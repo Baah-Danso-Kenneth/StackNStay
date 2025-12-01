@@ -1,0 +1,350 @@
+import {
+    principalCV,
+    uintCV,
+    stringAsciiCV,
+    fetchCallReadOnlyFunction,
+    ClarityType,
+    cvToValue,
+} from "@stacks/transactions";
+
+import { CONTRACT_ADDRESS, CONTRACTS, NETWORK } from './config';
+
+// Badge Types Constants (matching the contract)
+export const BADGE_TYPES = {
+    FIRST_BOOKING: 1,
+    FIRST_LISTING: 2,
+    SUPERHOST: 3,
+    FREQUENT_TRAVELER: 4,
+    EARLY_ADOPTER: 5,
+    PERFECT_HOST: 6,
+    GLOBE_TROTTER: 7,
+    TOP_EARNER: 8,
+} as const;
+
+// Types
+export interface BadgeMetadata {
+    badgeType: number;
+    owner: string;
+    earnedAt: number;
+    metadataUri: string;
+}
+
+export interface UserBadge {
+    badgeId: number;
+    earned: boolean;
+}
+
+export interface BadgeTypeInfo {
+    name: string;
+    description: string;
+    imageUri: string;
+    active: boolean;
+}
+
+// ============================================
+// PUBLIC FUNCTIONS (Write Operations)
+// ============================================
+
+/**
+ * Mint a badge for a recipient
+ * Only contract owner can call this
+ */
+export async function mintBadge({
+    recipient,
+    badgeType,
+    metadataUri,
+}: {
+    recipient: string;
+    badgeType: number;
+    metadataUri: string;
+}) {
+    return {
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: CONTRACTS.BADGE,
+        functionName: "mint-badge",
+        functionArgs: [
+            principalCV(recipient),
+            uintCV(badgeType),
+            stringAsciiCV(metadataUri),
+        ],
+    };
+}
+
+// ============================================
+// READ-ONLY FUNCTIONS
+// ============================================
+
+/**
+ * Get badge metadata by badge ID
+ */
+export async function getBadgeMetadata(badgeId: number): Promise<BadgeMetadata | null> {
+    try {
+        const result = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACTS.BADGE,
+            functionName: "get-badge-metadata",
+            functionArgs: [uintCV(badgeId)],
+            senderAddress: CONTRACT_ADDRESS,
+            network: NETWORK,
+        });
+
+        if (result.type === ClarityType.OptionalNone) {
+            return null;
+        }
+
+        if (result.type !== ClarityType.OptionalSome || !result.value) {
+            return null;
+        }
+
+        const data = cvToValue(result.value);
+
+        return {
+            badgeType: Number(data["badge-type"]),
+            owner: data.owner,
+            earnedAt: Number(data["earned-at"]),
+            metadataUri: data["metadata-uri"],
+        };
+    } catch (error) {
+        console.error("Error fetching badge metadata:", error);
+        return null;
+    }
+}
+
+/**
+ * Check if a user has a specific badge type
+ */
+export async function hasBadge(user: string, badgeType: number): Promise<boolean> {
+    try {
+        const result = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACTS.BADGE,
+            functionName: "has-badge",
+            functionArgs: [principalCV(user), uintCV(badgeType)],
+            senderAddress: CONTRACT_ADDRESS,
+            network: NETWORK,
+        });
+
+        return result.type === ClarityType.BoolTrue;
+    } catch (error) {
+        console.error("Error checking if user has badge:", error);
+        return false;
+    }
+}
+
+/**
+ * Get a user's specific badge by type
+ */
+export async function getUserBadge(
+    user: string,
+    badgeType: number
+): Promise<UserBadge | null> {
+    try {
+        const result = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACTS.BADGE,
+            functionName: "get-user-badge",
+            functionArgs: [principalCV(user), uintCV(badgeType)],
+            senderAddress: CONTRACT_ADDRESS,
+            network: NETWORK,
+        });
+
+        if (result.type === ClarityType.OptionalNone) {
+            return null;
+        }
+
+        if (result.type !== ClarityType.OptionalSome || !result.value) {
+            return null;
+        }
+
+        const data = cvToValue(result.value);
+
+        return {
+            badgeId: Number(data["badge-id"]),
+            earned: data.earned,
+        };
+    } catch (error) {
+        console.error("Error fetching user badge:", error);
+        return null;
+    }
+}
+
+/**
+ * Get badge type information
+ */
+export async function getBadgeTypeInfo(badgeType: number): Promise<BadgeTypeInfo | null> {
+    try {
+        const result = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACTS.BADGE,
+            functionName: "get-badge-type-info",
+            functionArgs: [uintCV(badgeType)],
+            senderAddress: CONTRACT_ADDRESS,
+            network: NETWORK,
+        });
+
+        if (result.type === ClarityType.OptionalNone) {
+            return null;
+        }
+
+        if (result.type !== ClarityType.OptionalSome || !result.value) {
+            return null;
+        }
+
+        const data = cvToValue(result.value);
+
+        return {
+            name: data.name,
+            description: data.description,
+            imageUri: data["image-uri"],
+            active: data.active,
+        };
+    } catch (error) {
+        console.error("Error fetching badge type info:", error);
+        return null;
+    }
+}
+
+/**
+ * Get the owner of a badge NFT
+ */
+export async function getOwner(badgeId: number): Promise<string | null> {
+    try {
+        const result = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACTS.BADGE,
+            functionName: "get-owner",
+            functionArgs: [uintCV(badgeId)],
+            senderAddress: CONTRACT_ADDRESS,
+            network: NETWORK,
+        });
+
+        if (result.type !== ClarityType.ResponseOk) {
+            return null;
+        }
+
+        const ownerData = cvToValue(result.value);
+
+        // The result is an optional, so check if it exists
+        if (ownerData === null) {
+            return null;
+        }
+
+        return ownerData as string;
+    } catch (error) {
+        console.error("Error fetching badge owner:", error);
+        return null;
+    }
+}
+
+/**
+ * Get token URI for a badge (for NFT marketplaces)
+ */
+export async function getTokenUri(badgeId: number): Promise<string | null> {
+    try {
+        const result = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACTS.BADGE,
+            functionName: "get-token-uri",
+            functionArgs: [uintCV(badgeId)],
+            senderAddress: CONTRACT_ADDRESS,
+            network: NETWORK,
+        });
+
+        if (result.type !== ClarityType.ResponseOk) {
+            return null;
+        }
+
+        const uriData = cvToValue(result.value);
+
+        // The result is an optional, so check if it exists
+        if (uriData === null) {
+            return null;
+        }
+
+        return uriData as string;
+    } catch (error) {
+        console.error("Error fetching token URI:", error);
+        return null;
+    }
+}
+
+/**
+ * Get total number of badges minted
+ */
+export async function getTotalBadges(): Promise<number> {
+    try {
+        const result = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACTS.BADGE,
+            functionName: "get-total-badges",
+            functionArgs: [],
+            senderAddress: CONTRACT_ADDRESS,
+            network: NETWORK,
+        });
+
+        if (result.type !== ClarityType.ResponseOk) {
+            return 0;
+        }
+
+        const count = cvToValue(result.value);
+        return Number(count);
+    } catch (error) {
+        console.error("Error fetching total badges:", error);
+        return 0;
+    }
+}
+
+/**
+ * Get all badges for a specific user
+ */
+export async function getAllUserBadges(user: string): Promise<(BadgeMetadata & { id: number })[]> {
+    try {
+        const badges: (BadgeMetadata & { id: number })[] = [];
+
+        // Check all badge types
+        for (const badgeType of Object.values(BADGE_TYPES)) {
+            const userBadge = await getUserBadge(user, badgeType);
+
+            if (userBadge && userBadge.earned) {
+                const metadata = await getBadgeMetadata(userBadge.badgeId);
+
+                if (metadata) {
+                    badges.push({
+                        id: userBadge.badgeId,
+                        ...metadata,
+                    });
+                }
+            }
+        }
+
+        return badges;
+    } catch (error) {
+        console.error("Error fetching all user badges:", error);
+        return [];
+    }
+}
+
+/**
+ * Get all badge type information
+ */
+export async function getAllBadgeTypes(): Promise<(BadgeTypeInfo & { type: number })[]> {
+    try {
+        const badgeTypes: (BadgeTypeInfo & { type: number })[] = [];
+
+        for (const [name, type] of Object.entries(BADGE_TYPES)) {
+            const info = await getBadgeTypeInfo(type);
+
+            if (info) {
+                badgeTypes.push({
+                    type,
+                    ...info,
+                });
+            }
+        }
+
+        return badgeTypes;
+    } catch (error) {
+        console.error("Error fetching all badge types:", error);
+        return [];
+    }
+}
