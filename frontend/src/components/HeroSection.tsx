@@ -45,9 +45,11 @@ const HeroSection = () => {
                                     <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
                             </Link>
-                            <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 rounded-xl text-lg font-semibold backdrop-blur-sm transition-all">
-                                {t('hero.learnButton')}
-                            </Button>
+                            <Link to="/learn-more" className="w-full sm:w-auto">
+                                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 rounded-xl text-lg font-semibold backdrop-blur-sm transition-all">
+                                    {t('hero.learnButton')}
+                                </Button>
+                            </Link>
                         </div>
 
                         {/* Stats */}

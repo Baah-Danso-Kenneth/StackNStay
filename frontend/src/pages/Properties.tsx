@@ -18,7 +18,7 @@ const Properties = () => {
   const [filters, setFilters] = useState<SearchFilters>({
     location: "",
     guests: 1,
-    priceRange: [0, 1000],
+    priceRange: [0, 10000], // Increased default max to 10,000 STX to include all properties
     checkIn: undefined,
     checkOut: undefined,
     bedrooms: undefined,
@@ -116,7 +116,9 @@ const Properties = () => {
   const filteredProperties = useMemo(() => {
     if (!properties || properties.length === 0) return [];
 
-    return properties.filter((property: any) => {
+    console.log(`🔍 Filtering ${properties.length} properties with filters:`, filters);
+
+    const filtered = properties.filter((property: any) => {
       // Search text filter (title, description, location)
       if (filters.searchText) {
         const searchLower = filters.searchText.toLowerCase();
@@ -125,7 +127,10 @@ const Properties = () => {
           property.description?.toLowerCase().includes(searchLower) ||
           property.location_city?.toLowerCase().includes(searchLower) ||
           property.location_country?.toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
+        if (!matchesSearch) {
+          console.log(`❌ Property #${property.id} filtered: search text doesn't match`);
+          return false;
+        }
       }
 
       // Location filter
@@ -134,25 +139,32 @@ const Properties = () => {
         const matchesLocation =
           property.location_city?.toLowerCase().includes(locationLower) ||
           property.location_country?.toLowerCase().includes(locationLower);
-        if (!matchesLocation) return false;
+        if (!matchesLocation) {
+          console.log(`❌ Property #${property.id} filtered: location doesn't match`);
+          return false;
+        }
       }
 
       // Guests filter
       if (filters.guests > 1) {
         if (!property.max_guests || property.max_guests < filters.guests) {
+          console.log(`❌ Property #${property.id} filtered: max_guests (${property.max_guests}) < required (${filters.guests})`);
           return false;
         }
       }
 
       // Price range filter (convert microSTX to STX)
       const priceInSTX = property.price_per_night / 1_000_000;
-      if (priceInSTX < filters.priceRange[0] || priceInSTX > filters.priceRange[1]) {
+      // Handle edge cases: if price is 0 or invalid, still show it (might be free or data issue)
+      if (priceInSTX > 0 && (priceInSTX < filters.priceRange[0] || priceInSTX > filters.priceRange[1])) {
+        console.log(`❌ Property #${property.id} filtered: price ${priceInSTX.toFixed(2)} STX outside range [${filters.priceRange[0]}, ${filters.priceRange[1]}]`);
         return false;
       }
 
       // Bedrooms filter
       if (filters.bedrooms !== undefined) {
         if (!property.bedrooms || property.bedrooms < filters.bedrooms) {
+          console.log(`❌ Property #${property.id} filtered: bedrooms (${property.bedrooms}) < required (${filters.bedrooms})`);
           return false;
         }
       }
@@ -160,6 +172,7 @@ const Properties = () => {
       // Bathrooms filter
       if (filters.bathrooms !== undefined) {
         if (!property.bathrooms || property.bathrooms < filters.bathrooms) {
+          console.log(`❌ Property #${property.id} filtered: bathrooms (${property.bathrooms}) < required (${filters.bathrooms})`);
           return false;
         }
       }
@@ -170,22 +183,38 @@ const Properties = () => {
         const hasAllAmenities = filters.amenities.every((amenity) =>
           propertyAmenities.includes(amenity.toUpperCase())
         );
-        if (!hasAllAmenities) return false;
+        if (!hasAllAmenities) {
+          console.log(`❌ Property #${property.id} filtered: missing amenities. Has: ${propertyAmenities.join(', ')}, Required: ${filters.amenities.join(', ')}`);
+          return false;
+        }
       }
 
-      // Only show active properties
-      if (!property.active) return false;
+      // Only show active properties (but log for debugging)
+      if (property.active === false) {
+        console.log(`❌ Property #${property.id} filtered: not active (active=${property.active})`);
+        return false;
+      }
+      
+      // Also handle undefined/null active status - default to showing it
+      if (property.active === undefined || property.active === null) {
+        console.log(`⚠️ Property #${property.id} has undefined active status, showing anyway`);
+      }
 
+      console.log(`✅ Property #${property.id} passed all filters`);
       return true;
     });
+
+    console.log(`📊 Filtering result: ${filtered.length} of ${properties.length} properties passed filters`);
+    return filtered;
   }, [properties, filters]);
 
-  // Count active filters
+  // Count active filters (don't count price range if it's the default [0, 1000])
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (filters.searchText) count++;
     if (filters.location) count++;
     if (filters.guests > 1) count++;
+    // Only count price range if it's been changed from default
     if (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000) count++;
     if (filters.bedrooms !== undefined) count++;
     if (filters.bathrooms !== undefined) count++;
@@ -199,7 +228,7 @@ const Properties = () => {
     setFilters({
       location: "",
       guests: 1,
-      priceRange: [0, 1000],
+      priceRange: [0, 10000], // Increased default max to 10,000 STX
       checkIn: undefined,
       checkOut: undefined,
       bedrooms: undefined,

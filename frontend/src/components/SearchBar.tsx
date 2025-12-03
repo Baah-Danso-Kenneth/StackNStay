@@ -93,72 +93,72 @@ const SearchBar = ({ filters, onFiltersChange, activeFiltersCount, onClearFilter
             </div>
           </div>
 
-          {/* Location */}
+        {/* Location */}
           <div className="md:col-span-2">
-            <Label className="text-xs font-semibold text-muted-foreground mb-2 block">
-              Location
-            </Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
+          <Label className="text-xs font-semibold text-muted-foreground mb-2 block">
+            Location
+          </Label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
                 placeholder="City or Country"
                 value={filters.location}
                 onChange={(e) => updateFilter("location", e.target.value)}
                 className="pl-11 bg-muted/50 border-0 h-12 rounded-xl focus-visible:ring-2 focus-visible:ring-primary transition-all"
-              />
-            </div>
+            />
           </div>
+        </div>
 
-          {/* Guests */}
-          <div className="md:col-span-2">
-            <Label className="text-xs font-semibold text-muted-foreground mb-2 block">
-              Guests
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
+        {/* Guests */}
+        <div className="md:col-span-2">
+          <Label className="text-xs font-semibold text-muted-foreground mb-2 block">
+            Guests
+          </Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal h-12 bg-muted/50 border-0 rounded-xl hover:bg-muted transition-all",
                     filters.guests > 1 && "bg-primary/10 border-primary/20"
                   )}
-                >
-                  <Users className="mr-2 h-4 w-4" />
+              >
+                <Users className="mr-2 h-4 w-4" />
                   {filters.guests} {filters.guests === 1 ? "guest" : "guests"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64" align="start">
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium mb-3 block">Number of Guests</Label>
-                    <Slider
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="start">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Number of Guests</Label>
+                  <Slider
                       value={[filters.guests]}
                       onValueChange={(value) => updateFilter("guests", value[0])}
-                      min={1}
-                      max={16}
-                      step={1}
-                      className="mb-2"
-                    />
-                    <div className="text-sm text-muted-foreground text-center">
+                    min={1}
+                    max={16}
+                    step={1}
+                    className="mb-2"
+                  />
+                  <div className="text-sm text-muted-foreground text-center">
                       {filters.guests} {filters.guests === 1 ? "guest" : "guests"}
-                    </div>
                   </div>
                 </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
           {/* Advanced Filters */}
           <div className="md:col-span-2">
             <Popover open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
                   className={cn(
                     "w-full h-12 bg-muted/50 border-0 rounded-xl hover:bg-muted transition-all relative",
                     hasActiveFilters && "bg-primary/10 border-primary/20"
                   )}
-                >
+              >
                   <SlidersHorizontal className="w-5 h-5 mr-2" />
                   Filters
                   {hasActiveFilters && (
@@ -166,8 +166,8 @@ const SearchBar = ({ filters, onFiltersChange, activeFiltersCount, onClearFilter
                       {activeFiltersCount}
                     </Badge>
                   )}
-                </Button>
-              </PopoverTrigger>
+              </Button>
+            </PopoverTrigger>
               <PopoverContent className="w-96 max-h-[80vh] overflow-y-auto" align="end">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -188,19 +188,19 @@ const SearchBar = ({ filters, onFiltersChange, activeFiltersCount, onClearFilter
                   </div>
 
                   {/* Price Range */}
-                  <div>
+                <div>
                     <Label className="text-sm font-medium mb-3 block">
                       Price Range (STX per night)
                     </Label>
-                    <Slider
+                  <Slider
                       value={filters.priceRange}
                       onValueChange={(value) => updateFilter("priceRange", value as [number, number])}
-                      min={0}
-                      max={1000}
-                      step={10}
-                      className="mb-2"
-                    />
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    min={0}
+                      max={10000}
+                      step={50}
+                    className="mb-2"
+                  />
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{filters.priceRange[0]} STX</span>
                       <span>{filters.priceRange[1]} STX</span>
                     </div>
@@ -345,16 +345,16 @@ const SearchBar = ({ filters, onFiltersChange, activeFiltersCount, onClearFilter
                           />
                         </PopoverContent>
                       </Popover>
-                    </div>
                   </div>
                 </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
           {/* Clear Button (only show if filters active) */}
           {hasActiveFilters && (
-            <div className="md:col-span-2">
+        <div className="md:col-span-2">
               <Button
                 variant="outline"
                 onClick={onClearFilters}
@@ -362,7 +362,7 @@ const SearchBar = ({ filters, onFiltersChange, activeFiltersCount, onClearFilter
               >
                 <X className="w-4 h-4 mr-2" />
                 Clear
-              </Button>
+          </Button>
             </div>
           )}
         </div>
@@ -395,12 +395,12 @@ const SearchBar = ({ filters, onFiltersChange, activeFiltersCount, onClearFilter
               />
             </Badge>
           )}
-          {(filters.priceRange[0] > 0 || filters.priceRange[1] < 1000) && (
+          {(filters.priceRange[0] > 0 || filters.priceRange[1] < 10000) && (
             <Badge variant="secondary" className="gap-1">
               {filters.priceRange[0]}-{filters.priceRange[1]} STX
               <X
                 className="w-3 h-3 cursor-pointer hover:text-destructive"
-                onClick={() => updateFilter("priceRange", [0, 1000])}
+                onClick={() => updateFilter("priceRange", [0, 10000])}
               />
             </Badge>
           )}

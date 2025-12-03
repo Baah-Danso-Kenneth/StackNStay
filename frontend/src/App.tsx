@@ -9,6 +9,7 @@ import PropertyDetail from "./pages/PropertyDetail";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import LearnMore from "./pages/LearnMore";
 import HostLayout from "./layouts/HostLayout";
 import Dashboard from "./pages/host/Dashboard";
 import CreateListing from "./pages/host/CreateListing";
@@ -24,6 +25,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/learn-more" element={<LearnMore />} />
           <Route path="/properties" element={<Properties />} />
           <Route path="/property/:id" element={<PropertyDetail />} />
           <Route path="/history" element={<History />} />
