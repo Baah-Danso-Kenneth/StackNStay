@@ -15,6 +15,8 @@ interface PropertyCardProps {
   featured?: boolean;
 }
 
+
+
 const PropertyCard = ({
   id,
   title,
@@ -27,20 +29,23 @@ const PropertyCard = ({
   featured = false,
 }: PropertyCardProps) => {
   // Format price - handle both string and number formats
+
   const formatPrice = () => {
-    if (typeof price === 'string') {
-      // If already formatted as "X STX", return as is
-      return price;
-    }
-    
-    // If it's a number (microSTX), convert to STX
-    if (typeof price === 'number') {
-      const stxAmount = (price / 1_000_000).toFixed(2);
-      return `${stxAmount} STX`;
-    }
-    
-    return 'Price N/A';
-  };
+  // If price is a string like "5 STX"
+  if (typeof price === "string") {
+    return price;
+  }
+
+  // If price is a real number
+  if (typeof price === "number" && !isNaN(price)) {
+    const stxAmount = (price / 1_000_000).toFixed(2);
+    return `${stxAmount} STX`;
+  }
+
+  // If price is invalid
+  return "Price N/A";
+};
+
 
   const formattedPrice = formatPrice();
 

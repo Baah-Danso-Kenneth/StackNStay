@@ -68,6 +68,8 @@ const PropertyDetail = () => {
     },
   };
 
+  
+
   if (loading) return <Loader />;
 
   return (
