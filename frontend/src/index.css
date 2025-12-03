@@ -158,6 +158,14 @@ All colors MUST be HSL.
   .transition-bounce {
     transition: var(--transition-bounce);
   }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .clip-path-hexagon {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
 }
 
 @keyframes fade-in {

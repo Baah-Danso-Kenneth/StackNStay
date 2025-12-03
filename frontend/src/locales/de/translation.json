@@ -1,0 +1,47 @@
+{
+    "nav": {
+        "home": "Startseite",
+        "properties": "Immobilien",
+        "myBookings": "Meine Buchungen",
+        "history": "Verlauf",
+        "connectWallet": "Wallet Verbinden"
+    },
+    "hero": {
+        "badge": "Dezentrale Vermietungsplattform",
+        "title": "Dezentrale",
+        "titleHighlight": "Ferienvermietungen",
+        "subtitle": "Buchen Sie einzigartige Unterkünfte direkt bei Gastgebern mit Smart Contracts auf der Stacks Blockchain. Keine Vermittler, niedrigere Gebühren und vollständige Transparenz.",
+        "exploreButton": "Immobilien Erkunden",
+        "learnButton": "Mehr Erfahren",
+        "stats": {
+            "properties": "Immobilien",
+            "countries": "Länder",
+            "satisfaction": "Zufriedenheit"
+        }
+    },
+    "footer": {
+        "tagline": "Dezentrales Wohnen",
+        "description": "Dezentrale Ferienvermietungen auf der Stacks Blockchain. Buchen Sie einzigartige Unterkünfte mit vollständiger Transparenz.",
+        "platform": "Plattform",
+        "browseProperties": "Immobilien Durchsuchen",
+        "aboutUs": "Über Uns",
+        "howItWorks": "Wie Es Funktioniert",
+        "faq": "FAQ",
+        "support": "Unterstützung",
+        "helpCenter": "Hilfezentrum",
+        "contactUs": "Kontaktieren Sie Uns",
+        "privacy": "Datenschutz",
+        "terms": "Nutzungsbedingungen",
+        "connect": "Verbinden",
+        "copyright": "© 2025 StackNStay. Alle Rechte vorbehalten.",
+        "builtOn": "Gebaut auf",
+        "blockchain": "Stacks Blockchain"
+    },
+    "ai": {
+        "tooltip": "KI-Assistent Fragen",
+        "subtitle": "Sofortige Hilfe Erhalten"
+    },
+    "common": {
+        "scrollToTop": "Nach Oben Scrollen"
+    }
+}

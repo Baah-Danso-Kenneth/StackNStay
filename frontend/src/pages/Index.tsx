@@ -12,6 +12,8 @@ import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
+import AIChatButton from "@/components/AIChatButton";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const Index = () => {
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,9 @@ const Index = () => {
       {/* Footer */}
       <Footer />
 
+      {/* Floating Action Buttons */}
+      <AIChatButton />
+      <ScrollToTop />
 
     </div>
   );

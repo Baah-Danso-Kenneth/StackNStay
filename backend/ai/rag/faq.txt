@@ -1,0 +1,183 @@
+# StacksStay Frequently Asked Questions
+
+## Getting Started
+
+### Do I need cryptocurrency experience to use StacksStay?
+No! While StacksStay uses STX cryptocurrency, you don't need prior crypto experience. Our platform guides you through wallet setup, and the booking process is similar to traditional platforms. Think of STX as digital cash specifically for StacksStay.
+
+### How do I get STX to book a property?
+You can buy STX on major cryptocurrency exchanges like Coinbase, Binance, or Kraken. After purchasing, transfer the STX to your Hiro Wallet. You'll need enough STX to cover your booking cost plus a small transaction fee (usually ~0.1 STX).
+
+### What wallet do I need?
+We recommend Hiro Wallet, a browser extension wallet specifically designed for Stacks. It's similar to MetaMask if you're familiar with Ethereum. Download it from wallet.hiro.so, create a wallet, and save your Secret Key securely.
+
+## Booking Process
+
+### How long does a booking transaction take?
+After you approve the transaction in your wallet, it typically confirms on the Stacks blockchain within 10-30 minutes. This is faster than Bitcoin (1 hour) but slower than credit cards (instant). The delay ensures security through blockchain consensus.
+
+### Can I book immediately or do I need approval?
+Most properties offer instant booking - your transaction is confirmed automatically by the smart contract. No waiting for host approval! However, hosts can disable their listing at any time, so book quickly if you find something you love.
+
+### What happens if my transaction fails?
+If a transaction fails (usually due to insufficient funds or network issues), your STX is automatically returned to your wallet minus the small transaction fee. The booking is not created. Check your wallet balance and try again.
+
+### Can I book multiple properties at once?
+Yes! Each booking is a separate smart contract transaction. You can book as many properties as you want, as long as you have sufficient STX. Each booking will have its own unique booking ID.
+
+## Payments and Fees
+
+### Why is the platform fee only 2%?
+Traditional platforms like Airbnb charge 15-20% because they need to cover payment processing, customer support staff, servers, and marketing. StacksStay uses smart contracts that automate most of these functions, eliminating expensive overhead. We pass these savings to you!
+
+### When does the host receive payment?
+The host receives payment automatically when the check-in block height is reached (approximately your check-in date). The smart contract releases funds from escrow without any manual intervention. This typically happens within 30 minutes of the scheduled check-in time.
+
+### Are there any hidden fees?
+No hidden fees! You pay exactly what's shown: nightly rate × nights + 2% platform fee + blockchain transaction fee (~0.1 STX). The transaction fee goes to Stacks miners, not StacksStay. What you see is what you pay.
+
+### Can I get a receipt for my booking?
+Yes! Your booking transaction is permanently recorded on the Stacks blockchain. You can view it on the Stacks Explorer using your transaction ID. This serves as an immutable receipt that can't be altered or deleted.
+
+## Cancellations and Refunds
+
+### How quickly are refunds processed?
+Refunds are instant! When you cancel a booking (or a dispute is resolved), the smart contract immediately transfers STX back to your wallet. No waiting 5-7 business days like traditional platforms. You'll see the refund within 30 minutes.
+
+### Can I cancel after check-in?
+No. Once check-in time has passed and payment is released to the host, cancellations are no longer possible through the platform. If issues arise during your stay, you should raise a dispute instead of canceling.
+
+### What if the host cancels on me?
+If the host cancels before check-in, you automatically receive a 100% refund to your wallet. The host's reputation score is negatively impacted, warning future guests. The smart contract ensures you get your money back without having to argue with customer support.
+
+### Is there a cancellation fee?
+The cancellation policy determines your refund amount (100%, 50%, or 0% based on timing), but there's no additional cancellation fee. You will pay a small blockchain transaction fee (~0.1 STX) to process the refund, which goes to network miners.
+
+## Safety and Security
+
+### Is my money safe in escrow?
+Yes! Escrow funds are held in a smart contract on the Stacks blockchain, which is secured by Bitcoin's hash power. The code is public and auditable. Neither StacksStay, the host, nor hackers can access escrowed funds before check-in. It's mathematically enforced.
+
+### What if someone hacks the platform website?
+Even if the StacksStay website is compromised, your escrowed funds remain safe because they're locked in the blockchain smart contract, not on our servers. Hackers would need to break Bitcoin's security to access your funds, which is effectively impossible.
+
+### How do I know the smart contract code is safe?
+Our smart contracts are written in Clarity, a decidable language that prevents common vulnerabilities. The code is open-source and deployed on the public Stacks blockchain, where anyone can audit it. We also undergo third-party security audits before major updates.
+
+### What if I lose my wallet password?
+If you lose your wallet password but still have your Secret Key (seed phrase), you can restore your wallet and funds. If you lose BOTH, your funds are permanently inaccessible - neither you nor StacksStay can recover them. This is why we emphasize: WRITE DOWN YOUR SECRET KEY!
+
+## Technical Questions
+
+### What is a block height and why do you use it?
+Block height is the number of blocks in the blockchain. Stacks produces a block every ~10 minutes. We use block heights instead of calendar dates because smart contracts can't access real-world clocks. The frontend converts your selected dates to approximate block heights automatically.
+
+### Do I need to understand blockchain to use StacksStay?
+No! You can use StacksStay just like Airbnb. However, understanding basics helps:
+- Blockchain = Digital ledger that can't be altered
+- Smart contract = Automated agreement enforced by code
+- Escrow = Money held securely until conditions are met
+- STX = Cryptocurrency used for payments
+
+### Why Stacks and not Ethereum?
+Stacks is secured by Bitcoin (the most secure blockchain) while offering smart contracts that Ethereum pioneered. It's faster and cheaper than Ethereum for our use case. Plus, Stacks' Clarity language is safer than Solidity - it prevents entire classes of vulnerabilities.
+
+### Can I use this from any country?
+Yes! StacksStay is global and permissionless. As long as you have internet access and can use a Stacks wallet, you can book properties anywhere. There are no geographic restrictions, country blocks, or discriminatory policies.
+
+## Property Listings
+
+### How do I know a property is legitimate?
+Check the host's reputation score (average of all reviews), read recent reviews, and look for detailed descriptions and multiple photos. Legitimate listings typically have 5+ reviews and a rating above 4.0. New hosts with no reviews may still be legitimate - use your judgment.
+
+### Can I contact the host before booking?
+Currently, host contact information is only shared after booking to protect privacy. Future updates will include on-chain messaging. For now, you can view the host's profile, reviews from other guests, and response rate.
+
+### What if the property doesn't match the listing?
+Take photos immediately and raise a dispute through the platform. Provide detailed evidence of the discrepancy. An admin will review your case and determine an appropriate refund (partial or full). This protects you from misleading listings.
+
+### How often are property details updated?
+Hosts can update their property details (except price during active bookings) at any time. Changes are reflected immediately. However, blockchain records (bookings, reviews) are immutable and can't be edited or deleted.
+
+## Reviews and Reputation
+
+### When can I leave a review?
+You can leave a review only after your checkout date and only if the booking status is "completed." Both guest and host can review each other. Reviews are submitted as blockchain transactions and become permanent, immutable records.
+
+### Can reviews be deleted or edited?
+No! Reviews are stored on the blockchain and cannot be edited, deleted, or censored by anyone - not even StacksStay admins. This ensures authentic, trustworthy feedback. Think carefully before submitting because it's permanent.
+
+### How is the reputation score calculated?
+Your reputation score is the average of all star ratings (1-5) you've received. If you have 10 reviews totaling 47 stars, your rating is 4.7. The score is recalculated automatically with each new review and stored on-chain.
+
+### Can hosts fake reviews?
+No. Reviews are cryptographically linked to actual bookings on the blockchain. You can only review someone if you completed a booking with them. This makes fake reviews impossible without actually booking (which costs real money).
+
+## Disputes
+
+### How long does dispute resolution take?
+Most disputes are reviewed within 24-48 hours. Simple cases (clear photos, obvious discrepancy) resolve faster. Complex cases requiring investigation may take up to 5 business days. However, this is much faster than traditional platforms' 2-4 week dispute processes.
+
+### Who decides dispute outcomes?
+Currently, StacksStay admins review disputes and determine fair refund percentages. We aim for neutral, evidence-based decisions. In the future, we plan to implement decentralized arbitration where community members vote on outcomes.
+
+### What evidence should I provide?
+Provide:
+- Clear photos showing the issue
+- Screenshots of listing vs. reality
+- Detailed written description
+- Timestamps (when did you discover the issue?)
+- Any communication with the host
+
+More evidence = faster resolution and better outcomes.
+
+### Is there a fee to raise a dispute?
+No fee to raise a dispute. However, you'll pay a small blockchain transaction fee (~0.1 STX) to submit the dispute on-chain. This prevents spam disputes while keeping it affordable for legitimate cases.
+
+## Platform Policies
+
+### Can my account be banned?
+StacksStay cannot "ban" your wallet address from the blockchain. However, if you violate terms (fraud, harassment, illegal activity), we can remove your listings from our frontend interface. You'd still own your on-chain data but couldn't use our platform UI.
+
+### What is not allowed on StacksStay?
+Prohibited:
+- Illegal activities (drugs, weapons, human trafficking)
+- Discriminatory practices (refusing guests based on protected characteristics)
+- Scams or fraud
+- Harassment of other users
+- Duplicate listings to manipulate rankings
+
+### How does StacksStay make money?
+We collect a 2% platform fee on every booking. This covers:
+- Maintaining the website and servers
+- Customer support
+- Marketing and growth
+- Ongoing smart contract development
+- Security audits and improvements
+
+### Can I list properties from other platforms on StacksStay?
+Yes! You can list the same property on multiple platforms (Airbnb, VRBO, and StacksStay simultaneously). However, YOU are responsible for managing availability across platforms. Double bookings are your responsibility, and StacksStay won't provide refunds for your scheduling errors.
+
+## Troubleshooting
+
+### "Transaction taking too long" - What do I do?
+Stacks transactions typically confirm in 10-30 minutes but can occasionally take longer during high network activity. Check the Stacks Explorer with your transaction ID. If pending over 1 hour, contact support with your transaction ID.
+
+### "Insufficient funds" error - But I have enough STX?
+You need booking cost + transaction fee (~0.1 STX). Also, if you have pending transactions, that STX is temporarily locked. Wait for previous transactions to confirm or add more STX to your wallet.
+
+### My wallet isn't connecting - Help!
+Common fixes:
+1. Refresh the page and try again
+2. Ensure Hiro Wallet extension is updated
+3. Try a different browser (Chrome works best)
+4. Disable other wallet extensions (they can conflict)
+5. Clear browser cache and cookies
+
+### How do I contact support?
+Currently, support is available via:
+- Discord: [link]
+- Twitter: @StacksStay
+- Email: support@stacksstay.com
+
+Response time: Usually within 24 hours. For urgent booking issues, use Discord for fastest response.

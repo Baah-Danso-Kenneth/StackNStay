@@ -26,6 +26,13 @@ export const UserMenu = ({ address, onDisconnect }: UserMenuProps) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                        <User className="w-4 h-4" />
+                        <span>My Profile</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
                     <Link to="/my-bookings" className="flex items-center gap-2 cursor-pointer">
                         <Calendar className="w-4 h-4" />
                         <span>My Bookings</span>
@@ -35,6 +42,13 @@ export const UserMenu = ({ address, onDisconnect }: UserMenuProps) => {
                     <Link to="/history" className="flex items-center gap-2 cursor-pointer">
                         <History className="w-4 h-4" />
                         <span>History</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                    <Link to="/host/dashboard" className="flex items-center gap-2 cursor-pointer font-medium">
+                        <User className="w-4 h-4" />
+                        <span>Switch to Hosting</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
