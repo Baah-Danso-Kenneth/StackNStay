@@ -7,6 +7,8 @@ import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { getAllProperties } from "@/lib/escrow";
+import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
 import "@/lib/debug"; // Load blockchain debug utilities
 
 const Properties = () => {
@@ -15,17 +17,52 @@ const Properties = () => {
   const { data: properties = [], isLoading, error, refetch } = useQuery({
     queryKey: ['properties'],
     queryFn: async () => {
-      const apiUrl = 'http://localhost:8000/api/properties/';
-      console.log('🔍 Fetching properties from:', apiUrl);
+      console.log('🔍 Fetching properties from blockchain...');
 
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch properties: ${response.status} ${response.statusText}`);
-      }
+      // Fetch properties from blockchain
+      const blockchainProperties = await getAllProperties(20);
+      console.log(`✅ Found ${blockchainProperties.length} properties on blockchain`);
 
-      const data = await response.json();
-      console.log(`✅ Fetched ${data.length} properties:`, data);
-      return data;
+      // Enrich each property with IPFS metadata
+      const enrichedProperties = await Promise.all(
+        blockchainProperties.map(async (prop) => {
+          const metadata = await fetchIPFSMetadata(prop.metadataUri);
+
+          if (!metadata) {
+            console.warn(`⚠️ Could not fetch metadata for property #${prop.id}`);
+            return null;
+          }
+
+          // Get the first image URL
+          const coverImage = metadata.images && metadata.images.length > 0
+            ? getIPFSImageUrl(metadata.images[0])
+            : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+
+          return {
+            id: prop.id,
+            blockchain_id: prop.id,
+            title: metadata.title,
+            description: metadata.description,
+            location_city: metadata.location.split(',')[0]?.trim() || metadata.location,
+            location_country: metadata.location.split(',')[1]?.trim() || '',
+            price_per_night: prop.pricePerNight,
+            max_guests: metadata.maxGuests,
+            bedrooms: metadata.bedrooms,
+            bathrooms: metadata.bathrooms,
+            amenities: metadata.amenities,
+            cover_image: coverImage,
+            images: metadata.images.map(getIPFSImageUrl),
+            active: prop.active,
+            owner: prop.owner,
+          };
+        })
+      );
+
+      // Filter out null values (failed metadata fetches)
+      const validProperties = enrichedProperties.filter(prop => prop !== null);
+      console.log(`✅ Successfully enriched ${validProperties.length} properties with IPFS data`);
+
+      return validProperties;
     }
   });
 
@@ -114,7 +151,7 @@ const Properties = () => {
                       id={property.blockchain_id}
                       title={property.title || "Untitled Property"}
                       location={`${property.location_city || ""}, ${property.location_country || ""}`}
-                      price={`${property.price_per_night} STX`}
+                      price={`${(property.price_per_night / 1_000_000).toFixed(2)} STX`}
                       rating={4.8} // Mock rating
                       reviews={12} // Mock reviews
                       guests={property.max_guests || 2}

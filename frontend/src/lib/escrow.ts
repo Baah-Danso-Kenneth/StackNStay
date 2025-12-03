@@ -151,11 +151,25 @@ export async function getProperty(propertyId: number): Promise<Property | null> 
 
         const data = cvToValue(result.value);
 
+        // Extract the metadata-uri as a string
+        // cvToValue returns objects for complex types, we need to handle strings specially
+        let metadataUri = data["metadata-uri"];
+
+        // If it's an object with a 'value' property, extract that
+        if (metadataUri && typeof metadataUri === 'object' && 'value' in metadataUri) {
+            metadataUri = metadataUri.value;
+        }
+
+        // Convert to string if it's a buffer or other type
+        if (typeof metadataUri !== 'string') {
+            metadataUri = String(metadataUri || '');
+        }
+
         return {
             owner: data.owner,
             pricePerNight: Number(data["price-per-night"]),
             locationTag: Number(data["location-tag"]),
-            metadataUri: data["metadata-uri"],
+            metadataUri: metadataUri,
             active: data.active,
             createdAt: Number(data["created-at"]),
         };
