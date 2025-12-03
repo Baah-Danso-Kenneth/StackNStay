@@ -128,129 +128,142 @@ export async function cancelBooking(bookingId: number) {
 // ============================================
 
 /**
- * Get property details
+ * Get property details with retry logic for network errors
  */
-export async function getProperty(propertyId: number): Promise<Property | null> {
-    try {
-        const result = await fetchCallReadOnlyFunction({
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACTS.ESCROW,
-            functionName: "get-property",
-            functionArgs: [uintCV(propertyId)],
-            senderAddress: CONTRACT_ADDRESS,
-            network: NETWORK,
-        });
+export async function getProperty(propertyId: number, retries: number = 3): Promise<Property | null> {
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            const result = await fetchCallReadOnlyFunction({
+                contractAddress: CONTRACT_ADDRESS,
+                contractName: CONTRACTS.ESCROW,
+                functionName: "get-property",
+                functionArgs: [uintCV(propertyId)],
+                senderAddress: CONTRACT_ADDRESS,
+                network: NETWORK,
+            });
 
-        if (result.type === ClarityType.OptionalNone) {
-            return null;
-        }
+            if (result.type === ClarityType.OptionalNone) {
+                return null;
+            }
 
-        if (result.type !== ClarityType.OptionalSome || !result.value) {
-            return null;
-        }
+            if (result.type !== ClarityType.OptionalSome || !result.value) {
+                return null;
+            }
 
-        const data = cvToValue(result.value);
-        
-        // Debug: log the raw data structure
-        console.log('🔍 Raw property data from blockchain:', JSON.stringify(data, null, 2));
+            const data = cvToValue(result.value);
 
-        // Extract the metadata-uri as a string
-        // cvToValue returns objects for complex types, we need to handle strings specially
-        let metadataUri = data["metadata-uri"];
+            // Debug: log the raw data structure
+            console.log('🔍 Raw property data from blockchain:', JSON.stringify(data, null, 2));
 
-        // If it's an object with a 'value' property, extract that
-        if (metadataUri && typeof metadataUri === 'object' && 'value' in metadataUri) {
-            metadataUri = metadataUri.value;
-        }
+            // Extract the metadata-uri as a string
+            // cvToValue returns objects for complex types, we need to handle strings specially
+            let metadataUri = data["metadata-uri"];
 
-        // Convert to string if it's a buffer or other type
-        if (typeof metadataUri !== 'string') {
-            metadataUri = String(metadataUri || '');
-        }
+            // If it's an object with a 'value' property, extract that
+            if (metadataUri && typeof metadataUri === 'object' && 'value' in metadataUri) {
+                metadataUri = metadataUri.value;
+            }
 
-        // Extract price-per-night - handle different formats
-        // Clarity uint values might come as bigint, string, or wrapped in object
-        let pricePerNight = data["price-per-night"];
-        
-        // Handle wrapped value
-        if (pricePerNight && typeof pricePerNight === 'object' && 'value' in pricePerNight) {
-            pricePerNight = pricePerNight.value;
-        }
-        
-        // Handle bigint (common in Clarity)
-        if (typeof pricePerNight === 'bigint') {
-            pricePerNight = Number(pricePerNight);
-        }
-        
-        // Handle string representation
-        if (typeof pricePerNight === 'string') {
-            pricePerNight = parseInt(pricePerNight, 10);
-        }
-        
-        const pricePerNightNum = Number(pricePerNight);
-        if (isNaN(pricePerNightNum)) {
-            console.error('❌ Invalid price-per-night value:', data["price-per-night"], 'Extracted:', pricePerNight, 'Type:', typeof pricePerNight);
-            console.error('❌ Full data keys:', Object.keys(data));
-        } else {
-            console.log(`✅ Property #${propertyId} - Extracted pricePerNight: ${pricePerNightNum} microSTX (${pricePerNightNum / 1_000_000} STX)`);
-        }
+            // Convert to string if it's a buffer or other type
+            if (typeof metadataUri !== 'string') {
+                metadataUri = String(metadataUri || '');
+            }
 
-        // Extract location-tag - handle different formats
-        let locationTag = data["location-tag"];
-        if (locationTag && typeof locationTag === 'object' && 'value' in locationTag) {
-            locationTag = locationTag.value;
-        }
-        if (typeof locationTag === 'bigint') {
-            locationTag = Number(locationTag);
-        }
-        if (typeof locationTag === 'string') {
-            locationTag = parseInt(locationTag, 10);
-        }
-        const locationTagNum = Number(locationTag);
+            // Extract price-per-night - handle different formats
+            // Clarity uint values might come as bigint, string, or wrapped in object
+            let pricePerNight = data["price-per-night"];
 
-        // Extract created-at - handle different formats
-        let createdAt = data["created-at"];
-        if (createdAt && typeof createdAt === 'object' && 'value' in createdAt) {
-            createdAt = createdAt.value;
-        }
-        if (typeof createdAt === 'bigint') {
-            createdAt = Number(createdAt);
-        }
-        if (typeof createdAt === 'string') {
-            createdAt = parseInt(createdAt, 10);
-        }
-        const createdAtNum = Number(createdAt);
+            // Handle wrapped value
+            if (pricePerNight && typeof pricePerNight === 'object' && 'value' in pricePerNight) {
+                pricePerNight = pricePerNight.value;
+            }
 
-        // Extract owner - handle principal type
-        let owner = data.owner;
-        if (owner && typeof owner === 'object' && 'value' in owner) {
-            owner = owner.value;
-        }
-        if (typeof owner !== 'string') {
-            owner = String(owner || '');
-        }
+            // Handle bigint (common in Clarity)
+            if (typeof pricePerNight === 'bigint') {
+                pricePerNight = Number(pricePerNight);
+            }
 
-        // Extract active - handle boolean
-        let active = data.active;
-        if (active && typeof active === 'object' && 'value' in active) {
-            active = active.value;
-        }
-        if (typeof active !== 'boolean') {
-            active = Boolean(active);
-        }
+            // Handle string representation
+            if (typeof pricePerNight === 'string') {
+                pricePerNight = parseInt(pricePerNight, 10);
+            }
 
-        return {
-            owner: owner,
-            pricePerNight: pricePerNightNum,
-            locationTag: locationTagNum,
-            metadataUri: metadataUri,
-            active: active,
-            createdAt: createdAtNum,
-        };
-    } catch (error) {
-        console.error("Error fetching property:", error);
-        return null;
+            const pricePerNightNum = Number(pricePerNight);
+            if (isNaN(pricePerNightNum)) {
+                console.error('❌ Invalid price-per-night value:', data["price-per-night"], 'Extracted:', pricePerNight, 'Type:', typeof pricePerNight);
+                console.error('❌ Full data keys:', Object.keys(data));
+            } else {
+                console.log(`✅ Property #${propertyId} - Extracted pricePerNight: ${pricePerNightNum} microSTX (${pricePerNightNum / 1_000_000} STX)`);
+            }
+
+            // Extract location-tag - handle different formats
+            let locationTag = data["location-tag"];
+            if (locationTag && typeof locationTag === 'object' && 'value' in locationTag) {
+                locationTag = locationTag.value;
+            }
+            if (typeof locationTag === 'bigint') {
+                locationTag = Number(locationTag);
+            }
+            if (typeof locationTag === 'string') {
+                locationTag = parseInt(locationTag, 10);
+            }
+            const locationTagNum = Number(locationTag);
+
+            // Extract created-at - handle different formats
+            let createdAt = data["created-at"];
+            if (createdAt && typeof createdAt === 'object' && 'value' in createdAt) {
+                createdAt = createdAt.value;
+            }
+            if (typeof createdAt === 'bigint') {
+                createdAt = Number(createdAt);
+            }
+            if (typeof createdAt === 'string') {
+                createdAt = parseInt(createdAt, 10);
+            }
+            const createdAtNum = Number(createdAt);
+
+            // Extract owner - handle principal type
+            let owner = data.owner;
+            if (owner && typeof owner === 'object' && 'value' in owner) {
+                owner = owner.value;
+            }
+            if (typeof owner !== 'string') {
+                owner = String(owner || '');
+            }
+
+            // Extract active - handle boolean
+            let active = data.active;
+            if (active && typeof active === 'object' && 'value' in active) {
+                active = active.value;
+            }
+            if (typeof active !== 'boolean') {
+                active = Boolean(active);
+            }
+
+            return {
+                owner: owner,
+                pricePerNight: pricePerNightNum,
+                locationTag: locationTagNum,
+                metadataUri: metadataUri,
+                active: active,
+                createdAt: createdAtNum,
+            };
+        } catch (error) {
+            const isLastAttempt = attempt === retries - 1;
+
+            if (isLastAttempt) {
+                console.error(`❌ Error fetching property #${propertyId} after ${retries} attempts:`, error);
+                return null;
+            }
+
+            // Exponential backoff: wait 500ms, 1000ms, 2000ms
+            const delay = 500 * Math.pow(2, attempt);
+            console.warn(`⚠️ Error fetching property #${propertyId} (attempt ${attempt + 1}/${retries}), retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
     }
+
+    return null;
 }
 
 /**
@@ -338,6 +351,7 @@ export async function getAllProperties(maxProperties: number = 200): Promise<(Pr
 
         // Try to fetch properties up to maxProperties
         // Continue through gaps to find all properties
+        // START AT 0 because Clarity property IDs ARE 0-based
         for (let i = 0; i < maxProperties; i++) {
             const property = await getProperty(i);
 
@@ -347,8 +361,10 @@ export async function getAllProperties(maxProperties: number = 200): Promise<(Pr
                     ...property,
                 });
                 consecutiveNulls = 0; // Reset counter when we find a property
+                console.log(`✅ Found property #${i}`);
             } else {
                 consecutiveNulls++;
+                console.log(`⚠️ Property #${i} not found (consecutive nulls: ${consecutiveNulls})`);
                 // Only stop if we hit many consecutive nulls (likely reached the end)
                 if (consecutiveNulls >= maxConsecutiveNulls) {
                     console.log(`⏹️ Stopped at property ID ${i} after ${maxConsecutiveNulls} consecutive nulls`);
@@ -372,8 +388,11 @@ export async function getAllProperties(maxProperties: number = 200): Promise<(Pr
 export async function getAllBookings(maxBookings: number = 100): Promise<(Booking & { id: number })[]> {
     try {
         const bookings: (Booking & { id: number })[] = [];
+        let consecutiveNulls = 0;
+        const maxConsecutiveNulls = 10; // Stop after 10 consecutive nulls
 
         // Try to fetch bookings up to maxBookings
+        // START AT 0 because Clarity booking IDs ARE 0-based
         for (let i = 0; i < maxBookings; i++) {
             const booking = await getBooking(i);
 
@@ -382,9 +401,13 @@ export async function getAllBookings(maxBookings: number = 100): Promise<(Bookin
                     id: i,
                     ...booking,
                 });
+                consecutiveNulls = 0; // Reset counter
             } else {
-                // If we hit a null, we've likely reached the end
-                break;
+                consecutiveNulls++;
+                // Stop if we hit many consecutive nulls
+                if (consecutiveNulls >= maxConsecutiveNulls) {
+                    break;
+                }
             }
         }
 

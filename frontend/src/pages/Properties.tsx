@@ -13,12 +13,12 @@ import "@/lib/debug"; // Load blockchain debug utilities
 
 const Properties = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  
+
   // Search filters state
   const [filters, setFilters] = useState<SearchFilters>({
     location: "",
     guests: 1,
-    priceRange: [0, 10000], // Increased default max to 10,000 STX to include all properties
+    priceRange: [0, 100000000], // Very high max to show all properties (including those with data errors)
     checkIn: undefined,
     checkOut: undefined,
     bedrooms: undefined,
@@ -70,12 +70,12 @@ const Properties = () => {
           }
 
           // Convert all image IPFS URIs to HTTP URLs
-          const imageUrls = metadata.images 
+          const imageUrls = metadata.images
             ? metadata.images.map((imgUri: string) => {
-                const httpUrl = getIPFSImageUrl(imgUri);
-                console.log(`🖼️ Property #${prop.id} - Image URL: ${imgUri} -> ${httpUrl}`);
-                return httpUrl;
-              })
+              const httpUrl = getIPFSImageUrl(imgUri);
+              console.log(`🖼️ Property #${prop.id} - Image URL: ${imgUri} -> ${httpUrl}`);
+              return httpUrl;
+            })
             : [];
 
           return {
@@ -194,7 +194,7 @@ const Properties = () => {
         console.log(`❌ Property #${property.id} filtered: not active (active=${property.active})`);
         return false;
       }
-      
+
       // Also handle undefined/null active status - default to showing it
       if (property.active === undefined || property.active === null) {
         console.log(`⚠️ Property #${property.id} has undefined active status, showing anyway`);
@@ -228,7 +228,7 @@ const Properties = () => {
     setFilters({
       location: "",
       guests: 1,
-      priceRange: [0, 10000], // Increased default max to 10,000 STX
+      priceRange: [0, 100000000], // Match the new default
       checkIn: undefined,
       checkOut: undefined,
       bedrooms: undefined,
@@ -301,7 +301,7 @@ const Properties = () => {
                     {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'} Available
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {activeFiltersCount > 0 
+                    {activeFiltersCount > 0
                       ? `Filtered from ${properties.length} verified listings`
                       : 'Verified listings on the blockchain'
                     }
@@ -338,7 +338,7 @@ const Properties = () => {
                   if (index === 0) {
                     console.log('🔍 Debug - Property price_per_night:', property.price_per_night, 'Type:', typeof property.price_per_night);
                   }
-                  
+
                   return (
                     <div
                       key={property.id}
