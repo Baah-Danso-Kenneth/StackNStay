@@ -1,0 +1,47 @@
+{
+    "nav": {
+        "home": "Inicio",
+        "properties": "Propiedades",
+        "myBookings": "Mis Reservas",
+        "history": "Historial",
+        "connectWallet": "Conectar Billetera"
+    },
+    "hero": {
+        "badge": "Plataforma de Alquiler Descentralizada",
+        "title": "Alquileres",
+        "titleHighlight": "Vacacionales Descentralizados",
+        "subtitle": "Reserve estancias únicas directamente con anfitriones usando contratos inteligentes en la blockchain de Stacks. Sin intermediarios, tarifas más bajas y total transparencia.",
+        "exploreButton": "Explorar Propiedades",
+        "learnButton": "Saber Más",
+        "stats": {
+            "properties": "Propiedades",
+            "countries": "Países",
+            "satisfaction": "Satisfacción"
+        }
+    },
+    "footer": {
+        "tagline": "Vida Descentralizada",
+        "description": "Alquileres vacacionales descentralizados en la blockchain de Stacks. Reserve estancias únicas con total transparencia.",
+        "platform": "Plataforma",
+        "browseProperties": "Explorar Propiedades",
+        "aboutUs": "Sobre Nosotros",
+        "howItWorks": "Cómo Funciona",
+        "faq": "Preguntas Frecuentes",
+        "support": "Soporte",
+        "helpCenter": "Centro de Ayuda",
+        "contactUs": "Contáctenos",
+        "privacy": "Política de Privacidad",
+        "terms": "Términos de Servicio",
+        "connect": "Conectar",
+        "copyright": "© 2025 StackNStay. Todos los derechos reservados.",
+        "builtOn": "Construido en",
+        "blockchain": "Blockchain Stacks"
+    },
+    "ai": {
+        "tooltip": "Preguntar al Asistente IA",
+        "subtitle": "Obtener Ayuda Instantánea"
+    },
+    "common": {
+        "scrollToTop": "Volver Arriba"
+    }
+}

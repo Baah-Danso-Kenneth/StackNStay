@@ -1,0 +1,391 @@
+# StacksStay Smart Contracts Technical Documentation
+
+## Overview
+
+StacksStay operates through three interconnected Clarity smart contracts deployed on the Stacks blockchain. These contracts handle escrow, reputation, and disputes in a trustless, decentralized manner.
+
+## Contract Architecture
+
+### Contract 1: stackstay-escrow.clar
+The core contract managing property listings, bookings, and payment escrow.
+
+**Key Functions:**
+
+**list-property**
+Creates a new property listing on-chain.
+Parameters: price-per-night (uint), location-tag (uint), metadata-uri (string)
+Returns: property-id (uint)
+Cost: ~0.05 STX transaction fee
+
+**book-property**
+Creates a booking and locks STX in escrow.
+Parameters: property-id (uint), check-in (uint block height), check-out (uint block height), num-nights (uint)
+Process: Transfers STX from guest to contract escrow, creates booking record
+Returns: booking-id (uint)
+Cost: Booking amount + ~0.1 STX transaction fee
+
+**release-payment**
+Releases escrowed funds to host at check-in time.
+Parameters: booking-id (uint)
+Validation: Check-in block must have passed, booking status must be "confirmed"
+Process: Transfers 98% to host, 2% platform fee to contract owner
+Returns: true on success
+
+**cancel-booking**
+Processes cancellations with time-based refund policy.
+Parameters: booking-id (uint)
+Refund Logic:
+- 7+ days before (1008+ blocks): 100% refund
+- 3-7 days before (432-1008 blocks): 50% refund
+- Less than 3 days (<432 blocks): 0% refund
+Returns: refund-amount (uint)
+
+**Data Structures:**
+
+Properties Map:
+```
+{
+  property-id: uint,
+  owner: principal,
+  price-per-night: uint (in micro-STX),
+  location-tag: uint,
+  metadata-uri: string-ascii,
+  active: bool,
+  created-at: uint
+}
+```
+
+Bookings Map:
+```
+{
+  booking-id: uint,
+  property-id: uint,
+  guest: principal,
+  host: principal,
+  check-in: uint (block height),
+  check-out: uint (block height),
+  total-amount: uint,
+  platform-fee: uint,
+  host-payout: uint,
+  status: string-ascii ("confirmed", "completed", "cancelled"),
+  escrowed-amount: uint
+}
+```
+
+### Contract 2: stackstay-reputation.clar
+Manages reviews and user reputation scores.
+
+**Key Functions:**
+
+**submit-review**
+Allows guests and hosts to review each other after completed bookings.
+Parameters: booking-id (uint), reviewee (principal), rating (uint 1-5), comment (string-utf8)
+Validation: 
+- Booking must be completed
+- Reviewer must be guest or host from that booking
+- Can't review yourself
+- Can only review once per booking
+Returns: review-id (uint)
+
+**Data Structures:**
+
+Reviews Map:
+```
+{
+  review-id: uint,
+  booking-id: uint,
+  reviewer: principal,
+  reviewee: principal,
+  rating: uint (1-5),
+  comment: string-utf8,
+  created-at: uint
+}
+```
+
+User Stats Map:
+```
+{
+  user: principal,
+  total-reviews: uint,
+  total-rating-sum: uint,
+  average-rating: uint (multiplied by 100, e.g., 450 = 4.5 stars)
+}
+```
+
+**Rating Calculation:**
+Average rating is stored as (sum of all ratings / count) × 100 to preserve decimal precision without using floating-point arithmetic. Frontend divides by 100 to display actual rating.
+
+### Contract 3: stackstay-disputes.clar
+Handles dispute resolution between guests and hosts.
+
+**Key Functions:**
+
+**raise-dispute**
+Allows guest or host to raise a dispute for a booking.
+Parameters: booking-id (uint), reason (string-utf8), evidence (string-utf8)
+Validation:
+- Caller must be guest or host
+- Booking must be "confirmed" or "completed" status
+- No existing dispute for this booking
+Returns: dispute-id (uint)
+
+**resolve-dispute**
+Admin-only function to resolve disputes and execute refunds.
+Parameters: dispute-id (uint), resolution (string-utf8), refund-percentage (uint 0-100)
+Validation: Only contract owner can call this
+Process: Updates dispute status, records resolution, sets refund percentage
+Note: Actual refund execution would need to be handled separately
+Returns: true on success
+
+**Data Structures:**
+
+Disputes Map:
+```
+{
+  dispute-id: uint,
+  booking-id: uint,
+  raised-by: principal,
+  reason: string-utf8,
+  evidence: string-utf8,
+  status: string-ascii ("pending", "resolved", "rejected"),
+  resolution: string-utf8,
+  refund-percentage: uint,
+  created-at: uint,
+  resolved-at: uint
+}
+```
+
+## Technical Specifications
+
+### Blockchain Details
+
+**Network:** Stacks Mainnet (secured by Bitcoin)
+**Language:** Clarity (decidable smart contract language)
+**Block Time:** ~10 minutes per block
+**Finality:** Confirmed after 1 block (inherited from Bitcoin's security)
+
+### Gas and Transaction Fees
+
+Typical transaction costs:
+- List property: ~0.05 STX
+- Book property: ~0.1 STX (varies by booking size)
+- Submit review: ~0.03 STX
+- Raise dispute: ~0.05 STX
+- Cancel booking: ~0.08 STX
+
+Note: Fees go to Stacks miners, not StacksStay platform.
+
+### Micro-STX Conversion
+
+All amounts in smart contracts use micro-STX (1 STX = 1,000,000 micro-STX) to avoid decimal arithmetic.
+
+Example:
+- User sees: 5.50 STX per night
+- Smart contract stores: 5,500,000 micro-STX
+- Frontend converts back for display
+
+### Platform Fee Calculation
+
+Fee is calculated as basis points (BPS):
+- Platform fee BPS: 200 (represents 2%)
+- BPS denominator: 10,000
+- Formula: (base_cost × 200) / 10,000
+
+Example:
+- Base cost: 10,000,000 micro-STX (10 STX)
+- Platform fee: (10,000,000 × 200) / 10,000 = 200,000 micro-STX (0.2 STX)
+- Total: 10,200,000 micro-STX (10.2 STX)
+
+## Security Features
+
+### Escrow Protection
+
+**Time-Lock Mechanism:**
+Funds can only be released after check-in block height is reached. This is mathematically enforced by the blockchain - no human can override it.
+
+**Reentrancy Protection:**
+Clarity's design prevents reentrancy attacks that plague Solidity contracts. Functions complete fully before external calls.
+
+**Access Control:**
+Only authorized principals can call sensitive functions:
+- Only guest/host can cancel bookings
+- Only contract owner can resolve disputes
+- Only booking participants can submit reviews
+
+### Immutability
+
+Once deployed, contract logic cannot be changed. This ensures:
+- No backdoors or hidden changes
+- Rules are permanent and predictable
+- No "terms and conditions" updates that screw users
+
+However, contract owner address is stored as a variable and can be transferred (useful for transitioning to DAO governance).
+
+## Cross-Contract Communication
+
+Contracts can call each other's public functions:
+
+Example: Reputation contract verifies booking completion by calling escrow contract:
+```clarity
+(contract-call? .stackstay-escrow get-booking booking-id)
+```
+
+This returns booking data to verify:
+- Booking exists
+- Status is "completed"
+- Caller is actually guest or host
+
+## Error Handling
+
+Contracts use error codes for different failure scenarios:
+
+**Escrow Contract (100-series):**
+- u100: Not authorized
+- u101: Property not found
+- u102: Already exists
+- u103: Invalid amount
+- u104: Not available
+- u105: Booking not found
+
+**Reputation Contract (200-series):**
+- u200: Not authorized
+- u201: Booking not found
+- u202: Already reviewed
+- u203: Invalid rating
+- u204: Booking not completed
+- u205: Review not found
+
+**Disputes Contract (300-series):**
+- u300: Not authorized
+- u301: Booking not found
+- u302: Dispute not found
+- u303: Dispute already exists
+- u304: Dispute already resolved
+- u305: Invalid refund percentage
+
+## Block Height vs Calendar Dates
+
+Smart contracts use block heights instead of calendar dates because:
+1. Contracts can't access real-world time
+2. Block heights are monotonically increasing (never go backwards)
+3. More reliable for blockchain consensus
+
+**Conversion:**
+- 1 block ≈ 10 minutes
+- 1 hour ≈ 6 blocks
+- 1 day ≈ 144 blocks
+- 1 week ≈ 1,008 blocks
+
+Frontend JavaScript handles date-to-block-height conversion automatically.
+
+## Storage Optimization
+
+To minimize on-chain storage costs:
+- Property photos stored on IPFS (decentralized file storage)
+- Only IPFS hash stored on-chain
+- Detailed property info in IPFS JSON metadata
+- Blockchain only stores critical data (IDs, addresses, amounts, hashes)
+
+## Future Upgrades
+
+Planned improvements (requires deploying new contract versions):
+
+**V2 Features:**
+- Multi-signature escrow for high-value bookings
+- Installment payments for long-term stays
+- Automatic price adjustments based on demand
+- Insurance pool for covered damages
+
+**V3 Features:**
+- DAO governance (community votes on dispute resolutions)
+- Cross-chain bridges (accept BTC, ETH directly)
+- NFT-based loyalty program
+- Decentralized identity integration
+
+Note: Current contracts remain functional. Users can choose which version to use.
+
+## Integration Guide for Developers
+
+**Connecting to Contracts:**
+
+JavaScript (using @stacks/transactions):
+```javascript
+import { callReadOnlyFunction, contractPrincipalCV, uintCV } from '@stacks/transactions';
+
+// Read property data
+const propertyData = await callReadOnlyFunction({
+  contractAddress: 'SP2...',
+  contractName: 'stackstay-escrow',
+  functionName: 'get-property',
+  functionArgs: [uintCV(propertyId)],
+  network: new StacksMainnet()
+});
+```
+
+**Executing Transactions:**
+```javascript
+import { makeContractCall } from '@stacks/transactions';
+
+// Book a property
+const txOptions = {
+  contractAddress: 'SP2...',
+  contractName: 'stackstay-escrow',
+  functionName: 'book-property',
+  functionArgs: [
+    uintCV(propertyId),
+    uintCV(checkInBlock),
+    uintCV(checkOutBlock),
+    uintCV(numNights)
+  ],
+  postConditions: [], // Add STX transfer post-condition for security
+  network: new StacksMainnet(),
+  anchorMode: AnchorMode.Any,
+};
+
+const transaction = await makeContractCall(txOptions);
+```
+
+## Testing on Testnet
+
+Before mainnet deployment, test contracts on Stacks testnet:
+
+**Testnet Details:**
+- Faucet: Get free testnet STX at testnet-faucet.stacks.org
+- Explorer: explorer.hiro.so/?chain=testnet
+- API: api.testnet.hiro.so
+
+**Deployment Process:**
+1. Write contracts in Clarity
+2. Test locally with Clarinet
+3. Deploy to testnet
+4. Test all functions with real transactions
+5. Audit code (optional but recommended)
+6. Deploy to mainnet
+
+## Contract Addresses
+
+**Mainnet:**
+- Escrow: [To be deployed]
+- Reputation: [To be deployed]
+- Disputes: [To be deployed]
+
+**Testnet:**
+- Escrow: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stackstay-escrow
+- Reputation: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stackstay-reputation
+- Disputes: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stackstay-disputes
+
+## Audit and Security
+
+**Security Measures:**
+- Open-source code (public GitHub repository)
+- Clarity language prevents common vulnerabilities (reentrancy, integer overflow)
+- Third-party audit by [Auditor Name] - [Date]
+- Bug bounty program (report vulnerabilities for rewards)
+
+**Reported Vulnerabilities:** None to date
+
+**Recommended Security Practices:**
+- Always verify contract addresses before interacting
+- Use post-conditions to prevent unexpected token transfers
+- Never approve more funds than necessary
+- Test on testnet before mainnet transactions

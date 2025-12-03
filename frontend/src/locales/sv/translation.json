@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "home": "Hem",
+    "properties": "Fastigheter",
+    "myBookings": "Mina Bokningar",
+    "history": "Historik",
+    "connectWallet": "Anslut Plånbok"
+  },
+  "hero": {
+    "badge": "Decentraliserad Uthyrningsplattform",
+    "title": "Decentraliserade",
+    "titleHighlight": "Semesteruthyrningar",
+    "subtitle": "Boka unika vistelser direkt med värdar med smarta kontrakt på Stacks blockchain. Inga mellanhänder, lägre avgifter och fullständig transparens.",
+    "exploreButton": "Utforska Fastigheter",
+    "learnButton": "Läs Mer",
+    "stats": {
+      "properties": "Fastigheter",
+      "countries": "Länder",
+      "satisfaction": "Tillfredsställelse"
+    }
+  },
+  "footer": {
+    "tagline": "Decentraliserat Boende",
+    "description": "Decentraliserade semesteruthyrningar på Stacks blockchain. Boka unika vistelser med fullständig transparens.",
+    "platform": "Plattform",
+    "browseProperties": "Bläddra Fastigheter",
+    "aboutUs": "Om Oss",
+    "howItWorks": "Hur Det Fungerar",
+    "faq": "Vanliga Frågor",
+    "support": "Support",
+    "helpCenter": "Hjälpcenter",
+    "contactUs": "Kontakta Oss",
+    "privacy": "Integritetspolicy",
+    "terms": "Användarvillkor",
+    "connect": "Anslut",
+    "copyright": "© 2025 StackNStay. Alla rättigheter förbehållna.",
+    "builtOn": "Byggd på",
+    "blockchain": "Stacks Blockchain"
+  },
+  "ai": {
+    "tooltip": "Fråga AI-Assistent",
+    "subtitle": "Få Omedelbar Hjälp"
+  },
+  "common": {
+    "scrollToTop": "Scrolla Till Toppen"
+  }
+}

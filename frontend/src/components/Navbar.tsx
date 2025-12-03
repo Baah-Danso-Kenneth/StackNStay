@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Wallet, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,6 +11,7 @@ const Navbar = () => {
   const isHome = location.pathname === "/";
   const { theme, setTheme } = useTheme();
   const { userData, connectWallet, disconnectWallet } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -35,7 +37,7 @@ const Navbar = () => {
                 StackNstay
               </span>
               <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">
-                Decentralized Living
+                {t('footer.tagline')}
               </span>
             </div>
           </Link>
@@ -46,15 +48,15 @@ const Navbar = () => {
               to="/"
               className="text-sm font-medium text-foreground/80 hover:text-foreground transition-smooth relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-primary after:transition-smooth"
             >
-              Home
+              {t('nav.home')}
             </Link>
             <Link
               to="/properties"
               className="text-sm font-medium text-foreground/80 hover:text-foreground transition-smooth relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-primary after:transition-smooth"
             >
-              Properties
+              {t('nav.properties')}
             </Link>
-            
+
             {/* Authenticated-only nav items */}
             {userData && (
               <>
@@ -62,13 +64,13 @@ const Navbar = () => {
                   to="/my-bookings"
                   className="text-sm font-medium text-foreground/80 hover:text-foreground transition-smooth relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-primary after:transition-smooth"
                 >
-                  My Bookings
+                  {t('nav.myBookings')}
                 </Link>
                 <Link
                   to="/history"
                   className="text-sm font-medium text-foreground/80 hover:text-foreground transition-smooth relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-primary after:transition-smooth"
                 >
-                  History
+                  {t('nav.history')}
                 </Link>
               </>
             )}
@@ -76,6 +78,16 @@ const Navbar = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            {userData && (
+              <Link to="/host/dashboard">
+                <Button
+                  variant="ghost"
+                  className="hidden md:flex text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted/50"
+                >
+                  Switch to Hosting
+                </Button>
+              </Link>
+            )}
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -100,7 +112,7 @@ const Navbar = () => {
                 className="gradient-hero text-primary-foreground shadow-elegant hover:shadow-glow transition-smooth font-semibold"
               >
                 <Wallet className="w-4 h-4 mr-2" />
-                Connect Wallet
+                {t('nav.connectWallet')}
               </Button>
             )}
           </div>
