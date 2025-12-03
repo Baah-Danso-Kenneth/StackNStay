@@ -58,7 +58,7 @@ const PropertyDetail = () => {
   const navigate = useNavigate();
   const { userData } = useAuth();
   const { toast } = useToast();
-  
+
   // Booking state
   const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
   const [checkOut, setCheckOut] = useState<Date | undefined>(undefined);
@@ -89,8 +89,8 @@ const PropertyDetail = () => {
         metadata.images && metadata.images.length > 0
           ? metadata.images.map(getIPFSImageUrl)
           : [
-              "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
-            ];
+            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+          ];
 
       // Map simple amenities (string[]) to objects with an icon + label
       const amenities =
@@ -126,6 +126,17 @@ const PropertyDetail = () => {
       toast({
         title: "Wallet Not Connected",
         description: "Please connect your wallet to book this property",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if user is trying to book their own property
+    const userAddress = userData.profile.stxAddress.testnet;
+    if (userAddress === property.owner) {
+      toast({
+        title: "Cannot Book Own Property",
+        description: "You cannot book a property that you own",
         variant: "destructive",
       });
       return;
@@ -171,7 +182,7 @@ const PropertyDetail = () => {
 
     try {
       const numNights = calculateNights(checkIn, checkOut);
-      
+
       // Convert dates to block heights (approximate)
       // In production, you'd fetch current block height from API
       const currentBlockHeight = 100000; // Placeholder - should fetch from API
@@ -204,7 +215,7 @@ const PropertyDetail = () => {
         ...contractCallOptions,
         onFinish: async (data) => {
           console.log('✅ Booking transaction submitted:', data);
-          
+
           try {
             toast({
               title: "Transaction Submitted",
@@ -240,9 +251,22 @@ const PropertyDetail = () => {
                         break;
                       }
                     }
-                  } else if (txStatus.tx_status === 'abort_by_response' || 
-                           txStatus.tx_status === 'abort_by_post_condition') {
-                    throw new Error(`Transaction failed: ${txStatus.tx_status}`);
+                  } else if (txStatus.tx_status === 'abort_by_response' ||
+                    txStatus.tx_status === 'abort_by_post_condition') {
+                    // Provide more helpful error messages
+                    let errorMessage = 'Transaction failed';
+                    if (txStatus.tx_result && txStatus.tx_result.repr) {
+                      if (txStatus.tx_result.repr.includes('u100')) {
+                        errorMessage = 'Not authorized - you may be trying to book your own property';
+                      } else if (txStatus.tx_result.repr.includes('u101')) {
+                        errorMessage = 'Property not found';
+                      } else if (txStatus.tx_result.repr.includes('u103')) {
+                        errorMessage = 'Invalid amount or dates';
+                      } else if (txStatus.tx_result.repr.includes('u104')) {
+                        errorMessage = 'Property not available';
+                      }
+                    }
+                    throw new Error(errorMessage);
                   }
                 }
               } catch (pollError) {
@@ -431,7 +455,7 @@ const PropertyDetail = () => {
               </div>
 
               {/* Highlights */}
-      {/* You can later add on-chain highlights or reviews here */}
+              {/* You can later add on-chain highlights or reviews here */}
             </div>
 
             {/* Booking Card */}
@@ -461,13 +485,13 @@ const PropertyDetail = () => {
                       >
                         <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
                         <div className="flex flex-col items-start">
-                      <span className="font-semibold">Check-in</span>
+                          <span className="font-semibold">Check-in</span>
                           {checkIn ? (
                             <span className="text-sm">{format(checkIn, "PPP")}</span>
                           ) : (
                             <span className="text-sm text-muted-foreground">Select date</span>
                           )}
-                    </div>
+                        </div>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -493,13 +517,13 @@ const PropertyDetail = () => {
                       >
                         <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
                         <div className="flex flex-col items-start">
-                      <span className="font-semibold">Check-out</span>
+                          <span className="font-semibold">Check-out</span>
                           {checkOut ? (
                             <span className="text-sm">{format(checkOut, "PPP")}</span>
                           ) : (
                             <span className="text-sm text-muted-foreground">Select date</span>
                           )}
-                    </div>
+                        </div>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -526,7 +550,7 @@ const PropertyDetail = () => {
                         <div className="flex items-center gap-3">
                           <Users className="h-5 w-5 text-primary" />
                           <div className="flex flex-col items-start">
-                      <span className="font-semibold">Guests</span>
+                            <span className="font-semibold">Guests</span>
                             <span className="text-sm text-muted-foreground">{guests} {guests === 1 ? 'guest' : 'guests'}</span>
                           </div>
                         </div>
@@ -554,9 +578,9 @@ const PropertyDetail = () => {
                           >
                             +
                           </Button>
-                    </div>
+                        </div>
                         <p className="text-xs text-muted-foreground">Max {property.maxGuests} guests</p>
-                  </div>
+                      </div>
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -569,19 +593,19 @@ const PropertyDetail = () => {
                       const baseCost = (property.pricePerNightMicroSTX / 1_000_000) * numNights;
                       const platformFee = (baseCost * PLATFORM_FEE_BPS) / BPS_DENOMINATOR;
                       const total = baseCost + platformFee;
-                      
+
                       return (
                         <>
-                  <div className="flex justify-between text-sm">
+                          <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">{property.priceStx} STX × {numNights} {numNights === 1 ? 'night' : 'nights'}</span>
                             <span className="font-medium">{baseCost.toFixed(2)} STX</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
+                          </div>
+                          <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Service fee ({PLATFORM_FEE_BPS / 100}%)</span>
                             <span className="font-medium">{platformFee.toFixed(2)} STX</span>
-                  </div>
+                          </div>
                           <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
-                    <span>Total</span>
+                            <span>Total</span>
                             <span>{total.toFixed(2)} STX</span>
                           </div>
                         </>
@@ -592,16 +616,18 @@ const PropertyDetail = () => {
 
                 <Button
                   className="w-full gradient-hero text-primary-foreground font-semibold shadow-elegant hover:shadow-glow transition-smooth h-14 text-lg rounded-xl mb-4"
-                  disabled={!checkIn || !checkOut || !property.active || isBooking || !userData}
+                  disabled={!checkIn || !checkOut || !property.active || isBooking || !userData || (userData && userData.profile.stxAddress.testnet === property.owner)}
                   onClick={handleBooking}
                 >
                   {!userData
                     ? "Connect Wallet to Book"
-                    : !property.active
-                    ? "Property Not Available"
-                    : isBooking
-                    ? "Processing..."
-                    : "Book Now with Wallet"}
+                    : userData.profile.stxAddress.testnet === property.owner
+                      ? "Cannot Book Own Property"
+                      : !property.active
+                        ? "Property Not Available"
+                        : isBooking
+                          ? "Processing..."
+                          : "Book Now with Wallet"}
                 </Button>
 
                 {!userData && (
