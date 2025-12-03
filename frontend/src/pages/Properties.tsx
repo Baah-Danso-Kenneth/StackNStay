@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
-import SearchBar from "@/components/SearchBar";
+import SearchBar, { SearchFilters } from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import NoProperties from "@/components/NoProperties";
 import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllProperties } from "@/lib/escrow";
 import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
@@ -13,14 +13,27 @@ import "@/lib/debug"; // Load blockchain debug utilities
 
 const Properties = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  
+  // Search filters state
+  const [filters, setFilters] = useState<SearchFilters>({
+    location: "",
+    guests: 1,
+    priceRange: [0, 1000],
+    checkIn: undefined,
+    checkOut: undefined,
+    bedrooms: undefined,
+    bathrooms: undefined,
+    amenities: [],
+    searchText: "",
+  });
 
   const { data: properties = [], isLoading, error, refetch } = useQuery({
     queryKey: ['properties'],
     queryFn: async () => {
       console.log('🔍 Fetching properties from blockchain...');
 
-      // Fetch properties from blockchain
-      const blockchainProperties = await getAllProperties(20);
+      // Fetch properties from blockchain - increased limit to get all properties
+      const blockchainProperties = await getAllProperties(200);
       console.log(`✅ Found ${blockchainProperties.length} properties on blockchain`);
 
       // Enrich each property with IPFS metadata
@@ -33,10 +46,37 @@ const Properties = () => {
             return null;
           }
 
-          // Get the first image URL
-          const coverImage = metadata.images && metadata.images.length > 0
-            ? getIPFSImageUrl(metadata.images[0])
-            : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+          // Validate and convert pricePerNight to a number
+          // pricePerNight is stored in microSTX on-chain
+          let pricePerNight: number;
+          if (typeof prop.pricePerNight === 'number' && !isNaN(prop.pricePerNight) && prop.pricePerNight > 0) {
+            pricePerNight = prop.pricePerNight;
+          } else {
+            console.warn(`⚠️ Invalid pricePerNight for property #${prop.id}:`, prop.pricePerNight);
+            // Fallback to 0 if invalid (will show as 0.00 STX)
+            pricePerNight = 0;
+          }
+
+          console.log(`💰 Property #${prop.id} - pricePerNight: ${pricePerNight} microSTX (${pricePerNight / 1_000_000} STX)`);
+
+          // Get the first image URL - convert IPFS URI to HTTP gateway URL
+          let coverImage: string;
+          if (metadata.images && metadata.images.length > 0) {
+            coverImage = getIPFSImageUrl(metadata.images[0]);
+            console.log(`🖼️ Property #${prop.id} - Cover image URL:`, coverImage);
+          } else {
+            coverImage = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+            console.warn(`⚠️ Property #${prop.id} - No images in metadata`);
+          }
+
+          // Convert all image IPFS URIs to HTTP URLs
+          const imageUrls = metadata.images 
+            ? metadata.images.map((imgUri: string) => {
+                const httpUrl = getIPFSImageUrl(imgUri);
+                console.log(`🖼️ Property #${prop.id} - Image URL: ${imgUri} -> ${httpUrl}`);
+                return httpUrl;
+              })
+            : [];
 
           return {
             id: prop.id,
@@ -45,13 +85,14 @@ const Properties = () => {
             description: metadata.description,
             location_city: metadata.location.split(',')[0]?.trim() || metadata.location,
             location_country: metadata.location.split(',')[1]?.trim() || '',
-            price_per_night: prop.pricePerNight,
+            // Pass the validated price in microSTX
+            price_per_night: pricePerNight,
             max_guests: metadata.maxGuests,
             bedrooms: metadata.bedrooms,
             bathrooms: metadata.bathrooms,
             amenities: metadata.amenities,
             cover_image: coverImage,
-            images: metadata.images.map(getIPFSImageUrl),
+            images: imageUrls,
             active: prop.active,
             owner: prop.owner,
           };
@@ -69,6 +110,103 @@ const Properties = () => {
   const handleRefresh = () => {
     console.log('🔄 Manually refreshing properties...');
     refetch();
+  };
+
+  // Filter properties based on search criteria
+  const filteredProperties = useMemo(() => {
+    if (!properties || properties.length === 0) return [];
+
+    return properties.filter((property: any) => {
+      // Search text filter (title, description, location)
+      if (filters.searchText) {
+        const searchLower = filters.searchText.toLowerCase();
+        const matchesSearch =
+          property.title?.toLowerCase().includes(searchLower) ||
+          property.description?.toLowerCase().includes(searchLower) ||
+          property.location_city?.toLowerCase().includes(searchLower) ||
+          property.location_country?.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Location filter
+      if (filters.location) {
+        const locationLower = filters.location.toLowerCase();
+        const matchesLocation =
+          property.location_city?.toLowerCase().includes(locationLower) ||
+          property.location_country?.toLowerCase().includes(locationLower);
+        if (!matchesLocation) return false;
+      }
+
+      // Guests filter
+      if (filters.guests > 1) {
+        if (!property.max_guests || property.max_guests < filters.guests) {
+          return false;
+        }
+      }
+
+      // Price range filter (convert microSTX to STX)
+      const priceInSTX = property.price_per_night / 1_000_000;
+      if (priceInSTX < filters.priceRange[0] || priceInSTX > filters.priceRange[1]) {
+        return false;
+      }
+
+      // Bedrooms filter
+      if (filters.bedrooms !== undefined) {
+        if (!property.bedrooms || property.bedrooms < filters.bedrooms) {
+          return false;
+        }
+      }
+
+      // Bathrooms filter
+      if (filters.bathrooms !== undefined) {
+        if (!property.bathrooms || property.bathrooms < filters.bathrooms) {
+          return false;
+        }
+      }
+
+      // Amenities filter (all selected amenities must be present)
+      if (filters.amenities.length > 0) {
+        const propertyAmenities = (property.amenities || []).map((a: string) => a.toUpperCase());
+        const hasAllAmenities = filters.amenities.every((amenity) =>
+          propertyAmenities.includes(amenity.toUpperCase())
+        );
+        if (!hasAllAmenities) return false;
+      }
+
+      // Only show active properties
+      if (!property.active) return false;
+
+      return true;
+    });
+  }, [properties, filters]);
+
+  // Count active filters
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filters.searchText) count++;
+    if (filters.location) count++;
+    if (filters.guests > 1) count++;
+    if (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000) count++;
+    if (filters.bedrooms !== undefined) count++;
+    if (filters.bathrooms !== undefined) count++;
+    if (filters.amenities.length > 0) count++;
+    if (filters.checkIn) count++;
+    if (filters.checkOut) count++;
+    return count;
+  }, [filters]);
+
+  const clearFilters = () => {
+    setFilters({
+      location: "",
+      guests: 1,
+      priceRange: [0, 1000],
+      checkIn: undefined,
+      checkOut: undefined,
+      bedrooms: undefined,
+      bathrooms: undefined,
+      amenities: [],
+      searchText: "",
+    });
   };
 
   if (isLoading) return <Loader />;
@@ -105,16 +243,40 @@ const Properties = () => {
 
           {/* Search Bar */}
           <div className="mb-12 animate-slide-up">
-            <SearchBar />
+            <SearchBar
+              filters={filters}
+              onFiltersChange={setFilters}
+              activeFiltersCount={activeFiltersCount}
+              onClearFilters={clearFilters}
+            />
           </div>
 
-          {properties.length > 0 ? (
+          {/* Results Summary */}
+          {filteredProperties.length !== properties.length && (
+            <div className="mb-8 animate-fade-in">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-sm">
+                  Showing {filteredProperties.length} of {properties.length} properties
+                </span>
+              </div>
+            </div>
+          )}
+
+          {filteredProperties.length > 0 ? (
             <>
               {/* View Toggle & Results Count */}
               <div className="flex items-center justify-between mb-8 animate-fade-in">
                 <div>
-                  <h2 className="text-2xl font-bold">{properties.length} Properties Available</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Verified listings on the blockchain</p>
+                  <h2 className="text-2xl font-bold">
+                    {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'} Available
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {activeFiltersCount > 0 
+                      ? `Filtered from ${properties.length} verified listings`
+                      : 'Verified listings on the blockchain'
+                    }
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2 bg-muted/50 rounded-xl p-1">
@@ -142,25 +304,33 @@ const Properties = () => {
                 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                 : "grid-cols-1"
                 } animate-scale-in`}>
-                {properties.map((property: any, index: number) => (
-                  <div
-                    key={property.id}
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <PropertyCard
-                      id={property.blockchain_id}
-                      title={property.title || "Untitled Property"}
-                      location={`${property.location_city || ""}, ${property.location_country || ""}`}
-                      price={`${(property.price_per_night / 1_000_000).toFixed(2)} STX`}
-                      rating={4.8} // Mock rating
-                      reviews={12} // Mock reviews
-                      guests={property.max_guests || 2}
-                      imageUrl={property.cover_image || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"}
-                      featured={index === 0}
-                    />
-                  </div>
-                ))}
+                {filteredProperties.map((property: any, index: number) => {
+                  // Debug: log price value before passing to PropertyCard
+                  if (index === 0) {
+                    console.log('🔍 Debug - Property price_per_night:', property.price_per_night, 'Type:', typeof property.price_per_night);
+                  }
+                  
+                  return (
+                    <div
+                      key={property.id}
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <PropertyCard
+                        id={property.blockchain_id}
+                        title={property.title || "Untitled Property"}
+                        location={`${property.location_city || ""}, ${property.location_country || ""}`}
+                        // Pass raw microSTX value and let PropertyCard handle formatting
+                        price={property.price_per_night}
+                        rating={4.8} // Mock rating
+                        reviews={12} // Mock reviews
+                        guests={property.max_guests || 2}
+                        imageUrl={property.cover_image || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"}
+                        featured={index === 0}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Load More */}

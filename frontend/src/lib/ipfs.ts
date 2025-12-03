@@ -8,6 +8,8 @@ const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
 const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT;
 const IPFS_GATEWAY = import.meta.env.VITE_IPFS_GATEWAY_URL || "https://azure-fantastic-loon-956.mypinata.cloud/ipfs";
+// Fallback to Pinata public gateway if dedicated gateway fails
+const PINATA_PUBLIC_GATEWAY = "https://gateway.pinata.cloud/ipfs";
 
 // API endpoint
 const PINATA_API = "https://api.pinata.cloud";
@@ -29,24 +31,42 @@ export interface PropertyMetadata {
  * Handles both formats:
  * - ipfs://QmXxx... -> https://gateway.pinata.cloud/ipfs/QmXxx...
  * - QmXxx... (bare hash) -> https://gateway.pinata.cloud/ipfs/QmXxx...
+ * 
+ * Uses the configured gateway (dedicated Pinata gateway) with fallback to public gateway
  */
-export function ipfsToHttp(ipfsUri: string): string {
-    if (!ipfsUri) return '';
+export function ipfsToHttp(ipfsUri: string, useFallback: boolean = false): string {
+    if (!ipfsUri) {
+        console.warn('⚠️ ipfsToHttp: Empty IPFS URI provided');
+        return '';
+    }
 
+    let hash: string;
+    
     // Remove ipfs:// prefix if present
     if (ipfsUri.startsWith('ipfs://')) {
-        const hash = ipfsUri.replace('ipfs://', '');
-        return `${IPFS_GATEWAY}/${hash}`;
-    }
-
-    // If it's already an HTTP URL, return as is
-    if (ipfsUri.startsWith('http://') || ipfsUri.startsWith('https://')) {
+        hash = ipfsUri.replace('ipfs://', '');
+    } else if (ipfsUri.startsWith('http://') || ipfsUri.startsWith('https://')) {
+        // If it's already an HTTP URL, return as is
         return ipfsUri;
+    } else {
+        // Otherwise, treat it as a bare IPFS hash
+        hash = ipfsUri;
     }
 
-    // Otherwise, treat it as a bare IPFS hash
-    // This handles cases where the blockchain stores just "Qm..." or "baf..."
-    return `${IPFS_GATEWAY}/${ipfsUri}`;
+    // Choose gateway (use fallback if requested, otherwise use configured gateway)
+    const gateway = useFallback ? PINATA_PUBLIC_GATEWAY : IPFS_GATEWAY;
+    
+    // Ensure gateway URL doesn't have trailing slash, and hash doesn't have leading slash
+    const cleanGateway = gateway.endsWith('/') ? gateway.slice(0, -1) : gateway;
+    const cleanHash = hash.startsWith('/') ? hash.slice(1) : hash;
+    
+    const httpUrl = `${cleanGateway}/${cleanHash}`;
+    
+    if (!useFallback) {
+        console.log(`🖼️ Converting IPFS URI: ${ipfsUri.substring(0, 50)}... -> ${httpUrl}`);
+    }
+    
+    return httpUrl;
 }
 
 /**
@@ -89,9 +109,22 @@ export async function fetchIPFSMetadata(ipfsUri: string): Promise<PropertyMetada
 
 /**
  * Get image URL from IPFS
+ * Converts ipfs:// URIs to HTTP gateway URLs
  */
 export function getIPFSImageUrl(ipfsUri: string): string {
-    return ipfsToHttp(ipfsUri);
+    if (!ipfsUri) {
+        console.warn('⚠️ getIPFSImageUrl: Empty IPFS URI provided');
+        return '';
+    }
+    
+    const httpUrl = ipfsToHttp(ipfsUri);
+    
+    // Log for debugging
+    if (httpUrl) {
+        console.log(`🖼️ Image URL conversion: ${ipfsUri.substring(0, 50)}... -> ${httpUrl.substring(0, 80)}...`);
+    }
+    
+    return httpUrl;
 }
 
 /**

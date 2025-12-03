@@ -31,20 +31,30 @@ const PropertyCard = ({
   // Format price - handle both string and number formats
 
   const formatPrice = () => {
-  // If price is a string like "5 STX"
-  if (typeof price === "string") {
-    return price;
-  }
+    // If price is a string like "5 STX", return as-is
+    if (typeof price === "string") {
+      return price;
+    }
 
-  // If price is a real number
-  if (typeof price === "number" && !isNaN(price)) {
+    // If price is undefined, null, or not a number, return fallback
+    if (price === undefined || price === null || typeof price !== "number") {
+      return "Price N/A";
+    }
+
+    // If price is NaN or not a finite number, return fallback
+    if (isNaN(price) || !isFinite(price)) {
+      return "Price N/A";
+    }
+
+    // Price is in microSTX, convert to STX
+    // Ensure we don't divide by zero and handle very small values
+    if (price === 0) {
+      return "0.00 STX";
+    }
+
     const stxAmount = (price / 1_000_000).toFixed(2);
     return `${stxAmount} STX`;
-  }
-
-  // If price is invalid
-  return "Price N/A";
-};
+  };
 
 
   const formattedPrice = formatPrice();

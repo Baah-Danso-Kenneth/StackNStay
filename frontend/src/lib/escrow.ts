@@ -150,6 +150,9 @@ export async function getProperty(propertyId: number): Promise<Property | null> 
         }
 
         const data = cvToValue(result.value);
+        
+        // Debug: log the raw data structure
+        console.log('🔍 Raw property data from blockchain:', JSON.stringify(data, null, 2));
 
         // Extract the metadata-uri as a string
         // cvToValue returns objects for complex types, we need to handle strings specially
@@ -165,13 +168,84 @@ export async function getProperty(propertyId: number): Promise<Property | null> 
             metadataUri = String(metadataUri || '');
         }
 
+        // Extract price-per-night - handle different formats
+        // Clarity uint values might come as bigint, string, or wrapped in object
+        let pricePerNight = data["price-per-night"];
+        
+        // Handle wrapped value
+        if (pricePerNight && typeof pricePerNight === 'object' && 'value' in pricePerNight) {
+            pricePerNight = pricePerNight.value;
+        }
+        
+        // Handle bigint (common in Clarity)
+        if (typeof pricePerNight === 'bigint') {
+            pricePerNight = Number(pricePerNight);
+        }
+        
+        // Handle string representation
+        if (typeof pricePerNight === 'string') {
+            pricePerNight = parseInt(pricePerNight, 10);
+        }
+        
+        const pricePerNightNum = Number(pricePerNight);
+        if (isNaN(pricePerNightNum)) {
+            console.error('❌ Invalid price-per-night value:', data["price-per-night"], 'Extracted:', pricePerNight, 'Type:', typeof pricePerNight);
+            console.error('❌ Full data keys:', Object.keys(data));
+        } else {
+            console.log(`✅ Property #${propertyId} - Extracted pricePerNight: ${pricePerNightNum} microSTX (${pricePerNightNum / 1_000_000} STX)`);
+        }
+
+        // Extract location-tag - handle different formats
+        let locationTag = data["location-tag"];
+        if (locationTag && typeof locationTag === 'object' && 'value' in locationTag) {
+            locationTag = locationTag.value;
+        }
+        if (typeof locationTag === 'bigint') {
+            locationTag = Number(locationTag);
+        }
+        if (typeof locationTag === 'string') {
+            locationTag = parseInt(locationTag, 10);
+        }
+        const locationTagNum = Number(locationTag);
+
+        // Extract created-at - handle different formats
+        let createdAt = data["created-at"];
+        if (createdAt && typeof createdAt === 'object' && 'value' in createdAt) {
+            createdAt = createdAt.value;
+        }
+        if (typeof createdAt === 'bigint') {
+            createdAt = Number(createdAt);
+        }
+        if (typeof createdAt === 'string') {
+            createdAt = parseInt(createdAt, 10);
+        }
+        const createdAtNum = Number(createdAt);
+
+        // Extract owner - handle principal type
+        let owner = data.owner;
+        if (owner && typeof owner === 'object' && 'value' in owner) {
+            owner = owner.value;
+        }
+        if (typeof owner !== 'string') {
+            owner = String(owner || '');
+        }
+
+        // Extract active - handle boolean
+        let active = data.active;
+        if (active && typeof active === 'object' && 'value' in active) {
+            active = active.value;
+        }
+        if (typeof active !== 'boolean') {
+            active = Boolean(active);
+        }
+
         return {
-            owner: data.owner,
-            pricePerNight: Number(data["price-per-night"]),
-            locationTag: Number(data["location-tag"]),
+            owner: owner,
+            pricePerNight: pricePerNightNum,
+            locationTag: locationTagNum,
             metadataUri: metadataUri,
-            active: data.active,
-            createdAt: Number(data["created-at"]),
+            active: active,
+            createdAt: createdAtNum,
         };
     } catch (error) {
         console.error("Error fetching property:", error);
@@ -254,12 +328,16 @@ export async function canReleasePayment(bookingId: number): Promise<boolean> {
  * Get all properties (utility function)
  * Note: This requires tracking property count in the contract or using events
  * For now, we'll implement a basic version that tries to fetch properties sequentially
+ * This version continues through gaps in property IDs to find all properties
  */
-export async function getAllProperties(maxProperties: number = 100): Promise<(Property & { id: number })[]> {
+export async function getAllProperties(maxProperties: number = 200): Promise<(Property & { id: number })[]> {
     try {
         const properties: (Property & { id: number })[] = [];
+        let consecutiveNulls = 0;
+        const maxConsecutiveNulls = 10; // Stop after 10 consecutive nulls
 
         // Try to fetch properties up to maxProperties
+        // Continue through gaps to find all properties
         for (let i = 0; i < maxProperties; i++) {
             const property = await getProperty(i);
 
@@ -268,9 +346,14 @@ export async function getAllProperties(maxProperties: number = 100): Promise<(Pr
                     id: i,
                     ...property,
                 });
+                consecutiveNulls = 0; // Reset counter when we find a property
             } else {
-                // If we hit a null, we've likely reached the end
-                break;
+                consecutiveNulls++;
+                // Only stop if we hit many consecutive nulls (likely reached the end)
+                if (consecutiveNulls >= maxConsecutiveNulls) {
+                    console.log(`⏹️ Stopped at property ID ${i} after ${maxConsecutiveNulls} consecutive nulls`);
+                    break;
+                }
             }
         }
 

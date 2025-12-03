@@ -37,6 +37,8 @@ export function useAuth() {
     const disconnectWallet = () => {
         userSession.signUserOut();
         setUserData(null);
+        // Redirect to home screen after logout
+        window.location.href = '/';
     }
 
 
