@@ -78,7 +78,8 @@ const Properties = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Error loading properties</h2>
-          <p className="text-muted-foreground">{error.message}</p>
+          <p className="text-muted-foreground">{(error as Error).message}</p>
+          <Button onClick={() => refetch()} className="mt-4">Try Again</Button>
         </div>
       </div>
     );

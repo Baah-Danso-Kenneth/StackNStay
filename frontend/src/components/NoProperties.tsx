@@ -31,7 +31,7 @@ const NoProperties = ({ variant = "general" }: NoPropertiesProps) => {
             description: "You haven't listed any properties yet. Start earning by listing your first property on the blockchain!",
             action: {
                 label: "Create Your First Listing",
-                onClick: () => navigate("/host/create"),
+                onClick: () => navigate("/host/create-listing"),
             },
         },
     };
