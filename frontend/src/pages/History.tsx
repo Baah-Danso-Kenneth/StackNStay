@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 
 const History = () => {
+    const { t } = useTranslation();
     const { userData } = useAuth();
     const [filter, setFilter] = useState<"all" | "confirmed" | "completed" | "cancelled">("all");
 

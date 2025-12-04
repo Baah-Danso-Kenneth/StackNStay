@@ -1,47 +1,198 @@
 {
     "nav": {
-        "home": "Главная",
-        "properties": "Недвижимость",
-        "myBookings": "Мои Бронирования",
-        "history": "История",
-        "connectWallet": "Подключить Кошелек"
+        "home": "Home",
+        "properties": "Properties",
+        "myBookings": "My Bookings",
+        "history": "History",
+        "connectWallet": "Connect Wallet"
     },
     "hero": {
-        "badge": "Децентрализованная Платформа Аренды",
-        "title": "Децентрализованная",
-        "titleHighlight": "Аренда Жилья",
-        "subtitle": "Бронируйте уникальное жилье напрямую у хозяев с помощью смарт-контрактов на блокчейне Stacks. Без посредников, низкие комиссии и полная прозрачность.",
-        "exploreButton": "Исследовать Недвижимость",
-        "learnButton": "Узнать Больше",
+        "badge": "Decentralized Rental Platform",
+        "title": "Decentralized",
+        "titleHighlight": "Vacation Rentals",
+        "subtitle": "Book unique stays directly with hosts using smart contracts on the Stacks blockchain. No intermediaries, lower fees, and complete transparency.",
+        "exploreButton": "Explore Properties",
+        "learnButton": "Learn More",
         "stats": {
-            "properties": "Объектов",
-            "countries": "Стран",
-            "satisfaction": "Удовлетворенность"
+            "properties": "Properties",
+            "countries": "Countries",
+            "satisfaction": "Satisfaction"
         }
     },
+    "features": {
+        "badge": "Why Choose StacksStay?",
+        "title": "Decentralized",
+        "titleHighlight": "Freedom",
+        "subtitle": "Experience the future of property rental with our blockchain-powered platform. Secure, transparent, and built for everyone.",
+        "instant": {
+            "badge": "Instant Setup",
+            "title": "Instant Booking",
+            "description": "Connect your wallet and book properties instantly. No intermediaries, no delays, just seamless peer-to-peer transactions."
+        },
+        "fees": {
+            "badge": "Lower Fees",
+            "title": "Minimal Fees",
+            "description": "Say goodbye to hefty platform fees. Pay only a 2% protocol fee per successful booking, with no hidden charges."
+        },
+        "global": {
+            "badge": "Global Access",
+            "title": "Borderless Travel",
+            "description": "Access properties from around the world with consistent quality standards and verified reviews stored on-chain."
+        }
+    },
+    "howItWorks": {
+        "title": "How It Works",
+        "subtitle": "Get started in three simple steps",
+        "step1": {
+            "title": "Connect Wallet",
+            "description": "Link your Stacks wallet to get started"
+        },
+        "step2": {
+            "title": "Browse Properties",
+            "description": "Find your perfect vacation rental"
+        },
+        "step3": {
+            "title": "Book Securely",
+            "description": "Complete your booking with a smart contract"
+        }
+    },
+    "faq": {
+        "title": "Common Questions",
+        "subtitle": "Everything you need to know about fees, support, and how StacksStay works.",
+        "q1": {
+            "question": "What are the platform fees?",
+            "answer": "StacksStay charges a minimal 2% platform fee on all bookings. This is significantly lower than traditional platforms (15-20%) because our smart contracts automate the process, eliminating expensive intermediaries. Example: For a 5,000 STX booking, the fee is only 100 STX."
+        },
+        "q2": {
+            "question": "My transaction is pending forever",
+            "answer": "Check the Stacks blockchain explorer with your transaction ID. Transactions usually confirm within 10-30 minutes depending on network congestion."
+        },
+        "q3": {
+            "question": "I don't have enough STX",
+            "answer": "You need enough STX to cover the booking cost plus a small transaction fee (~0.1 STX). You can buy more STX on exchanges like Coinbase, Binance, or Kraken."
+        },
+        "q4": {
+            "question": "Host isn't responding",
+            "answer": "Hosts have 24 hours to respond. If there is no response, you can cancel for a full refund (if more than 7 days before check-in)."
+        },
+        "q5": {
+            "question": "Property doesn't match listing",
+            "answer": "Take photos and raise a dispute immediately through the platform. An admin will review your case and determine a fair refund percentage based on the evidence."
+        }
+    },
+    "testimonials": {
+        "title": "What Our Users Say",
+        "subtitle": "Real experiences from our community"
+    },
     "footer": {
-        "tagline": "Децентрализованное Жилье",
-        "description": "Децентрализованная аренда жилья на блокчейне Stacks. Бронируйте уникальное жилье с полной прозрачностью.",
-        "platform": "Платформа",
-        "browseProperties": "Просмотр Недвижимости",
-        "aboutUs": "О Нас",
-        "howItWorks": "Как Это Работает",
-        "faq": "Частые Вопросы",
-        "support": "Поддержка",
-        "helpCenter": "Центр Помощи",
-        "contactUs": "Связаться С Нами",
-        "privacy": "Политика Конфиденциальности",
-        "terms": "Условия Использования",
-        "connect": "Подключить",
-        "copyright": "© 2025 StackNStay. Все права защищены.",
-        "builtOn": "Построено на",
-        "blockchain": "Блокчейн Stacks"
+        "tagline": "Decentralized Living",
+        "description": "Decentralized vacation rentals on the Stacks blockchain. Book unique stays with complete transparency.",
+        "platform": "Platform",
+        "browseProperties": "Browse Properties",
+        "aboutUs": "About Us",
+        "howItWorks": "How It Works",
+        "faq": "FAQ",
+        "support": "Support",
+        "helpCenter": "Help Center",
+        "contactUs": "Contact Us",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "connect": "Connect",
+        "copyright": "© 2025 StackNStay. All rights reserved.",
+        "builtOn": "Built on",
+        "blockchain": "Stacks Blockchain"
     },
     "ai": {
-        "tooltip": "Спросить ИИ-Ассистента",
-        "subtitle": "Получить Мгновенную Помощь"
+        "tooltip": "Ask AI Assistant",
+        "subtitle": "Get instant help"
     },
     "common": {
-        "scrollToTop": "Наверх"
+        "scrollToTop": "Scroll to top",
+        "loading": "Loading...",
+        "error": "Error",
+        "tryAgain": "Try Again",
+        "property": "Property",
+        "properties_one": "Property",
+        "properties_other": "Properties"
+    },
+    "pages": {
+        "properties": {
+            "title": "Explore Properties",
+            "subtitle": "Discover verified rental spaces from around the world",
+            "errorLoading": "Error loading properties",
+            "showingResults": "Showing {{count}} of {{total}} properties",
+            "available": "Available",
+            "filteredFrom": "Filtered from {{total}} verified listings",
+            "verifiedListings": "Verified listings on the blockchain",
+            "loadMore": "Load More Properties"
+        },
+        "profile": {
+            "title": "User Account",
+            "stats": {
+                "trips": "Trips Taken",
+                "listings": "Properties Listed",
+                "joined": "Joined",
+                "verified": "Verified"
+            },
+            "achievements": "Achievements",
+            "reviews": "Reviews",
+            "noReviews": "No reviews yet",
+            "avgRating": "Average Rating",
+            "totalReviews": "Total Reviews"
+        },
+        "history": {
+            "title": "Booking History",
+            "subtitle": "View and manage your bookings",
+            "noBookings": "No bookings yet",
+            "status": {
+                "confirmed": "Confirmed",
+                "completed": "Completed",
+                "cancelled": "Cancelled",
+                "pending": "Pending"
+            }
+        },
+        "propertyDetail": {
+            "bookNow": "Book Now",
+            "checkIn": "Check-in",
+            "checkOut": "Check-out",
+            "guests": "Guests",
+            "amenities": "Amenities",
+            "location": "Location",
+            "reviews": "Reviews",
+            "host": "Host",
+            "pricePerNight": "per night"
+        },
+        "notFound": {
+            "title": "Page Not Found",
+            "message": "The page you're looking for doesn't exist.",
+            "backHome": "Back to Home"
+        },
+        "host": {
+            "dashboard": {
+                "title": "Host Dashboard",
+                "earnings": "Total Earnings",
+                "bookings": "Active Bookings",
+                "properties": "Properties",
+                "rating": "Rating"
+            },
+            "createListing": {
+                "title": "Create New Listing",
+                "basicInfo": "Basic Information",
+                "propertyDetails": "Property Details",
+                "amenities": "Amenities",
+                "photos": "Photos",
+                "pricing": "Pricing",
+                "submit": "Create Listing",
+                "fields": {
+                    "title": "Property Title",
+                    "description": "Description",
+                    "location": "Location",
+                    "price": "Price per Night",
+                    "guests": "Max Guests",
+                    "bedrooms": "Bedrooms",
+                    "bathrooms": "Bathrooms"
+                }
+            }
+        }
     }
 }

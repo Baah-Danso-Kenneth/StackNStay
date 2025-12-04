@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import Navbar from "@/components/Navbar";
 import SearchBar, { SearchFilters } from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
@@ -12,6 +13,7 @@ import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
 import "@/lib/debug"; // Load blockchain debug utilities
 
 const Properties = () => {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Search filters state
@@ -244,9 +246,9 @@ const Properties = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Error loading properties</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('pages.properties.errorLoading')}</h2>
           <p className="text-muted-foreground">{(error as Error).message}</p>
-          <Button onClick={() => refetch()} className="mt-4">Try Again</Button>
+          <Button onClick={() => refetch()} className="mt-4">{t('common.tryAgain')}</Button>
         </div>
       </div>
     );
@@ -262,9 +264,9 @@ const Properties = () => {
           <div className="mb-12 animate-fade-in">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-5xl font-bold mb-4">Explore Properties</h1>
+                <h1 className="text-5xl font-bold mb-4">{t('pages.properties.title')}</h1>
                 <p className="text-xl text-muted-foreground">
-                  Discover verified rental spaces from around the world
+                  {t('pages.properties.subtitle')}
                 </p>
               </div>
             </div>
@@ -286,7 +288,7 @@ const Properties = () => {
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Sparkles className="w-4 h-4" />
                 <span className="text-sm">
-                  Showing {filteredProperties.length} of {properties.length} properties
+                  {t('pages.properties.showingResults', { count: filteredProperties.length, total: properties.length })}
                 </span>
               </div>
             </div>
@@ -298,12 +300,12 @@ const Properties = () => {
               <div className="flex items-center justify-between mb-8 animate-fade-in">
                 <div>
                   <h2 className="text-2xl font-bold">
-                    {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'} Available
+                    {filteredProperties.length} {filteredProperties.length === 1 ? t('common.properties_one') : t('common.properties_other')} {t('pages.properties.available')}
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
                     {activeFiltersCount > 0
-                      ? `Filtered from ${properties.length} verified listings`
-                      : 'Verified listings on the blockchain'
+                      ? t('pages.properties.filteredFrom', { total: properties.length })
+                      : t('pages.properties.verifiedListings')
                     }
                   </p>
                 </div>
@@ -369,7 +371,7 @@ const Properties = () => {
                   variant="outline"
                   className="border-2 border-border hover:border-primary transition-smooth px-12 h-14 rounded-xl font-semibold"
                 >
-                  Load More Properties
+                  {t('pages.properties.loadMore')}
                 </Button>
               </div>
             </>

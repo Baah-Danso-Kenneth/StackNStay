@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ function calculateNights(checkIn: Date, checkOut: Date): number {
 }
 
 const PropertyDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const propertyId = Number(id);
   const navigate = useNavigate();

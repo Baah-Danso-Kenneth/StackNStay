@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowRight, Shield, Globe, Key, Home, Wallet, Zap, Users } from "lucide-react";
 
 const LearnMore = () => {
+    const { t } = useTranslation();
     return (
         <div className="min-h-screen bg-background flex flex-col">
             <Navbar />

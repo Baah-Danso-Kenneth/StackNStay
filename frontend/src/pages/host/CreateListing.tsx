@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
 const CreateListing = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { createListing, validateListing, isSubmitting, uploadProgress } = useListing();
     const [step, setStep] = useState(1);

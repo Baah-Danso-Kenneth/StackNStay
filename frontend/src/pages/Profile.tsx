@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Award, MapPin, Calendar, ShieldCheck, Edit, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useBadges } from "@/hooks/use-badge";
 import { useReputation } from "@/hooks/use-reputation";
@@ -10,6 +11,7 @@ import NoBadges from "@/components/NoBadges";
 import Navbar from "@/components/Navbar";
 
 const Profile = () => {
+    const { t } = useTranslation();
     const { userData } = useAuth();
     const { badges, isLoading: badgesLoading, error: badgesError } = useBadges();
     const { stats, formattedRating, reviews, isLoading: reputationLoading } = useReputation();

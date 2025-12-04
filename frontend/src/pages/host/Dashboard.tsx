@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, DollarSign, Home, Users, TrendingUp, Loader2, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { getUserProperties, getUserBookings } from "@/lib/escrow";
@@ -13,6 +14,7 @@ import PropertyCard from "@/components/PropertyCard";
 import Loader from "@/components/Loader";
 
 const Dashboard = () => {
+    const { t } = useTranslation();
     const { userData } = useAuth();
 
     // Fetch user's properties from blockchain
