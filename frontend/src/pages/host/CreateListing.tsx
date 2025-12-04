@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
 const CreateListing = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { createListing, validateListing, isSubmitting, uploadProgress } = useListing();
     const [step, setStep] = useState(1);
@@ -19,6 +21,8 @@ const CreateListing = () => {
         description: "",
         pricePerNight: "",
         location: "",
+        location_city: "",
+        location_country: "",
         locationTag: "0",
         images: [],
         amenities: [],
@@ -50,8 +54,11 @@ const CreateListing = () => {
 
         if (step === 2) {
             const errors: string[] = [];
-            if (!formData.location || formData.location.trim().length < 3) {
-                errors.push("Location is required");
+            if (!formData.location_city || formData.location_city.trim().length < 2) {
+                errors.push("City is required");
+            }
+            if (!formData.location_country || formData.location_country.trim().length < 2) {
+                errors.push("Country is required");
             }
             const price = parseFloat(formData.pricePerNight);
             if (isNaN(price) || price <= 0) {
@@ -253,14 +260,25 @@ const CreateListing = () => {
                     {/* Step 2: Location & Pricing */}
                     {step === 2 && (
                         <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                            <div className="space-y-2">
-                                <Label htmlFor="location">Location *</Label>
-                                <Input
-                                    id="location"
-                                    placeholder="e.g. New York, NY"
-                                    value={formData.location}
-                                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="location_city">City *</Label>
+                                    <Input
+                                        id="location_city"
+                                        placeholder="e.g. New York"
+                                        value={formData.location_city}
+                                        onChange={(e) => setFormData({ ...formData, location_city: e.target.value, location: `${e.target.value}, ${formData.location_country}` })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="location_country">Country *</Label>
+                                    <Input
+                                        id="location_country"
+                                        placeholder="e.g. USA"
+                                        value={formData.location_country}
+                                        onChange={(e) => setFormData({ ...formData, location_country: e.target.value, location: `${formData.location_city}, ${e.target.value}` })}
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-2">
@@ -359,7 +377,7 @@ const CreateListing = () => {
                                     </div>
                                     <div>
                                         <p className="text-muted-foreground">Location</p>
-                                        <p className="font-medium">{formData.location || "Not set"}</p>
+                                        <p className="font-medium">{formData.location_city && formData.location_country ? `${formData.location_city}, ${formData.location_country}` : "Not set"}</p>
                                     </div>
                                     <div>
                                         <p className="text-muted-foreground">Price per Night</p>

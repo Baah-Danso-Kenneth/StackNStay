@@ -1,14 +1,143 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, DollarSign, Home, Users, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, DollarSign, Home, Users, TrendingUp, Loader2, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { getUserProperties, getUserBookings } from "@/lib/escrow";
+import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
+import { BookingActions } from "@/components/BookingActions";
 import NoProperties from "@/components/NoProperties";
+import PropertyCard from "@/components/PropertyCard";
+import Loader from "@/components/Loader";
 
 const Dashboard = () => {
-    // TODO: Fetch host data from blockchain
-    const hasListings = false;
-    const stats = [];
-    const recentActivity: any[] = [];
+    const { t } = useTranslation();
+    const { userData } = useAuth();
+
+    // Fetch user's properties from blockchain
+    const { data: userProperties = [], isLoading: isLoadingProperties } = useQuery({
+        queryKey: ['user-properties', userData?.profile?.stxAddress?.testnet],
+        enabled: !!userData?.profile?.stxAddress?.testnet,
+        queryFn: async () => {
+            if (!userData?.profile?.stxAddress?.testnet) {
+                return [];
+            }
+
+            console.log('🔍 Fetching properties for user:', userData.profile.stxAddress.testnet);
+
+            // Fetch properties owned by this user
+            const blockchainProperties = await getUserProperties(
+                userData.profile.stxAddress.testnet,
+                50
+            );
+
+            console.log(`✅ Found ${blockchainProperties.length} properties for user`);
+
+            // Enrich each property with IPFS metadata
+            const enrichedProperties = await Promise.all(
+                blockchainProperties.map(async (prop) => {
+                    const metadata = await fetchIPFSMetadata(prop.metadataUri);
+
+                    if (!metadata) {
+                        console.warn(`⚠️ Could not fetch metadata for property #${prop.id}`);
+                        return null;
+                    }
+
+                    // Get the first image URL
+                    const coverImage = metadata.images && metadata.images.length > 0
+                        ? getIPFSImageUrl(metadata.images[0])
+                        : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+
+                    return {
+                        id: prop.id,
+                        blockchain_id: prop.id,
+                        title: metadata.title,
+                        description: metadata.description,
+                        location_city: metadata.location.split(',')[0]?.trim() || metadata.location,
+                        location_country: metadata.location.split(',')[1]?.trim() || '',
+                        price_per_night: Number(prop.pricePerNight),
+                        max_guests: metadata.maxGuests,
+                        bedrooms: metadata.bedrooms,
+                        bathrooms: metadata.bathrooms,
+                        amenities: metadata.amenities,
+                        cover_image: coverImage,
+                        images: metadata.images.map(getIPFSImageUrl),
+                        active: prop.active,
+                        owner: prop.owner,
+                    };
+                })
+            );
+
+            // Filter out null values (failed metadata fetches)
+            const validProperties = enrichedProperties.filter(prop => prop !== null);
+            console.log(`✅ Successfully enriched ${validProperties.length} properties with IPFS data`);
+
+            return validProperties;
+        }
+    });
+
+    // Fetch user's bookings (as host)
+    const { data: hostBookings = [], isLoading: isLoadingBookings, refetch: refetchBookings } = useQuery({
+        queryKey: ['host-bookings', userData?.profile?.stxAddress?.testnet],
+        enabled: !!userData?.profile?.stxAddress?.testnet,
+        queryFn: async () => {
+            if (!userData?.profile?.stxAddress?.testnet) {
+                return [];
+            }
+
+            const userAddress = userData.profile.stxAddress.testnet;
+            const allBookings = await getUserBookings(userAddress, 100);
+
+            // Filter to only bookings where user is the host
+            return allBookings.filter(booking => booking.host === userAddress);
+        }
+    });
+
+    const isLoading = isLoadingProperties || isLoadingBookings;
+    const hasListings = userProperties.length > 0;
+    const currentBlockHeight = 100000; // TODO: Fetch from API
+
+    // Calculate revenue from completed bookings
+    const totalRevenue = hostBookings
+        .filter(b => b.status === "completed")
+        .reduce((sum, b) => sum + b.hostPayout, 0) / 1_000_000;
+
+    const confirmedBookings = hostBookings.filter(b => b.status === "confirmed").length;
+    const completedBookings = hostBookings.filter(b => b.status === "completed").length;
+
+    // Calculate stats from user's properties
+    const stats = hasListings ? [
+        {
+            title: "Total Listings",
+            value: userProperties.length,
+            change: `${userProperties.filter((p: any) => p.active).length} active`,
+            icon: Home,
+        },
+        {
+            title: "Total Revenue",
+            value: `${totalRevenue.toFixed(2)} STX`,
+            change: `${completedBookings} completed bookings`,
+            icon: DollarSign,
+        },
+        {
+            title: "Active Bookings",
+            value: confirmedBookings,
+            change: `${completedBookings} completed`,
+            icon: Calendar,
+        },
+        {
+            title: "Total Capacity",
+            value: userProperties.reduce((sum: number, p: any) => sum + (p.max_guests || 0), 0),
+            change: "guests across all listings",
+            icon: Users,
+        },
+    ] : [];
+
+    // Get recent bookings (last 5)
+    const recentBookings = hostBookings.slice(0, 5);
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -25,7 +154,11 @@ const Dashboard = () => {
                 </Link>
             </div>
 
-            {!hasListings ? (
+            {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+            ) : !hasListings ? (
                 <NoProperties variant="host" />
             ) : (
                 <>
@@ -49,35 +182,74 @@ const Dashboard = () => {
                         ))}
                     </div>
 
+                    {/* User's Properties List */}
+                    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle>Your Listings</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {userProperties.map((property: any) => (
+                                    <PropertyCard
+                                        key={property.id}
+                                        id={property.blockchain_id}
+                                        title={property.title || "Untitled Property"}
+                                        location={`${property.location_city || ""}, ${property.location_country || ""}`}
+                                        price={property.price_per_night}
+                                        rating={4.8}
+                                        reviews={0}
+                                        guests={property.max_guests || 2}
+                                        imageUrl={property.cover_image || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"}
+                                        featured={false}
+                                    />
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Recent Activity / Bookings */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <Card className="col-span-1 lg:col-span-2 border-border/50 bg-card/50 backdrop-blur-sm">
                             <CardHeader>
-                                <CardTitle>Recent Activity</CardTitle>
+                                <CardTitle>Recent Bookings</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
-                                    {recentActivity.length === 0 ? (
+                                    {recentBookings.length === 0 ? (
                                         <div className="text-center py-8 text-muted-foreground">
-                                            <p>No recent activity yet</p>
+                                            <p>No bookings yet</p>
+                                            <p className="text-xs mt-2">Bookings will appear here once guests book your properties</p>
                                         </div>
                                     ) : (
-                                        recentActivity.map((item: any) => (
-                                            <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-2 h-2 rounded-full ${item.status === 'success' ? 'bg-emerald-500' :
-                                                        item.status === 'destructive' ? 'bg-red-500' : 'bg-blue-500'
-                                                        }`} />
-                                                    <div>
-                                                        <p className="text-sm font-medium">{item.action}</p>
-                                                        <p className="text-xs text-muted-foreground">{item.property} • {item.guest}</p>
+                                        recentBookings.map((booking: any) => (
+                                            <div key={booking.id} className="flex items-center justify-between p-4 rounded-lg hover:bg-muted/50 transition-colors border border-border/50">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <p className="text-sm font-medium">Booking #{booking.id}</p>
+                                                        {booking.status === 'confirmed' && (
+                                                            <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 text-xs">
+                                                                Confirmed
+                                                            </Badge>
+                                                        )}
+                                                        {booking.status === 'completed' && (
+                                                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 text-xs">
+                                                                Completed
+                                                            </Badge>
+                                                        )}
                                                     </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className={`text-sm font-bold ${item.amount.startsWith('+') ? 'text-emerald-500' : 'text-foreground'}`}>
-                                                        {item.amount}
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Property #{booking.propertyId} • Guest: {booking.guest.slice(0, 8)}...
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">{item.date}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        Amount: {(booking.totalAmount / 1_000_000).toFixed(2)} STX
+                                                    </p>
+                                                </div>
+                                                <div className="ml-4">
+                                                    <BookingActions
+                                                        booking={booking}
+                                                        currentBlockHeight={currentBlockHeight}
+                                                        onSuccess={() => refetchBookings()}
+                                                    />
                                                 </div>
                                             </div>
                                         ))

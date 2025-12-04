@@ -1,10 +1,20 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useQuery } from "@tanstack/react-query";
+import { openContractCall } from "@stacks/connect";
+import { getProperty, bookProperty, PLATFORM_FEE_BPS, BPS_DENOMINATOR } from "@/lib/escrow";
+import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import {
   MapPin,
   Star,
@@ -15,60 +25,325 @@ import {
   Car,
   ArrowLeft,
   Check,
-  Calendar,
+  Calendar as CalendarIcon,
   Shield,
+  ChevronDown,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+/**
+ * Convert a date to approximate Stacks block height
+ * Stacks blocks are ~10 minutes apart, so ~144 blocks per day
+ * This is an approximation - in production you'd fetch current block height from API
+ */
+function dateToBlockHeight(date: Date, currentBlockHeight: number = 100000): number {
+  const now = new Date();
+  const diffMs = date.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const blocksPerDay = 144; // ~10 min per block = 144 blocks/day
+  return currentBlockHeight + Math.floor(diffDays * blocksPerDay);
+}
+
+/**
+ * Calculate number of nights between two dates
+ */
+function calculateNights(checkIn: Date, checkOut: Date): number {
+  const diffMs = checkOut.getTime() - checkIn.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return Math.max(1, Math.floor(diffDays));
+}
 
 const PropertyDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
-  const [loading, setLoading] = useState(true);
+  const propertyId = Number(id);
+  const navigate = useNavigate();
+  const { userData } = useAuth();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  // Booking state
+  const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
+  const [checkOut, setCheckOut] = useState<Date | undefined>(undefined);
+  const [guests, setGuests] = useState<number>(1);
+  const [isBooking, setIsBooking] = useState(false);
 
-  // Mock property data
-  const property = {
-    id: "1",
-    title: "Modern Villa with Ocean View",
-    location: "Seminyak, Bali, Indonesia",
-    price: "$250",
-    rating: 4.9,
-    reviews: 128,
-    guests: 6,
-    bedrooms: 3,
-    bathrooms: 2,
-    images: [
-      "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1200&q=80",
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80",
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
-    ],
-    description:
-      "Experience luxury living in this stunning modern villa with breathtaking ocean views. Perfect for families or groups seeking a premium tropical getaway. The villa features contemporary design, infinity pool, and direct beach access.",
-    amenities: [
-      { icon: Wifi, label: "High-speed WiFi" },
-      { icon: Waves, label: "Infinity Pool" },
-      { icon: UtensilsCrossed, label: "Full Kitchen" },
-      { icon: Car, label: "Free Parking" },
-    ],
-    highlights: [
-      "Ocean view from every room",
-      "Private infinity pool",
-      "24/7 security",
-      "Smart home features",
-      "Beach access",
-      "Fully equipped kitchen",
-    ],
-    host: {
-      name: "Sarah Johnson",
-      joinedYear: 2020,
-      properties: 12,
+  const {
+    data: property,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["property-detail", propertyId],
+    enabled: !Number.isNaN(propertyId),
+    queryFn: async () => {
+      // Fetch on-chain property
+      const onChain = await getProperty(propertyId);
+      if (!onChain) {
+        throw new Error("Property not found on-chain");
+      }
+
+      // Fetch IPFS metadata
+      const metadata = await fetchIPFSMetadata(onChain.metadataUri);
+      if (!metadata) {
+        throw new Error("Failed to load property metadata from IPFS");
+      }
+
+      const images =
+        metadata.images && metadata.images.length > 0
+          ? metadata.images.map(getIPFSImageUrl)
+          : [
+            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+          ];
+
+      // Map simple amenities (string[]) to objects with an icon + label
+      const amenities =
+        (metadata.amenities || []).map((label: string) => ({
+          icon: Wifi,
+          label,
+        })) ?? [];
+
+      const stxPrice = Number(onChain.pricePerNight) / 1_000_000;
+
+      return {
+        id: propertyId,
+        title: metadata.title,
+        location: metadata.location,
+        priceStx: Number.isFinite(stxPrice) ? stxPrice.toFixed(2) : "0.00",
+        pricePerNightMicroSTX: Number(onChain.pricePerNight),
+        rating: 4.8, // placeholder until you have on-chain reputation
+        reviews: 0,
+        maxGuests: metadata.maxGuests,
+        bedrooms: metadata.bedrooms,
+        bathrooms: metadata.bathrooms,
+        images,
+        description: metadata.description,
+        amenities,
+        owner: onChain.owner,
+        active: onChain.active,
+      };
     },
+  });
+
+  const handleBooking = async () => {
+    if (!userData) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to book this property",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if user is trying to book their own property
+    const userAddress = userData.profile.stxAddress.testnet;
+    if (userAddress === property.owner) {
+      toast({
+        title: "Cannot Book Own Property",
+        description: "You cannot book a property that you own",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!checkIn || !checkOut) {
+      toast({
+        title: "Dates Required",
+        description: "Please select check-in and check-out dates",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (checkOut <= checkIn) {
+      toast({
+        title: "Invalid Dates",
+        description: "Check-out date must be after check-in date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (guests > property.maxGuests) {
+      toast({
+        title: "Too Many Guests",
+        description: `Maximum ${property.maxGuests} guests allowed`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (guests < 1) {
+      toast({
+        title: "Invalid Guest Count",
+        description: "At least 1 guest is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsBooking(true);
+
+    try {
+      const numNights = calculateNights(checkIn, checkOut);
+
+      // Convert dates to block heights (approximate)
+      // In production, you'd fetch current block height from API
+      const currentBlockHeight = 100000; // Placeholder - should fetch from API
+      const checkInBlock = dateToBlockHeight(checkIn, currentBlockHeight);
+      const checkOutBlock = dateToBlockHeight(checkOut, currentBlockHeight);
+
+      console.log('📅 Booking details:', {
+        propertyId,
+        checkIn: checkIn.toISOString(),
+        checkOut: checkOut.toISOString(),
+        checkInBlock,
+        checkOutBlock,
+        numNights,
+        guests,
+      });
+
+      toast({
+        title: "Preparing Booking",
+        description: "Please confirm the transaction in your wallet",
+      });
+
+      const contractCallOptions = await bookProperty({
+        propertyId,
+        checkIn: checkInBlock,
+        checkOut: checkOutBlock,
+        numNights,
+      });
+
+      await openContractCall({
+        ...contractCallOptions,
+        onFinish: async (data) => {
+          console.log('✅ Booking transaction submitted:', data);
+
+          try {
+            toast({
+              title: "Transaction Submitted",
+              description: "Waiting for blockchain confirmation...",
+            });
+
+            // Poll for transaction confirmation
+            const maxAttempts = 30;
+            let attempts = 0;
+            let bookingId: number | null = null;
+
+            while (attempts < maxAttempts && bookingId === null) {
+              attempts++;
+              await new Promise(resolve => setTimeout(resolve, 2000));
+
+              try {
+                const txStatusResponse = await fetch(
+                  `https://api.testnet.hiro.so/extended/v1/tx/${data.txId}`
+                );
+
+                if (txStatusResponse.ok) {
+                  const txStatus = await txStatusResponse.json();
+                  console.log(`Attempt ${attempts}: Transaction status:`, txStatus.tx_status);
+
+                  if (txStatus.tx_status === 'success') {
+                    const txResult = txStatus.tx_result;
+
+                    if (txResult && txResult.repr) {
+                      const match = txResult.repr.match(/\(ok u(\d+)\)/);
+                      if (match && match[1]) {
+                        bookingId = parseInt(match[1]);
+                        console.log('✅ Booking ID extracted:', bookingId);
+                        break;
+                      }
+                    }
+                  } else if (txStatus.tx_status === 'abort_by_response' ||
+                    txStatus.tx_status === 'abort_by_post_condition') {
+                    // Provide more helpful error messages
+                    let errorMessage = 'Transaction failed';
+                    if (txStatus.tx_result && txStatus.tx_result.repr) {
+                      if (txStatus.tx_result.repr.includes('u100')) {
+                        errorMessage = 'Not authorized - you may be trying to book your own property';
+                      } else if (txStatus.tx_result.repr.includes('u101')) {
+                        errorMessage = 'Property not found';
+                      } else if (txStatus.tx_result.repr.includes('u103')) {
+                        errorMessage = 'Invalid amount or dates';
+                      } else if (txStatus.tx_result.repr.includes('u104')) {
+                        errorMessage = 'Property not available';
+                      }
+                    }
+                    throw new Error(errorMessage);
+                  }
+                }
+              } catch (pollError) {
+                console.warn(`Attempt ${attempts} failed:`, pollError);
+              }
+            }
+
+            if (bookingId === null) {
+              throw new Error('Transaction confirmation timeout. Please check blockchain explorer.');
+            }
+
+            toast({
+              title: "Booking Confirmed!",
+              description: `Your booking #${bookingId} has been confirmed. Payment is held in escrow.`,
+            });
+
+            // Navigate to booking confirmation or history page
+            setTimeout(() => {
+              navigate(`/history`);
+            }, 2000);
+
+          } catch (confirmError) {
+            console.error('Error during confirmation:', confirmError);
+            toast({
+              title: "Booking Submitted",
+              description: confirmError instanceof Error ? confirmError.message : "Booking submitted. Confirmation may take time.",
+            });
+          } finally {
+            setIsBooking(false);
+          }
+        },
+        onCancel: () => {
+          toast({
+            title: "Booking Cancelled",
+            description: "You cancelled the booking transaction",
+            variant: "destructive",
+          });
+          setIsBooking(false);
+        },
+      });
+
+    } catch (error) {
+      console.error('Error booking property:', error);
+      toast({
+        title: "Booking Failed",
+        description: error instanceof Error ? error.message : "Failed to book property",
+        variant: "destructive",
+      });
+      setIsBooking(false);
+    }
   };
 
-  if (loading) return <Loader />;
+  if (isLoading) return <Loader />;
+  if (error || !property) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-28 pb-16">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <Link
+              to="/properties"
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-smooth mb-8 group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-smooth" />
+              <span>Back to Properties</span>
+            </Link>
+            <h1 className="text-3xl font-bold mb-4">Property not available</h1>
+            <p className="text-muted-foreground">
+              {(error as Error)?.message ?? "We couldn&apos;t load this property. Please try again."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,7 +408,7 @@ const PropertyDetail = () => {
                 <div className="flex items-center gap-3">
                   <Users className="w-6 h-6 text-primary" />
                   <div>
-                    <div className="font-semibold text-lg">{property.guests} Guests</div>
+                    <div className="font-semibold text-lg">{property.maxGuests} Guests</div>
                     <div className="text-sm text-muted-foreground">Maximum capacity</div>
                   </div>
                 </div>
@@ -182,19 +457,7 @@ const PropertyDetail = () => {
               </div>
 
               {/* Highlights */}
-              <div className="animate-fade-in">
-                <h2 className="text-2xl font-bold mb-6">Property Highlights</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {property.highlights.map((highlight, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="text-muted-foreground">{highlight}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* You can later add on-chain highlights or reviews here */}
             </div>
 
             {/* Booking Card */}
@@ -202,7 +465,7 @@ const PropertyDetail = () => {
               <Card className="sticky top-28 p-8 shadow-elegant border-border animate-fade-in">
                 <div className="mb-6">
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-4xl font-bold">{property.price}</span>
+                    <span className="text-4xl font-bold">{property.priceStx} STX</span>
                     <span className="text-muted-foreground">/ night</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
@@ -212,53 +475,174 @@ const PropertyDetail = () => {
                 </div>
 
                 <div className="space-y-4 mb-6">
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Calendar className="w-5 h-5 text-primary" />
-                      <span className="font-semibold">Check-in</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Select your dates</p>
-                  </div>
+                  {/* Check-in Date Picker */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal p-4 h-auto",
+                          !checkIn && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
+                        <div className="flex flex-col items-start">
+                          <span className="font-semibold">Check-in</span>
+                          {checkIn ? (
+                            <span className="text-sm">{format(checkIn, "PPP")}</span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Select date</span>
+                          )}
+                        </div>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkIn}
+                        onSelect={setCheckIn}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
 
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Calendar className="w-5 h-5 text-primary" />
-                      <span className="font-semibold">Check-out</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Select your dates</p>
-                  </div>
+                  {/* Check-out Date Picker */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal p-4 h-auto",
+                          !checkOut && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
+                        <div className="flex flex-col items-start">
+                          <span className="font-semibold">Check-out</span>
+                          {checkOut ? (
+                            <span className="text-sm">{format(checkOut, "PPP")}</span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Select date</span>
+                          )}
+                        </div>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkOut}
+                        onSelect={setCheckOut}
+                        disabled={(date) => {
+                          if (!checkIn) return date < new Date();
+                          return date <= checkIn;
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
 
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Users className="w-5 h-5 text-primary" />
-                      <span className="font-semibold">Guests</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">2 guests</p>
-                  </div>
+                  {/* Guests Selector */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between p-4 h-auto font-normal"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Users className="h-5 w-5 text-primary" />
+                          <div className="flex flex-col items-start">
+                            <span className="font-semibold">Guests</span>
+                            <span className="text-sm text-muted-foreground">{guests} {guests === 1 ? 'guest' : 'guests'}</span>
+                          </div>
+                        </div>
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-4" align="start">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Number of guests</label>
+                        <div className="flex items-center gap-4">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setGuests(Math.max(1, guests - 1))}
+                            disabled={guests <= 1}
+                          >
+                            -
+                          </Button>
+                          <span className="w-8 text-center font-semibold">{guests}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setGuests(Math.min(property.maxGuests, guests + 1))}
+                            disabled={guests >= property.maxGuests}
+                          >
+                            +
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Max {property.maxGuests} guests</p>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
-                <Button className="w-full gradient-hero text-primary-foreground font-semibold shadow-elegant hover:shadow-glow transition-smooth h-14 text-lg rounded-xl mb-4">
-                  Book Now with Wallet
+                {/* Price Breakdown */}
+                {checkIn && checkOut && (
+                  <div className="mb-6 p-4 rounded-xl bg-muted/50 border border-border space-y-2">
+                    {(() => {
+                      const numNights = calculateNights(checkIn, checkOut);
+                      const baseCost = (property.pricePerNightMicroSTX / 1_000_000) * numNights;
+                      const platformFee = (baseCost * PLATFORM_FEE_BPS) / BPS_DENOMINATOR;
+                      const total = baseCost + platformFee;
+
+                      return (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">{property.priceStx} STX × {numNights} {numNights === 1 ? 'night' : 'nights'}</span>
+                            <span className="font-medium">{baseCost.toFixed(2)} STX</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Service fee ({PLATFORM_FEE_BPS / 100}%)</span>
+                            <span className="font-medium">{platformFee.toFixed(2)} STX</span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
+                            <span>Total</span>
+                            <span>{total.toFixed(2)} STX</span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                <Button
+                  className="w-full gradient-hero text-primary-foreground font-semibold shadow-elegant hover:shadow-glow transition-smooth h-14 text-lg rounded-xl mb-4"
+                  disabled={!checkIn || !checkOut || !property.active || isBooking || !userData || (userData && userData.profile.stxAddress.testnet === property.owner)}
+                  onClick={handleBooking}
+                >
+                  {!userData
+                    ? "Connect Wallet to Book"
+                    : userData.profile.stxAddress.testnet === property.owner
+                      ? "Cannot Book Own Property"
+                      : !property.active
+                        ? "Property Not Available"
+                        : isBooking
+                          ? "Processing..."
+                          : "Book Now with Wallet"}
                 </Button>
 
-                <p className="text-xs text-center text-muted-foreground">
-                  You won't be charged yet
-                </p>
+                {!userData && (
+                  <p className="text-xs text-center text-muted-foreground mb-4">
+                    Connect your Stacks wallet to book
+                  </p>
+                )}
 
-                <div className="mt-6 pt-6 border-t border-border space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{property.price} × 3 nights</span>
-                    <span className="font-semibold">$750</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Service fee</span>
-                    <span className="font-semibold">$45</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold pt-3 border-t border-border">
-                    <span>Total</span>
-                    <span>$795</span>
-                  </div>
-                </div>
+                {checkIn && checkOut && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Payment will be held in escrow until check-in
+                  </p>
+                )}
               </Card>
             </div>
           </div>

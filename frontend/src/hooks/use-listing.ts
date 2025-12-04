@@ -2,17 +2,20 @@ import { useState } from "react";
 import { useAuth } from "./use-auth";
 import { listProperty } from "@/lib/escrow";
 import { useToast } from "./use-toast";
+import { openContractCall } from "@stacks/connect";
 import {
-    openContractCall,
-} from "@stacks/connect";
-
-
+    uploadMetadataToIPFS,
+    uploadImagesToIPFS,
+    type PropertyMetadata,
+} from "@/lib/ipfs";
 
 export interface ListingFormData {
     title: string;
     description: string;
     pricePerNight: string;
     location: string;
+    location_city: string;
+    location_country: string;
     locationTag: string;
     images: File[];
     amenities: string[];
@@ -21,81 +24,11 @@ export interface ListingFormData {
     bathrooms: string;
 }
 
-export interface ListingMetadata {
-    title: string;
-    description: string;
-    location: string;
-    images: string[]; // IPFS URLs
-    amenities: string[];
-    maxGuests: number;
-    bedrooms: number;
-    bathrooms: number;
-}
-
 export function useListing() {
     const { userData } = useAuth();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
-
-    /**
-     * Upload metadata to IPFS via backend
-     */
-    const uploadMetadataToIPFS = async (metadata: ListingMetadata): Promise<string> => {
-        try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'}/api/ipfs/upload`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(metadata),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to upload metadata to IPFS');
-            }
-
-            const data = await response.json();
-            return data.ipfsHash; // Returns the IPFS hash
-        } catch (error) {
-            console.error('Error uploading to IPFS:', error);
-            throw error;
-        }
-    };
-
-    /**
-     * Upload images to IPFS via backend
-     */
-    const uploadImagesToIPFS = async (images: File[]): Promise<string[]> => {
-        try {
-            const uploadedUrls: string[] = [];
-
-            for (let i = 0; i < images.length; i++) {
-                const formData = new FormData();
-                formData.append('file', images[i]);
-
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'}/api/ipfs/upload-image`, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to upload image ${i + 1}`);
-                }
-
-                const data = await response.json();
-                uploadedUrls.push(data.ipfsUrl);
-
-                // Update progress
-                setUploadProgress(((i + 1) / images.length) * 50); // First 50% for images
-            }
-
-            return uploadedUrls;
-        } catch (error) {
-            console.error('Error uploading images:', error);
-            throw error;
-        }
-    };
 
     /**
      * Create a new property listing
@@ -121,21 +54,29 @@ export function useListing() {
             });
 
             const imageUrls = formData.images.length > 0
-                ? await uploadImagesToIPFS(formData.images)
+                ? await uploadImagesToIPFS(formData.images, (progress) => {
+                    // Map image upload progress to 0-50% range
+                    setUploadProgress((progress / 100) * 50);
+                })
                 : [];
+
+            console.log('📸 Image URLs:', imageUrls);
 
             // Step 2: Create metadata object (50-60%)
             setUploadProgress(50);
-            const metadata: ListingMetadata = {
+            const metadata: PropertyMetadata = {
                 title: formData.title,
                 description: formData.description,
                 location: formData.location,
-                images: imageUrls,
+                location_city: formData.location_city,
+                images: imageUrls, // Already in ipfs:// format
                 amenities: formData.amenities,
                 maxGuests: parseInt(formData.maxGuests) || 1,
                 bedrooms: parseInt(formData.bedrooms) || 1,
                 bathrooms: parseInt(formData.bathrooms) || 1,
             };
+
+            console.log('📋 Metadata to upload:', metadata);
 
             // Step 3: Upload metadata to IPFS (60-80%)
             toast({
@@ -143,7 +84,9 @@ export function useListing() {
                 description: "Uploading property metadata to IPFS...",
             });
 
-            const metadataUri = await uploadMetadataToIPFS(metadata);
+            const metadataHash = await uploadMetadataToIPFS(metadata);
+
+            console.log('✅ Metadata IPFS Hash:', metadataHash);
             setUploadProgress(80);
 
             // Step 4: Prepare contract call (80-90%)
@@ -156,11 +99,11 @@ export function useListing() {
             const priceInMicroSTX = Math.floor(parseFloat(formData.pricePerNight) * 1_000_000);
             const locationTagNum = parseInt(formData.locationTag) || 0;
 
-            // Get contract call options
+            // Get contract call options - send bare hash to blockchain
             const contractCallOptions = await listProperty({
                 pricePerNight: priceInMicroSTX,
                 locationTag: locationTagNum,
-                metadataUri: metadataUri,
+                metadataUri: metadataHash, // Send bare hash to contract
             });
 
             setUploadProgress(90);
@@ -183,24 +126,19 @@ export function useListing() {
                             description: "Waiting for blockchain confirmation...",
                         });
 
-                        // Wait for transaction confirmation
-                        // The transaction needs to be confirmed before we can get the property ID
                         console.log('⏳ Waiting for transaction to confirm...');
                         console.log('Transaction ID:', data.txId);
 
                         // Poll for transaction confirmation
-                        const maxAttempts = 30; // 30 attempts * 2 seconds = 1 minute max wait
+                        const maxAttempts = 30;
                         let attempts = 0;
                         let propertyId: number | null = null;
 
                         while (attempts < maxAttempts && propertyId === null) {
                             attempts++;
-
-                            // Wait 2 seconds between checks
                             await new Promise(resolve => setTimeout(resolve, 2000));
 
                             try {
-                                // Check transaction status
                                 const txStatusResponse = await fetch(
                                     `https://api.testnet.hiro.so/extended/v1/tx/${data.txId}`
                                 );
@@ -210,12 +148,9 @@ export function useListing() {
                                     console.log(`Attempt ${attempts}: Transaction status:`, txStatus.tx_status);
 
                                     if (txStatus.tx_status === 'success') {
-                                        // Transaction confirmed! Extract property ID from contract result
-                                        // The list-property function returns (ok property-id)
                                         const txResult = txStatus.tx_result;
 
                                         if (txResult && txResult.repr) {
-                                            // Parse the result, e.g., "(ok u0)" -> 0
                                             const match = txResult.repr.match(/\(ok u(\d+)\)/);
                                             if (match && match[1]) {
                                                 propertyId = parseInt(match[1]);
@@ -223,7 +158,8 @@ export function useListing() {
                                                 break;
                                             }
                                         }
-                                    } else if (txStatus.tx_status === 'abort_by_response' || txStatus.tx_status === 'abort_by_post_condition') {
+                                    } else if (txStatus.tx_status === 'abort_by_response' ||
+                                        txStatus.tx_status === 'abort_by_post_condition') {
                                         throw new Error(`Transaction failed: ${txStatus.tx_status}`);
                                     }
                                 }
@@ -236,52 +172,65 @@ export function useListing() {
                             throw new Error('Transaction confirmation timeout. Please check blockchain explorer.');
                         }
 
-                        // Sync to backend database
-                        toast({
-                            title: "Syncing to Database",
-                            description: `Saving property #${propertyId} details...`,
-                        });
+                        // Sync to backend database (if backend exists)
+                        if (import.meta.env.VITE_BACKEND_URL) {
+                            toast({
+                                title: "Syncing to Database",
+                                description: `Saving property #${propertyId} details...`,
+                            });
 
-                        const syncResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'}/api/properties/sync`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
+                            const syncPayload = {
                                 blockchain_id: propertyId,
-                                owner_address: userData.profile.stxAddress.testnet, // Use testnet address
+                                owner_address: userData.profile.stxAddress.testnet,
                                 price_per_night: priceInMicroSTX,
                                 location_tag: locationTagNum,
-                                metadata_uri: metadataUri,
-                                ipfs_hash: metadataUri,
+                                metadata_uri: metadataHash,
+                                ipfs_hash: metadataHash,
                                 active: true
-                            }),
+                            };
+
+                            console.log('📤 Syncing to backend:', syncPayload);
+
+                            try {
+                                const syncResponse = await fetch(
+                                    `${import.meta.env.VITE_BACKEND_URL}/api/properties/sync`,
+                                    {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify(syncPayload),
+                                    }
+                                );
+
+                                if (syncResponse.ok) {
+                                    console.log('✅ Property synced to database');
+                                } else {
+                                    console.warn('⚠️ Failed to sync to database, but property is on blockchain');
+                                }
+                            } catch (syncError) {
+                                console.warn('⚠️ Database sync failed, but property is on blockchain:', syncError);
+                            }
+                        }
+
+                        toast({
+                            title: "Success!",
+                            description: `Property #${propertyId} has been listed successfully!`,
                         });
 
-                        if (!syncResponse.ok) {
-                            const errorData = await syncResponse.json();
-                            console.error('Failed to sync property to database:', errorData);
-                            toast({
-                                title: "Warning",
-                                description: `Property #${propertyId} listed on blockchain but failed to sync to database: ${errorData.detail || 'Unknown error'}`,
-                                variant: "destructive",
-                            });
-                        } else {
-                            console.log('✅ Property synced to database successfully');
-                            toast({
-                                title: "Success!",
-                                description: `Property #${propertyId} has been listed and synced successfully!`,
-                            });
-                        }
-                    } catch (syncError) {
-                        console.error('Error during sync process:', syncError);
+                    } catch (confirmError) {
+                        console.error('Error during confirmation:', confirmError);
                         toast({
-                            title: "Sync Error",
-                            description: syncError instanceof Error ? syncError.message : "Failed to sync property. It may appear shortly.",
-                            variant: "destructive",
+                            title: "Listed on Blockchain",
+                            description: confirmError instanceof Error ? confirmError.message : "Property listed on blockchain. Confirmation may take time.",
                         });
                     } finally {
                         setUploadProgress(100);
+                        // Reset after 2 seconds
+                        setTimeout(() => {
+                            setIsSubmitting(false);
+                            setUploadProgress(0);
+                        }, 2000);
                     }
                 },
                 onCancel: () => {
@@ -290,6 +239,8 @@ export function useListing() {
                         description: "You cancelled the transaction",
                         variant: "destructive",
                     });
+                    setIsSubmitting(false);
+                    setUploadProgress(0);
                 },
             });
 
@@ -300,7 +251,6 @@ export function useListing() {
                 description: error instanceof Error ? error.message : "Failed to create listing",
                 variant: "destructive",
             });
-        } finally {
             setIsSubmitting(false);
             setUploadProgress(0);
         }

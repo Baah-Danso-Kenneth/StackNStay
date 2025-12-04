@@ -107,6 +107,92 @@
         "subtitle": "Get instant help"
     },
     "common": {
-        "scrollToTop": "Scroll to top"
+        "scrollToTop": "Scroll to top",
+        "loading": "Loading...",
+        "error": "Error",
+        "tryAgain": "Try Again",
+        "property": "Property",
+        "properties_one": "Property",
+        "properties_other": "Properties"
+    },
+    "pages": {
+        "properties": {
+            "title": "Explore Properties",
+            "subtitle": "Discover verified rental spaces from around the world",
+            "errorLoading": "Error loading properties",
+            "showingResults": "Showing {{count}} of {{total}} properties",
+            "available": "Available",
+            "filteredFrom": "Filtered from {{total}} verified listings",
+            "verifiedListings": "Verified listings on the blockchain",
+            "loadMore": "Load More Properties"
+        },
+        "profile": {
+            "title": "User Account",
+            "stats": {
+                "trips": "Trips Taken",
+                "listings": "Properties Listed",
+                "joined": "Joined",
+                "verified": "Verified"
+            },
+            "achievements": "Achievements",
+            "reviews": "Reviews",
+            "noReviews": "No reviews yet",
+            "avgRating": "Average Rating",
+            "totalReviews": "Total Reviews"
+        },
+        "history": {
+            "title": "Booking History",
+            "subtitle": "View and manage your bookings",
+            "noBookings": "No bookings yet",
+            "status": {
+                "confirmed": "Confirmed",
+                "completed": "Completed",
+                "cancelled": "Cancelled",
+                "pending": "Pending"
+            }
+        },
+        "propertyDetail": {
+            "bookNow": "Book Now",
+            "checkIn": "Check-in",
+            "checkOut": "Check-out",
+            "guests": "Guests",
+            "amenities": "Amenities",
+            "location": "Location",
+            "reviews": "Reviews",
+            "host": "Host",
+            "pricePerNight": "per night"
+        },
+        "notFound": {
+            "title": "Page Not Found",
+            "message": "The page you're looking for doesn't exist.",
+            "backHome": "Back to Home"
+        },
+        "host": {
+            "dashboard": {
+                "title": "Host Dashboard",
+                "earnings": "Total Earnings",
+                "bookings": "Active Bookings",
+                "properties": "Properties",
+                "rating": "Rating"
+            },
+            "createListing": {
+                "title": "Create New Listing",
+                "basicInfo": "Basic Information",
+                "propertyDetails": "Property Details",
+                "amenities": "Amenities",
+                "photos": "Photos",
+                "pricing": "Pricing",
+                "submit": "Create Listing",
+                "fields": {
+                    "title": "Property Title",
+                    "description": "Description",
+                    "location": "Location",
+                    "price": "Price per Night",
+                    "guests": "Max Guests",
+                    "bedrooms": "Bedrooms",
+                    "bathrooms": "Bathrooms"
+                }
+            }
+        }
     }
 }
