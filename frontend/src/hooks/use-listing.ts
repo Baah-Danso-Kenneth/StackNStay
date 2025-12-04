@@ -14,6 +14,8 @@ export interface ListingFormData {
     description: string;
     pricePerNight: string;
     location: string;
+    location_city: string;
+    location_country: string;
     locationTag: string;
     images: File[];
     amenities: string[];
@@ -66,7 +68,7 @@ export function useListing() {
                 title: formData.title,
                 description: formData.description,
                 location: formData.location,
-                location_city: formData.locationTag,
+                location_city: formData.location_city,
                 images: imageUrls, // Already in ipfs:// format
                 amenities: formData.amenities,
                 maxGuests: parseInt(formData.maxGuests) || 1,
@@ -83,7 +85,7 @@ export function useListing() {
             });
 
             const metadataHash = await uploadMetadataToIPFS(metadata);
-            
+
             console.log('✅ Metadata IPFS Hash:', metadataHash);
             setUploadProgress(80);
 
@@ -156,8 +158,8 @@ export function useListing() {
                                                 break;
                                             }
                                         }
-                                    } else if (txStatus.tx_status === 'abort_by_response' || 
-                                             txStatus.tx_status === 'abort_by_post_condition') {
+                                    } else if (txStatus.tx_status === 'abort_by_response' ||
+                                        txStatus.tx_status === 'abort_by_post_condition') {
                                         throw new Error(`Transaction failed: ${txStatus.tx_status}`);
                                     }
                                 }

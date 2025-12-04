@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getUserBookings, getProperty } from "@/lib/escrow";
 import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
 import { BookingActions } from "@/components/BookingActions";
+import { DisputeModal } from "@/components/DisputeModal";
 import NoHistory from "@/components/NoHistory";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
@@ -170,6 +171,14 @@ const History = () => {
                                                 {/* Actions Section */}
                                                 <div className="flex flex-col items-end gap-2 min-w-[200px]">
                                                     <BookingActions booking={booking} currentBlockHeight={currentBlockHeight} onSuccess={() => refetch()} />
+
+                                                    {/* Dispute Actions */}
+                                                    {(booking.status === "confirmed" || booking.status === "completed") && (
+                                                        <DisputeModal
+                                                            bookingId={booking.id}
+                                                            onSuccess={() => refetch()}
+                                                        />
+                                                    )}
 
                                                     <Button variant="outline" size="sm" className="gap-2 w-full" asChild>
                                                         <a href={`https://explorer.hiro.so/txid/${booking.id}?chain=testnet`} target="_blank" rel="noopener noreferrer">
