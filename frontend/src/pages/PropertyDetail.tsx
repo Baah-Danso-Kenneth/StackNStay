@@ -27,6 +27,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ReviewsList } from "@/components/ReviewsList";
 
 /**
  * Convert a date to approximate Stacks block height
@@ -469,6 +470,14 @@ const PropertyDetail = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Reviews Section */}
+              <div className="animate-fade-in">
+                <ReviewsList
+                  userAddress={property.owner}
+                  title="Host Reviews"
+                />
               </div>
 
               {/* Highlights */}

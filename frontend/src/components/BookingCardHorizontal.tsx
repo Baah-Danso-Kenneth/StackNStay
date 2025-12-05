@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, ExternalLink, User } from "lucide-react";
 import { BookingActions } from "@/components/BookingActions";
 import { DisputeModal } from "@/components/DisputeModal";
+import { ReviewDialog } from "@/components/ReviewDialog";
 import type { Booking } from "@/lib/escrow";
 
 interface EnrichedBooking extends Booking {
@@ -114,6 +115,17 @@ export function BookingCardHorizontal({
                         {(booking.status === "confirmed" || booking.status === "completed") && (
                             <DisputeModal
                                 bookingId={booking.id}
+                                onSuccess={onSuccess}
+                            />
+                        )}
+
+                        {/* Review Dialog - Only for completed bookings */}
+                        {booking.status === "completed" && (
+                            <ReviewDialog
+                                bookingId={booking.id}
+                                reviewee={userRole === "guest" ? booking.host : booking.guest}
+                                revieweeName={userRole === "guest" ? "Host" : "Guest"}
+                                propertyTitle={booking.propertyTitle}
                                 onSuccess={onSuccess}
                             />
                         )}

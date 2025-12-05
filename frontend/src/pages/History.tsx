@@ -39,41 +39,39 @@ const History = () => {
             console.log(`✅ Found ${allBookings.length} total bookings (as guest or host)`);
 
             // Enrich bookings with property details and IPFS metadata
-            const enrichedBookings = await Promise.all(
-                allBookings.map(async (booking) => {
-                    try {
-                        // Fetch property details
-                        const property = await getProperty(booking.propertyId);
-                        if (!property) {
-                            console.warn(`⚠️ Property #${booking.propertyId} not found`);
-                            return null;
-                        }
-
-                        // Fetch IPFS metadata
-                        const metadata = await fetchIPFSMetadata(property.metadataUri);
-                        if (!metadata) {
-                            console.warn(`⚠️ Metadata not found for property #${booking.propertyId}`);
-                            return null;
-                        }
-
-                        // Get cover image
-                        const coverImage =
-                            metadata.images && metadata.images.length > 0
-                                ? getIPFSImageUrl(metadata.images[0])
-                                : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
-
-                        return {
-                            ...booking,
-                            propertyTitle: metadata.title,
-                            propertyLocation: metadata.location,
-                            propertyImage: coverImage,
-                        };
-                    } catch (error) {
-                        console.error(`Error enriching booking #${booking.id}:`, error);
-                        return null;
+            const enrichedBookings = [];
+            for (const booking of allBookings) {
+                try {
+                    // Fetch property details
+                    const property = await getProperty(booking.propertyId);
+                    if (!property) {
+                        console.warn(`⚠️ Property #${booking.propertyId} not found`);
+                        continue;
                     }
-                })
-            );
+
+                    // Fetch IPFS metadata
+                    const metadata = await fetchIPFSMetadata(property.metadataUri);
+                    if (!metadata) {
+                        console.warn(`⚠️ Metadata not found for property #${booking.propertyId}`);
+                        continue;
+                    }
+
+                    // Get cover image
+                    const coverImage =
+                        metadata.images && metadata.images.length > 0
+                            ? getIPFSImageUrl(metadata.images[0])
+                            : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+
+                    enrichedBookings.push({
+                        ...booking,
+                        propertyTitle: metadata.title,
+                        propertyLocation: metadata.location,
+                        propertyImage: coverImage,
+                    });
+                } catch (error) {
+                    console.error(`Error enriching booking #${booking.id}:`, error);
+                }
+            }
 
             return enrichedBookings.filter((b) => b !== null);
         },

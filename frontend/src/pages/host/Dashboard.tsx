@@ -12,6 +12,7 @@ import { BookingActions } from "@/components/BookingActions";
 import NoProperties from "@/components/NoProperties";
 import PropertyCard from "@/components/PropertyCard";
 import Loader from "@/components/Loader";
+import { BadgeCollection } from "@/components/BadgeCollection";
 
 const Dashboard = () => {
     const { t } = useTranslation();
@@ -37,13 +38,14 @@ const Dashboard = () => {
             console.log(`✅ Found ${blockchainProperties.length} properties for user`);
 
             // Enrich each property with IPFS metadata
-            const enrichedProperties = await Promise.all(
-                blockchainProperties.map(async (prop) => {
+            const enrichedProperties = [];
+            for (const prop of blockchainProperties) {
+                try {
                     const metadata = await fetchIPFSMetadata(prop.metadataUri);
 
                     if (!metadata) {
                         console.warn(`⚠️ Could not fetch metadata for property #${prop.id}`);
-                        return null;
+                        continue;
                     }
 
                     // Get the first image URL
@@ -51,7 +53,7 @@ const Dashboard = () => {
                         ? getIPFSImageUrl(metadata.images[0])
                         : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
 
-                    return {
+                    enrichedProperties.push({
                         id: prop.id,
                         blockchain_id: prop.id,
                         title: metadata.title,
@@ -67,9 +69,11 @@ const Dashboard = () => {
                         images: metadata.images.map(getIPFSImageUrl),
                         active: prop.active,
                         owner: prop.owner,
-                    };
-                })
-            );
+                    });
+                } catch (error) {
+                    console.error(`Error enriching property #${prop.id}:`, error);
+                }
+            }
 
             // Filter out null values (failed metadata fetches)
             const validProperties = enrichedProperties.filter(prop => prop !== null);
@@ -95,26 +99,31 @@ const Dashboard = () => {
             const hostOnlyBookings = allBookings.filter(booking => booking.host === userAddress);
 
             // Enrich bookings with property details
-            const enrichedBookings = await Promise.all(
-                hostOnlyBookings.map(async (booking) => {
-                    try {
-                        const property = await getProperty(booking.propertyId);
-                        if (!property) return booking;
-
-                        const metadata = await fetchIPFSMetadata(property.metadataUri);
-                        if (!metadata) return booking;
-
-                        return {
-                            ...booking,
-                            propertyTitle: metadata.title,
-                            propertyLocation: metadata.location,
-                        };
-                    } catch (error) {
-                        console.error(`Error enriching booking #${booking.id}:`, error);
-                        return booking;
+            const enrichedBookings = [];
+            for (const booking of hostOnlyBookings) {
+                try {
+                    const property = await getProperty(booking.propertyId);
+                    if (!property) {
+                        enrichedBookings.push(booking);
+                        continue;
                     }
-                })
-            );
+
+                    const metadata = await fetchIPFSMetadata(property.metadataUri);
+                    if (!metadata) {
+                        enrichedBookings.push(booking);
+                        continue;
+                    }
+
+                    enrichedBookings.push({
+                        ...booking,
+                        propertyTitle: metadata.title,
+                        propertyLocation: metadata.location,
+                    });
+                } catch (error) {
+                    console.error(`Error enriching booking #${booking.id}:`, error);
+                    enrichedBookings.push(booking);
+                }
+            }
 
             return enrichedBookings;
         }
@@ -285,6 +294,19 @@ const Dashboard = () => {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* Host Achievements */}
+                        {userData?.profile?.stxAddress?.testnet && (
+                            <Card className="col-span-1 lg:col-span-3 border-border/50 bg-card/50 backdrop-blur-sm">
+                                <CardContent className="pt-6">
+                                    <BadgeCollection
+                                        userAddress={userData.profile.stxAddress.testnet}
+                                        title="Your Achievements"
+                                        showLocked={false}
+                                    />
+                                </CardContent>
+                            </Card>
+                        )}
 
                         <Card className="col-span-1 border-border/50 bg-card/50 backdrop-blur-sm">
                             <CardHeader>
