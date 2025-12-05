@@ -1,0 +1,162 @@
+[
+  {
+    "title": "Introduction",
+    "content": "# StackNStay Knowledge Base",
+    "section": ""
+  },
+  {
+    "title": "What is StackNStay?",
+    "content": "StackNStay is a decentralized property rental platform built on the Stacks blockchain. It connects property owners (hosts) with travelers (guests) without traditional intermediaries like Airbnb or Booking.com.",
+    "section": "What is StackNStay?"
+  },
+  {
+    "title": "Key Features:",
+    "content": "- **Decentralized**: No central authority controls your listings or bookings\n- **Low Fees**: Only 2% platform fee (vs 15-20% on traditional platforms)\n- **Smart Contract Escrow**: Your payment is held securely until check-in\n- **Blockchain-based**: All transactions recorded on Stacks blockchain\n- **IPFS Storage**: Property data stored on decentralized IPFS network\n- **STX Payments**: Pay with Stacks (STX) cryptocurrency\n\n---",
+    "section": "What is StackNStay?"
+  },
+  {
+    "title": "Why So Low?",
+    "content": "Traditional platforms like Airbnb charge 15-20% in fees. StackNStay's smart contracts automate everything, eliminating expensive middlemen.\n\n**Fee Breakdown:**\n- **Guest Fee**: 2% of booking total\n- **Host Fee**: 0% (hosts keep 98% of earnings!)\n- **Traditional Platforms**: 15-20% total fees\n\n**Example:**\n- Booking cost: 100 STX\n- Platform fee: 2 STX\n- Total paid: 102 STX\n- Host receives: 100 STX\n\n**Why This Works:**\n- Smart contracts handle escrow automatically\n- No customer service staff needed\n- No payment processing fees (blockchain native)\n- No marketing costs (decentralized discovery)\n\n---",
+    "section": "Platform Fees"
+  },
+  {
+    "title": "Step-by-Step Process:",
+    "content": "1. **Browse Properties**: Search for properties by location, price, amenities\n2. **Select Dates**: Choose check-in and check-out dates\n3. **Book & Pay**: Payment goes into smart contract escrow\n4. **Confirmation**: Booking confirmed on blockchain\n5. **Check-in**: At check-in time, payment releases to host\n6. **Check-out**: Leave a review after your stay",
+    "section": "How Booking Works"
+  },
+  {
+    "title": "Escrow Protection:",
+    "content": "Your payment is held in a smart contract until check-in. This protects both guests and hosts:\n\n**For Guests:**\n- Money held safely until check-in\n- Can cancel for refund (with cancellation policy)\n- Dispute resolution if property doesn't match listing\n\n**For Hosts:**\n- Guaranteed payment after check-in\n- Protected from fraudulent chargebacks\n- Automatic payment release (no waiting)\n\n---",
+    "section": "How Booking Works"
+  },
+  {
+    "title": "What is Block Height?",
+    "content": "The Stacks blockchain produces blocks approximately every 10 minutes. Block height is the number of blocks since the blockchain started.",
+    "section": "Block Heights vs. Dates"
+  },
+  {
+    "title": "Why Use Block Heights?",
+    "content": "Smart contracts use block heights instead of calendar dates because they're more reliable on the blockchain. The frontend converts your selected dates to approximate block heights.",
+    "section": "Block Heights vs. Dates"
+  },
+  {
+    "title": "Example:",
+    "content": "- You select March 10, 2024 for check-in\n- Frontend calculates: ~block 830,000\n- Smart contract uses block 830,000 for check-in",
+    "section": "Block Heights vs. Dates"
+  },
+  {
+    "title": "Conversion:",
+    "content": "- **1 day** ≈ 144 blocks (24 hours × 6 blocks/hour)\n- **1 week** ≈ 1,008 blocks\n- **1 month** ≈ 4,320 blocks\n\n**Don't worry!** The frontend handles all conversions automatically. You just pick dates like normal.\n\n---",
+    "section": "Block Heights vs. Dates"
+  },
+  {
+    "title": "Refund Schedule:",
+    "content": "**More than 7 days before check-in:**\n- 100% refund (minus small gas fee)\n\n**3-7 days before check-in:**\n- 50% refund\n\n**Less than 3 days before check-in:**\n- 0% refund (host keeps full amount)\n\n**After check-in:**\n- No refunds (payment already released to host)",
+    "section": "Cancellation Policy"
+  },
+  {
+    "title": "How to Cancel:",
+    "content": "1. Go to \"My Bookings\" page\n2. Find your booking\n3. Click \"Cancel Booking\"\n4. Confirm cancellation\n5. Refund processed automatically via smart contract\n\n---",
+    "section": "Cancellation Policy"
+  },
+  {
+    "title": "When to Raise a Dispute:",
+    "content": "- Property doesn't match listing\n- Serious cleanliness issues\n- Safety concerns\n- Host no-show or locked out\n- Major amenities missing",
+    "section": "Dispute Resolution"
+  },
+  {
+    "title": "How Disputes Work:",
+    "content": "1. **Guest raises dispute** (during stay or within 24 hours of check-out)\n2. **Evidence submitted**: Photos, messages, descriptions\n3. **Admin reviews**: Platform admin examines evidence\n4. **Decision made**: Full refund, partial refund, or no refund\n5. **Smart contract executes**: Refund processed automatically",
+    "section": "Dispute Resolution"
+  },
+  {
+    "title": "Evidence to Provide:",
+    "content": "- Photos of issues\n- Screenshots of messages with host\n- Detailed description of problem\n- Timestamps of when issue occurred\n\n---",
+    "section": "Dispute Resolution"
+  },
+  {
+    "title": "What Data is Stored:",
+    "content": "**On Blockchain:**\n- Property IDs and prices\n- Booking dates and amounts\n- Review scores and text\n- Wallet addresses (public)\n\n**Off Blockchain (IPFS):**\n- Property photos\n- Descriptions and amenities\n- Host profile information",
+    "section": "Privacy and Decentralization"
+  },
+  {
+    "title": "What's NOT Stored:",
+    "content": "- Your name, email, or phone number\n- Payment card information\n- Personal identification documents\n- Private messages (unless you choose to share)",
+    "section": "Privacy and Decentralization"
+  },
+  {
+    "title": "True Ownership:",
+    "content": "- **Hosts own their property listings** (stored on IPFS, linked to your wallet)\n- **Users own their booking records** (on blockchain, tied to your wallet)\n- **No company can freeze your account** or censor your listings\n- **No data harvesting** for advertising\n\n---",
+    "section": "Privacy and Decentralization"
+  },
+  {
+    "title": "For Guests:",
+    "content": "1. **Get a Stacks Wallet**:\n   - Install Hiro Wallet (browser extension)\n   - Or use Leather Wallet\n   - Or Xverse Wallet\n\n2. **Get STX Tokens**:\n   - Buy on exchanges: Binance, OKX, Kraken\n   - Transfer to your wallet\n\n3. **Connect Wallet**:\n   - Click \"Connect Wallet\" on StackNStay\n   - Approve connection\n\n4. **Start Booking**:\n   - Search for properties\n   - Book with STX",
+    "section": "Getting Started"
+  },
+  {
+    "title": "For Hosts:",
+    "content": "1. **Connect Wallet** (same as guests)\n\n2. **Create Listing**:\n   - Click \"List Property\"\n   - Upload photos (stored on IPFS)\n   - Set price in STX\n   - Add amenities and description\n\n3. **Publish**:\n   - Transaction sent to blockchain\n   - Listing goes live immediately\n\n4. **Manage Bookings**:\n   - View bookings in dashboard\n   - Release payments after check-in\n   - Respond to guest messages\n\n---",
+    "section": "Getting Started"
+  },
+  {
+    "title": "\"My transaction is pending forever\"",
+    "content": "**Solution:**\n- Stacks transactions take 10-30 minutes to confirm\n- Check status on Stacks Explorer: https://explorer.hiro.so\n- If stuck for over 1 hour, contact support",
+    "section": "Common Issues"
+  },
+  {
+    "title": "\"I don't have enough STX\"",
+    "content": "**Solution:**\n- You need: Booking cost + 2% fee + ~0.1 STX for gas\n- Buy more STX on an exchange\n- Transfer to your wallet",
+    "section": "Common Issues"
+  },
+  {
+    "title": "\"Host isn't responding\"",
+    "content": "**Solution:**\n- Hosts have 24 hours to respond\n- If no response and more than 7 days before check-in: Cancel for full refund\n- If less than 7 days: Contact support for assistance",
+    "section": "Common Issues"
+  },
+  {
+    "title": "\"Property doesn't match listing\"",
+    "content": "**Solution:**\n- Take photos immediately\n- Raise a dispute within 24 hours of check-out\n- Provide evidence (photos, descriptions)\n- Admin will review and determine fair refund",
+    "section": "Common Issues"
+  },
+  {
+    "title": "\"Can't connect wallet\"",
+    "content": "**Solution:**\n- Make sure wallet extension is installed\n- Refresh the page\n- Try a different browser\n- Clear browser cache\n\n---",
+    "section": "Common Issues"
+  },
+  {
+    "title": "For Guests:",
+    "content": "✅ **Lower Fees**: 2% vs 15% on Airbnb  \n✅ **True Privacy**: No personal data collection  \n✅ **Transparent Escrow**: See exactly where your money is  \n✅ **Censorship-Resistant**: Can't be deplatformed  \n✅ **Global Access**: No geographic restrictions  \n✅ **Blockchain Security**: Immutable booking records",
+    "section": "Benefits Over Traditional Platforms"
+  },
+  {
+    "title": "For Hosts:",
+    "content": "✅ **Keep 98% of Earnings**: vs 80-85% on traditional platforms  \n✅ **No Arbitrary Suspensions**: You own your listings  \n✅ **Direct Relationship**: Connect with guests directly  \n✅ **Global Reach**: Access worldwide travelers  \n✅ **Instant Payments**: Released automatically at check-in  \n✅ **No Discrimination**: Platform can't delist you unfairly  \n\n---",
+    "section": "Benefits Over Traditional Platforms"
+  },
+  {
+    "title": "Smart Contracts:",
+    "content": "**stackstay-escrow.clar**:\n- Handles property listings\n- Manages bookings and escrow\n- Processes payments and refunds\n- Enforces cancellation policies\n\n**stackstay-reputation.clar**:\n- Tracks user reputation scores\n- Records review history\n- Calculates trust ratings\n\n**stackstay-badge.clar**:\n- Awards achievement badges\n- Tracks milestones\n- Gamifies platform engagement\n\n**stackstay-dispute.clar**:\n- Manages dispute resolution\n- Holds disputed funds\n- Executes admin decisions",
+    "section": "Technical Details"
+  },
+  {
+    "title": "Technology Stack:",
+    "content": "**Blockchain**: Stacks (Bitcoin-secured)  \n**Smart Contracts**: Clarity language  \n**Storage**: IPFS (Pinata)  \n**Frontend**: React + TypeScript  \n**Backend**: FastAPI + Python  \n**AI**: LangGraph + Groq + Cohere  \n\n---",
+    "section": "Technical Details"
+  },
+  {
+    "title": "How Your Funds Are Protected:",
+    "content": "1. **Smart Contract Escrow**: Funds locked in audited contract\n2. **Time-locked Releases**: Payments only release at check-in block height\n3. **Dispute Mechanism**: Admin can intervene if needed\n4. **Blockchain Immutability**: All transactions recorded permanently",
+    "section": "Security"
+  },
+  {
+    "title": "Best Practices:",
+    "content": "- Never share your wallet seed phrase\n- Verify property details before booking\n- Read reviews from other guests\n- Communicate through platform (for dispute evidence)\n- Take photos at check-in and check-out\n\n---",
+    "section": "Security"
+  },
+  {
+    "title": "FAQ",
+    "content": "**Q: Do I need cryptocurrency to use StackNStay?**  \nA: Yes, you need STX (Stacks tokens) to book properties or list properties.\n\n**Q: Is this legal?**  \nA: Yes! Decentralized platforms are legal. Hosts are responsible for local regulations (taxes, permits).\n\n**Q: What if I lose my wallet?**  \nA: If you lose your seed phrase, you lose access to your wallet and funds. Always back it up securely!\n\n**Q: Can I get a refund in USD?**  \nA: No, refunds are in STX. You can sell STX on exchanges for USD.\n\n**Q: How do I contact the host?**  \nA: Use the messaging feature on the booking page (coming in v2.0). For now, communicate via wallet addresses.\n\n**Q: Is my data private?**  \nA: Yes! Only your wallet address is public. No personal information is stored.\n\n**Q: What happens if the host cancels?**  \nA: You get a full refund automatically via smart contract.\n\n**Q: Can I list multiple properties?**  \nA: Yes! No limit on listings per wallet.\n\n**Q: Do you support fiat currency?**  \nA: Not yet. Currently STX only. Multi-currency support coming in v2.0.\n\n**Q: How do I become a host?**  \nA: Connect your wallet and click \"List Property\". It's that simple!",
+    "section": "FAQ"
+  }
+]

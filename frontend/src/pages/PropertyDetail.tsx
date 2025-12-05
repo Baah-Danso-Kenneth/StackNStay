@@ -9,22 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { openContractCall } from "@stacks/connect";
 import { getProperty, bookProperty, PLATFORM_FEE_BPS, BPS_DENOMINATOR } from "@/lib/escrow";
 import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { PostConditionMode } from "@stacks/transactions";
 import {
   MapPin,
   Star,
   Users,
   Wifi,
-  UtensilsCrossed,
-  Waves,
-  Car,
   ArrowLeft,
-  Check,
   Calendar as CalendarIcon,
   Shield,
   ChevronDown,
@@ -60,6 +57,7 @@ const PropertyDetail = () => {
   const navigate = useNavigate();
   const { userData } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Booking state
   const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
@@ -191,6 +189,11 @@ const PropertyDetail = () => {
       const checkInBlock = dateToBlockHeight(checkIn, currentBlockHeight);
       const checkOutBlock = dateToBlockHeight(checkOut, currentBlockHeight);
 
+      // Calculate total amount (base cost + platform fee)
+      const baseCost = property.pricePerNightMicroSTX * numNights;
+      const platformFee = Math.floor((baseCost * PLATFORM_FEE_BPS) / BPS_DENOMINATOR);
+      const totalAmount = baseCost + platformFee;
+
       console.log('📅 Booking details:', {
         propertyId,
         checkIn: checkIn.toISOString(),
@@ -199,6 +202,12 @@ const PropertyDetail = () => {
         checkOutBlock,
         numNights,
         guests,
+      });
+
+      console.log('💰 Payment breakdown:', {
+        baseCost: `${baseCost} microSTX (${baseCost / 1_000_000} STX)`,
+        platformFee: `${platformFee} microSTX (${platformFee / 1_000_000} STX)`,
+        totalAmount: `${totalAmount} microSTX (${totalAmount / 1_000_000} STX)`,
       });
 
       toast({
@@ -215,6 +224,7 @@ const PropertyDetail = () => {
 
       await openContractCall({
         ...contractCallOptions,
+        postConditionMode: PostConditionMode.Allow,
         onFinish: async (data) => {
           console.log('✅ Booking transaction submitted:', data);
 
@@ -285,10 +295,13 @@ const PropertyDetail = () => {
               description: `Your booking #${bookingId} has been confirmed. Payment is held in escrow.`,
             });
 
+            // Invalidate bookings cache to ensure fresh data on History page
+            await queryClient.invalidateQueries({ queryKey: ["user-bookings"] });
+
             // Navigate to booking confirmation or history page
             setTimeout(() => {
-              navigate(`/history`);
-            }, 2000);
+              navigate(`/my-bookings`);
+            }, 4000);
 
           } catch (confirmError) {
             console.error('Error during confirmation:', confirmError);
