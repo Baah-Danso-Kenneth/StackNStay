@@ -297,10 +297,27 @@ export async function getBooking(bookingId: number): Promise<Booking | null> {
 
         const data = cvToValue(optionalValue.value);
 
-        return {
+        // Parse principal addresses (they come as objects from Clarity)
+        let guestAddress = data.guest;
+        if (guestAddress && typeof guestAddress === 'object' && 'value' in guestAddress) {
+            guestAddress = guestAddress.value;
+        }
+        if (typeof guestAddress !== 'string') {
+            guestAddress = String(guestAddress || '');
+        }
+
+        let hostAddress = data.host;
+        if (hostAddress && typeof hostAddress === 'object' && 'value' in hostAddress) {
+            hostAddress = hostAddress.value;
+        }
+        if (typeof hostAddress !== 'string') {
+            hostAddress = String(hostAddress || '');
+        }
+
+        const booking = {
             propertyId: Number(data["property-id"]),
-            guest: data.guest,
-            host: data.host,
+            guest: guestAddress,
+            host: hostAddress,
             checkIn: Number(data["check-in"]),
             checkOut: Number(data["check-out"]),
             totalAmount: Number(data["total-amount"]),
@@ -310,6 +327,15 @@ export async function getBooking(bookingId: number): Promise<Booking | null> {
             createdAt: Number(data["created-at"]),
             escrowedAmount: Number(data["escrowed-amount"]),
         };
+
+        console.log(`📋 Parsed booking:`, {
+            id: bookingId,
+            guest: booking.guest,
+            host: booking.host,
+            status: booking.status
+        });
+
+        return booking;
     } catch (error) {
         console.error("Error fetching booking:", error);
         return null;
@@ -393,19 +419,23 @@ export async function getAllBookings(maxBookings: number = 100): Promise<(Bookin
 
         // Try to fetch bookings up to maxBookings
         // START AT 0 because Clarity booking IDs ARE 0-based
+        console.log(`🔍 Fetching bookings (max: ${maxBookings})...`);
         for (let i = 0; i < maxBookings; i++) {
             const booking = await getBooking(i);
 
             if (booking) {
+                console.log(`✅ Found booking #${i}:`, booking);
                 bookings.push({
                     id: i,
                     ...booking,
                 });
                 consecutiveNulls = 0; // Reset counter
             } else {
+                console.log(`⚠️ Booking #${i} not found`);
                 consecutiveNulls++;
                 // Stop if we hit many consecutive nulls
                 if (consecutiveNulls >= maxConsecutiveNulls) {
+                    console.log(`⏹️ Stopped at booking ID ${i} after ${maxConsecutiveNulls} consecutive nulls`);
                     break;
                 }
             }
@@ -424,12 +454,26 @@ export async function getAllBookings(maxBookings: number = 100): Promise<(Bookin
  */
 export async function getUserBookings(userAddress: string, maxBookings: number = 100): Promise<(Booking & { id: number })[]> {
     try {
+        console.log(`🔍 getUserBookings called for address: "${userAddress}"`);
         const allBookings = await getAllBookings(maxBookings);
 
         // Filter bookings where user is either guest or host
-        const userBookings = allBookings.filter(
-            booking => booking.guest === userAddress || booking.host === userAddress
-        );
+        const userBookings = allBookings.filter((booking) => {
+            const isGuest = booking.guest === userAddress;
+            const isHost = booking.host === userAddress;
+            const matches = isGuest || isHost;
+            
+            console.log(`🔎 Booking #${booking.id}:`, {
+                guest: booking.guest,
+                host: booking.host,
+                userAddress,
+                isGuest,
+                isHost,
+                matches
+            });
+            
+            return matches;
+        });
 
         console.log('✨ Found', userBookings.length, 'bookings for user', userAddress);
         return userBookings;

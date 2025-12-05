@@ -10,28 +10,28 @@ plan:
       transactions:
         - contract-publish:
             contract-name: stackstay-badge
-            expected-sender: ST30KZS9YJ5BRTM39HMDC0QBF83PXNDSQTK4FFZWJ
+            expected-sender: ST29YGNFT0YCF03062RPKEPEJ7ZX1TDASKADBAAT3
             cost: 64210
             path: contracts/stackstay-badge.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stackstay-escrow
-            expected-sender: ST30KZS9YJ5BRTM39HMDC0QBF83PXNDSQTK4FFZWJ
+            expected-sender: ST29YGNFT0YCF03062RPKEPEJ7ZX1TDASKADBAAT3
             cost: 91740
             path: contracts/stackstay-escrow.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stackstay-dispute
-            expected-sender: ST30KZS9YJ5BRTM39HMDC0QBF83PXNDSQTK4FFZWJ
+            expected-sender: ST29YGNFT0YCF03062RPKEPEJ7ZX1TDASKADBAAT3
             cost: 54730
             path: contracts/stackstay-dispute.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stackstay-reputation
-            expected-sender: ST30KZS9YJ5BRTM39HMDC0QBF83PXNDSQTK4FFZWJ
+            expected-sender: ST29YGNFT0YCF03062RPKEPEJ7ZX1TDASKADBAAT3
             cost: 46620
             path: contracts/stackstay-reputation.clar
             anchor-block-only: true

@@ -72,6 +72,22 @@ class VectorStore:
         if property_data.get("description"):
             parts.append(f"Description: {property_data['description']}")
         
+        # Host reputation and badges (NEW - from enriched data)
+        if property_data.get("is_superhost"):
+            parts.append("Superhost verified property")
+        
+        if property_data.get("host_badges"):
+            badges = property_data["host_badges"]
+            badge_text = ", ".join(badges)
+            parts.append(f"Host achievements: {badge_text}")
+        
+        if property_data.get("host_reputation"):
+            reputation = property_data["host_reputation"]
+            avg_rating = reputation.get("average_rating", 0)
+            total_reviews = reputation.get("total_reviews", 0)
+            if avg_rating > 0:
+                parts.append(f"Host rating: {avg_rating:.1f} stars from {total_reviews} reviews")
+        
         return ". ".join(parts)
     
     async def embed_texts(self, texts: List[str]) -> np.ndarray:

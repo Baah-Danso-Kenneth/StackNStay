@@ -4,18 +4,17 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, ExternalLink } from "lucide-react";
+import { Calendar, MapPin, ExternalLink, ShoppingBag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { getUserBookings, getProperty } from "@/lib/escrow";
 import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
 import { BookingActions } from "@/components/BookingActions";
 import { DisputeModal } from "@/components/DisputeModal";
-import NoHistory from "@/components/NoHistory";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 
-const History = () => {
+const MyBookings = () => {
     const { t } = useTranslation();
     const { userData } = useAuth();
     const [filter, setFilter] = useState<"all" | "confirmed" | "completed" | "cancelled">("all");
@@ -28,21 +27,24 @@ const History = () => {
         isLoading,
         refetch,
     } = useQuery({
-        queryKey: ["user-bookings", userData?.profile.stxAddress.testnet],
+        queryKey: ["my-bookings", userData?.profile.stxAddress.testnet],
         enabled: !!userData,
         refetchOnMount: "always", // Always refetch when component mounts
         queryFn: async () => {
             if (!userData) return [];
 
             const userAddress = userData.profile.stxAddress.testnet;
-            console.log("🔍 Fetching bookings for user:", userAddress);
+            console.log("🔍 Fetching my bookings for user:", userAddress);
 
             const allBookings = await getUserBookings(userAddress, 100);
-            console.log(`✅ Found ${allBookings.length} bookings`);
+
+            // Filter: Only bookings where user is GUEST
+            const myBookings = allBookings.filter(b => b.guest === userAddress);
+            console.log(`✅ Found ${myBookings.length} bookings where user is guest`);
 
             // Enrich bookings with property details and IPFS metadata
             const enrichedBookings = await Promise.all(
-                allBookings.map(async (booking) => {
+                myBookings.map(async (booking) => {
                     try {
                         // Fetch property details
                         const property = await getProperty(booking.propertyId);
@@ -98,8 +100,8 @@ const History = () => {
                 <Navbar />
                 <div className="container mx-auto px-4 py-24 max-w-5xl">
                     <div className="text-center">
-                        <h1 className="text-4xl font-bold mb-4">Booking History</h1>
-                        <p className="text-muted-foreground">Connect your wallet to view your booking history</p>
+                        <h1 className="text-4xl font-bold mb-4">My Bookings</h1>
+                        <p className="text-muted-foreground">Connect your wallet to view your bookings</p>
                     </div>
                 </div>
             </div>
@@ -114,8 +116,11 @@ const History = () => {
             <div className="container mx-auto px-4 py-24 max-w-5xl animate-fade-in">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h1 className="text-4xl font-heading font-bold tracking-tight mb-2">Booking History</h1>
-                        <p className="text-muted-foreground">View and manage your bookings</p>
+                        <h1 className="text-4xl font-heading font-bold tracking-tight mb-2 flex items-center gap-3">
+                            <ShoppingBag className="w-8 h-8 text-primary" />
+                            My Bookings
+                        </h1>
+                        <p className="text-muted-foreground">View and manage your property bookings</p>
                     </div>
                 </div>
 
@@ -141,6 +146,9 @@ const History = () => {
                                             <div className="w-full md:w-48 h-32 md:h-auto relative overflow-hidden">
                                                 <img src={booking.propertyImage} alt={booking.propertyTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
+                                                <Badge className="absolute top-2 right-2 bg-primary/90 text-primary-foreground">
+                                                    {booking.status}
+                                                </Badge>
                                             </div>
 
                                             {/* Content Section */}
@@ -201,11 +209,20 @@ const History = () => {
                         </div>
                     </>
                 ) : (
-                    <NoHistory />
+                    <div className="text-center py-16">
+                        <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                        <h3 className="text-xl font-semibold mb-2">No Bookings Yet</h3>
+                        <p className="text-muted-foreground mb-6">
+                            You haven't made any bookings yet. Start exploring properties!
+                        </p>
+                        <Button asChild>
+                            <a href="/properties">Browse Properties</a>
+                        </Button>
+                    </div>
                 )}
             </div>
         </div>
     );
 };
 
-export default History;
+export default MyBookings;

@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import History from "./pages/History";
+import MyBookings from "./pages/MyBookings";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import LearnMore from "./pages/LearnMore";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/learn-more" element={<LearnMore />} />
           <Route path="/properties" element={<Properties />} />
           <Route path="/property/:id" element={<PropertyDetail />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
 
