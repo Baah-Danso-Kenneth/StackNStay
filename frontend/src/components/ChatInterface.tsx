@@ -58,7 +58,7 @@ export function ChatInterface() {
     return (
         <div className="flex flex-col h-full bg-gradient-to-b from-background to-muted/20">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b bg-white/80 dark:bg-background/80 backdrop-blur-md sticky top-0 z-10">
+            <div className="flex items-center justify-between p-4 border-b bg-white/80 dark:bg-background/80 backdrop-blur-md flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20 animate-in zoom-in duration-500">
                         <Sparkles className="w-5 h-5 text-white animate-pulse" />
@@ -85,92 +85,94 @@ export function ChatInterface() {
                 )}
             </div>
 
-            {/* Messages */}
-            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                <div className="space-y-6 pb-4">
-                    {messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6 relative group">
-                                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-accent opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
-                                <Sparkles className="w-12 h-12 text-primary relative z-10" />
+            {/* Messages - Scrollable Area */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+                <ScrollArea className="h-full" ref={scrollRef}>
+                    <div className="p-4 space-y-6">
+                        {messages.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6 relative group">
+                                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-accent opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
+                                    <Sparkles className="w-12 h-12 text-primary relative z-10" />
+                                </div>
+                                <h3 className="text-2xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                                    Hi {userName}! 👋
+                                </h3>
+                                <p className="text-muted-foreground max-w-md mb-8 text-lg">
+                                    I'm your personal assistant. How can I help you find your perfect stay today?
+                                </p>
+                                <div className="flex flex-wrap gap-3 justify-center max-w-lg">
+                                    <Badge
+                                        variant="outline"
+                                        className="cursor-pointer hover:bg-accent"
+                                        onClick={() => handleSuggestedAction("What is StackNStay?")}
+                                    >
+                                        What is StackNStay?
+                                    </Badge>
+                                    <Badge
+                                        variant="outline"
+                                        className="cursor-pointer hover:bg-accent"
+                                        onClick={() => handleSuggestedAction("Find me a 2-bedroom apartment")}
+                                    >
+                                        Find properties
+                                    </Badge>
+                                    <Badge
+                                        variant="outline"
+                                        className="cursor-pointer hover:bg-accent"
+                                        onClick={() => handleSuggestedAction("How do fees work?")}
+                                    >
+                                        How do fees work?
+                                    </Badge>
+                                </div>
                             </div>
-                            <h3 className="text-2xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                                Hi {userName}! 👋
-                            </h3>
-                            <p className="text-muted-foreground max-w-md mb-8 text-lg">
-                                I'm your personal assistant. How can I help you find your perfect stay today?
-                            </p>
-                            <div className="flex flex-wrap gap-3 justify-center max-w-lg">
-                                <Badge
-                                    variant="outline"
-                                    className="cursor-pointer hover:bg-accent"
-                                    onClick={() => handleSuggestedAction("What is StackNStay?")}
-                                >
-                                    What is StackNStay?
-                                </Badge>
-                                <Badge
-                                    variant="outline"
-                                    className="cursor-pointer hover:bg-accent"
-                                    onClick={() => handleSuggestedAction("Find me a 2-bedroom apartment")}
-                                >
-                                    Find properties
-                                </Badge>
-                                <Badge
-                                    variant="outline"
-                                    className="cursor-pointer hover:bg-accent"
-                                    onClick={() => handleSuggestedAction("How do fees work?")}
-                                >
-                                    How do fees work?
-                                </Badge>
-                            </div>
-                        </div>
-                    ) : (
-                        messages.map((message) => (
-                            <ChatMessage key={message.id} message={message} />
-                        ))
-                    )}
+                        ) : (
+                            messages.map((message) => (
+                                <ChatMessage key={message.id} message={message} />
+                            ))
+                        )}
 
-                    {/* Loading Indicator */}
-                    {isLoading && (
-                        <div className="flex gap-3">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                                <Loader2 className="w-5 h-5 text-white animate-spin" />
-                            </div>
-                            <div className="flex-1">
-                                <div className="rounded-2xl px-4 py-3 bg-muted max-w-[80%]">
-                                    <div className="flex gap-1">
-                                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        {/* Loading Indicator */}
+                        {isLoading && (
+                            <div className="flex gap-3">
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="rounded-2xl px-4 py-3 bg-muted max-w-[80%]">
+                                        <div className="flex gap-1">
+                                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                </div>
-            </ScrollArea>
+                        )}
 
-            {/* Suggested Actions */}
-            {suggestedActions.length > 0 && !isLoading && (
-                <div className="px-4 py-2 border-t bg-muted/30">
-                    <p className="text-xs text-muted-foreground mb-2">Suggested:</p>
-                    <div className="flex flex-wrap gap-2">
-                        {suggestedActions.map((action, idx) => (
-                            <Badge
-                                key={idx}
-                                variant="secondary"
-                                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                                onClick={() => handleSuggestedAction(action)}
-                            >
-                                {action}
-                            </Badge>
-                        ))}
+                        {/* Suggested Actions */}
+                        {suggestedActions.length > 0 && !isLoading && (
+                            <div className="mt-6 pt-4 border-t border-border/50">
+                                <p className="text-xs text-muted-foreground mb-3 font-medium">💡 Suggested questions:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {suggestedActions.map((action, idx) => (
+                                        <Badge
+                                            key={idx}
+                                            variant="secondary"
+                                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all hover:scale-105 shadow-sm"
+                                            onClick={() => handleSuggestedAction(action)}
+                                        >
+                                            {action}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </div>
-            )}
+                </ScrollArea>
+            </div>
 
-            {/* Input */}
-            <div className="p-4 border-t bg-background">
+            {/* Input - Fixed at Bottom */}
+            <div className="p-4 border-t bg-background flex-shrink-0">
                 <div className="flex gap-2">
                     <Input
                         ref={inputRef}

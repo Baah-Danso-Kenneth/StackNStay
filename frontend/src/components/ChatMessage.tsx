@@ -75,8 +75,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
                 {/* Text Message */}
                 <div className={`rounded-2xl px-4 py-3 max-w-[85%] shadow-sm ${isUser
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-white/80 dark:bg-muted/80 backdrop-blur-md border border-border/50'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-white/80 dark:bg-muted/80 backdrop-blur-md border border-border/50'
                     }`}>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">
                         {renderText(displayedText)}
@@ -86,27 +86,29 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
                 {/* Knowledge Snippets */}
                 {!isUser && message.knowledge_snippets && message.knowledge_snippets.length > 0 && (
-                    <div className="w-full space-y-2 mt-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="w-full mt-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                             <BookOpen className="w-4 h-4" />
                             <span>Related Information</span>
                         </div>
-                        {message.knowledge_snippets.map((snippet, idx) => (
-                            <Card key={idx} className="bg-accent/10">
-                                <CardContent className="p-3">
-                                    <h4 className="font-semibold text-sm mb-1">{snippet.title}</h4>
-                                    <p className="text-xs text-muted-foreground line-clamp-3">
-                                        {snippet.content}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        ))}
+                        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                            {message.knowledge_snippets.map((snippet, idx) => (
+                                <Card key={idx} className="bg-accent/10 hover:bg-accent/20 transition-colors">
+                                    <CardContent className="p-3">
+                                        <h4 className="font-semibold text-sm mb-1">{snippet.title}</h4>
+                                        <p className="text-xs text-muted-foreground line-clamp-3">
+                                            {snippet.content}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
                     </div>
                 )}
 
                 {/* Property Cards */}
                 {!isUser && message.properties && message.properties.length > 0 && (
-                    <div className="w-full mt-2">
+                    <div className="w-full mt-2 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {message.properties.map((property) => (
                                 <PropertyChatCard key={property.property_id} property={property} />
