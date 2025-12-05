@@ -12,6 +12,7 @@ import { BookingActions } from "@/components/BookingActions";
 import NoProperties from "@/components/NoProperties";
 import PropertyCard from "@/components/PropertyCard";
 import Loader from "@/components/Loader";
+import { BadgeCollection } from "@/components/BadgeCollection";
 
 const Dashboard = () => {
     const { t } = useTranslation();
@@ -293,6 +294,19 @@ const Dashboard = () => {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* Host Achievements */}
+                        {userData?.profile?.stxAddress?.testnet && (
+                            <Card className="col-span-1 lg:col-span-3 border-border/50 bg-card/50 backdrop-blur-sm">
+                                <CardContent className="pt-6">
+                                    <BadgeCollection
+                                        userAddress={userData.profile.stxAddress.testnet}
+                                        title="Your Achievements"
+                                        showLocked={false}
+                                    />
+                                </CardContent>
+                            </Card>
+                        )}
 
                         <Card className="col-span-1 border-border/50 bg-card/50 backdrop-blur-sm">
                             <CardHeader>
