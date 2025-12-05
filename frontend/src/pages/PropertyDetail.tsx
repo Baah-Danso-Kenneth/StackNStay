@@ -295,8 +295,10 @@ const PropertyDetail = () => {
               description: `Your booking #${bookingId} has been confirmed. Payment is held in escrow.`,
             });
 
-            // Invalidate bookings cache to ensure fresh data on History page
+            // Invalidate bookings cache to ensure fresh data on MyBookings and History pages
             await queryClient.invalidateQueries({ queryKey: ["user-bookings"] });
+            await queryClient.invalidateQueries({ queryKey: ["user-history"] });
+            await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
 
             // Navigate to booking confirmation or history page
             setTimeout(() => {

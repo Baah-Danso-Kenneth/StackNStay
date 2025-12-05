@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, ExternalLink, ShoppingBag } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ShoppingBag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { getUserBookings, getProperty } from "@/lib/escrow";
 import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
-import { BookingActions } from "@/components/BookingActions";
-import { DisputeModal } from "@/components/DisputeModal";
+import { BookingCardHorizontal } from "@/components/BookingCardHorizontal";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 
@@ -137,69 +134,16 @@ const MyBookings = () => {
                         </Tabs>
 
                         {/* Bookings List */}
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {filteredBookings.length > 0 ? (
                                 filteredBookings.map((booking) => (
-                                    <Card key={booking.id} className="overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 group">
-                                        <div className="flex flex-col md:flex-row">
-                                            {/* Image Section */}
-                                            <div className="w-full md:w-48 h-32 md:h-auto relative overflow-hidden">
-                                                <img src={booking.propertyImage} alt={booking.propertyTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
-                                                <Badge className="absolute top-2 right-2 bg-primary/90 text-primary-foreground">
-                                                    {booking.status}
-                                                </Badge>
-                                            </div>
-
-                                            {/* Content Section */}
-                                            <div className="flex-1 p-6 flex flex-col md:flex-row justify-between gap-4">
-                                                <div className="flex-1">
-                                                    <h3 className="text-xl font-bold mb-1">{booking.propertyTitle}</h3>
-                                                    <div className="flex items-center text-sm text-muted-foreground gap-4 mb-3">
-                                                        <span className="flex items-center gap-1">
-                                                            <MapPin className="w-3 h-3" />
-                                                            {booking.propertyLocation}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Calendar className="w-3 h-3" />
-                                                            Booking #{booking.id}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-sm text-muted-foreground mb-2">
-                                                        <p>
-                                                            <strong>Total:</strong> {(booking.totalAmount / 1_000_000).toFixed(2)} STX
-                                                        </p>
-                                                        <p>
-                                                            <strong>Check-in Block:</strong> {booking.checkIn}
-                                                        </p>
-                                                        <p>
-                                                            <strong>Check-out Block:</strong> {booking.checkOut}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Actions Section */}
-                                                <div className="flex flex-col items-end gap-2 min-w-[200px]">
-                                                    <BookingActions booking={booking} currentBlockHeight={currentBlockHeight} onSuccess={() => refetch()} />
-
-                                                    {/* Dispute Actions */}
-                                                    {(booking.status === "confirmed" || booking.status === "completed") && (
-                                                        <DisputeModal
-                                                            bookingId={booking.id}
-                                                            onSuccess={() => refetch()}
-                                                        />
-                                                    )}
-
-                                                    <Button variant="outline" size="sm" className="gap-2 w-full" asChild>
-                                                        <a href={`https://explorer.hiro.so/txid/${booking.id}?chain=testnet`} target="_blank" rel="noopener noreferrer">
-                                                            <ExternalLink className="w-3 h-3" />
-                                                            View on Explorer
-                                                        </a>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Card>
+                                    <BookingCardHorizontal
+                                        key={booking.id}
+                                        booking={booking}
+                                        userRole="guest"
+                                        currentBlockHeight={currentBlockHeight}
+                                        onSuccess={() => refetch()}
+                                    />
                                 ))
                             ) : (
                                 <div className="text-center py-12">

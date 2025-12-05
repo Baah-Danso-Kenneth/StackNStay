@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { getUserProperties, getUserBookings } from "@/lib/escrow";
+import { getUserProperties, getUserBookings, getProperty } from "@/lib/escrow";
 import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
 import { BookingActions } from "@/components/BookingActions";
 import NoProperties from "@/components/NoProperties";
@@ -92,7 +92,31 @@ const Dashboard = () => {
             const allBookings = await getUserBookings(userAddress, 100);
 
             // Filter to only bookings where user is the host
-            return allBookings.filter(booking => booking.host === userAddress);
+            const hostOnlyBookings = allBookings.filter(booking => booking.host === userAddress);
+
+            // Enrich bookings with property details
+            const enrichedBookings = await Promise.all(
+                hostOnlyBookings.map(async (booking) => {
+                    try {
+                        const property = await getProperty(booking.propertyId);
+                        if (!property) return booking;
+
+                        const metadata = await fetchIPFSMetadata(property.metadataUri);
+                        if (!metadata) return booking;
+
+                        return {
+                            ...booking,
+                            propertyTitle: metadata.title,
+                            propertyLocation: metadata.location,
+                        };
+                    } catch (error) {
+                        console.error(`Error enriching booking #${booking.id}:`, error);
+                        return booking;
+                    }
+                })
+            );
+
+            return enrichedBookings;
         }
     });
 
@@ -238,7 +262,11 @@ const Dashboard = () => {
                                                         )}
                                                     </div>
                                                     <p className="text-xs text-muted-foreground">
-                                                        Property #{booking.propertyId} • Guest: {booking.guest.slice(0, 8)}...
+                                                        {booking.propertyTitle ? (
+                                                            <>{booking.propertyTitle} • Guest: {booking.guest.slice(0, 8)}...</>
+                                                        ) : (
+                                                            <>Property #{booking.propertyId} • Guest: {booking.guest.slice(0, 8)}...</>
+                                                        )}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground mt-1">
                                                         Amount: {(booking.totalAmount / 1_000_000).toFixed(2)} STX
