@@ -267,6 +267,36 @@ export async function getProperty(propertyId: number, retries: number = 3): Prom
 }
 
 /**
+ * Helper to parse Clarity numbers that might be BigInt, strings, or wrapped objects
+ */
+function parseClarityNumber(value: any): number {
+    if (value === null || value === undefined) return 0;
+
+    // Handle wrapped value (sometimes happens with certain Stacks versions)
+    if (typeof value === 'object' && 'value' in value) {
+        value = value.value;
+    }
+
+    // Handle bigint
+    if (typeof value === 'bigint') {
+        return Number(value);
+    }
+
+    // Handle string
+    if (typeof value === 'string') {
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    // Handle number
+    if (typeof value === 'number') {
+        return value;
+    }
+
+    return Number(value) || 0;
+}
+
+/**
  * Get booking details
  */
 export async function getBooking(bookingId: number): Promise<Booking | null> {
@@ -315,23 +345,22 @@ export async function getBooking(bookingId: number): Promise<Booking | null> {
         }
 
         const booking = {
-            propertyId: Number(data["property-id"]),
+            propertyId: parseClarityNumber(data["property-id"]),
             guest: guestAddress,
             host: hostAddress,
-            checkIn: Number(data["check-in"]),
-            checkOut: Number(data["check-out"]),
-            totalAmount: Number(data["total-amount"]),
-            platformFee: Number(data["platform-fee"]),
-            hostPayout: Number(data["host-payout"]),
+            checkIn: parseClarityNumber(data["check-in"]),
+            checkOut: parseClarityNumber(data["check-out"]),
+            totalAmount: parseClarityNumber(data["total-amount"]),
+            platformFee: parseClarityNumber(data["platform-fee"]),
+            hostPayout: parseClarityNumber(data["host-payout"]),
             status: data.status,
-            createdAt: Number(data["created-at"]),
-            escrowedAmount: Number(data["escrowed-amount"]),
+            createdAt: parseClarityNumber(data["created-at"]),
+            escrowedAmount: parseClarityNumber(data["escrowed-amount"]),
         };
 
-        console.log(`📋 Parsed booking:`, {
-            id: bookingId,
-            guest: booking.guest,
-            host: booking.host,
+        console.log(`📋 Parsed booking #${bookingId}:`, {
+            propertyId: booking.propertyId,
+            totalAmount: booking.totalAmount,
             status: booking.status
         });
 
@@ -462,7 +491,7 @@ export async function getUserBookings(userAddress: string, maxBookings: number =
             const isGuest = booking.guest === userAddress;
             const isHost = booking.host === userAddress;
             const matches = isGuest || isHost;
-            
+
             console.log(`🔎 Booking #${booking.id}:`, {
                 guest: booking.guest,
                 host: booking.host,
@@ -471,7 +500,7 @@ export async function getUserBookings(userAddress: string, maxBookings: number =
                 isHost,
                 matches
             });
-            
+
             return matches;
         });
 
