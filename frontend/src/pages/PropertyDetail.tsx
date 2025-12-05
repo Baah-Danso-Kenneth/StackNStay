@@ -25,6 +25,8 @@ import {
   Calendar as CalendarIcon,
   Shield,
   ChevronDown,
+  Bath,
+  Bed,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ReviewsList } from "@/components/ReviewsList";
@@ -108,7 +110,7 @@ const PropertyDetail = () => {
         location: metadata.location,
         priceStx: Number.isFinite(stxPrice) ? stxPrice.toFixed(2) : "0.00",
         pricePerNightMicroSTX: Number(onChain.pricePerNight),
-        rating: 4.8, // placeholder until you have on-chain reputation
+        rating: 0, // placeholder until you have on-chain reputation
         reviews: 0,
         maxGuests: metadata.maxGuests,
         bedrooms: metadata.bedrooms,
@@ -430,7 +432,7 @@ const PropertyDetail = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 flex items-center justify-center">
-                    <span className="text-2xl">🛏️</span>
+                    <Bed className="w-6 h-6 text-primary" />
                   </div>
                   <div>
                     <div className="font-semibold text-lg">{property.bedrooms} Bedrooms</div>
@@ -439,7 +441,7 @@ const PropertyDetail = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 flex items-center justify-center">
-                    <span className="text-2xl">🚿</span>
+                    <Bath className="w-6 h-6 text-primary" />
                   </div>
                   <div>
                     <div className="font-semibold text-lg">{property.bathrooms} Bathrooms</div>

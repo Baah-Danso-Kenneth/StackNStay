@@ -22,7 +22,7 @@ const PropertyCard = ({
   title,
   location,
   price,
-  rating = 4.8,
+  rating = 0,
   reviews = 0,
   guests,
   imageUrl,
@@ -73,7 +73,7 @@ const PropertyCard = ({
               target.src = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
             }}
           />
-          
+
           {/* Badges */}
           <div className="absolute top-4 left-4 flex gap-2">
             {featured && (
@@ -91,7 +91,9 @@ const PropertyCard = ({
           <div className="absolute top-4 right-4">
             <div className="flex items-center gap-1 bg-background/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-elegant">
               <Star className="w-4 h-4 text-accent fill-accent" />
-              <span className="font-semibold text-sm">{rating}</span>
+              <span className="font-semibold text-sm">
+                {reviews > 0 ? rating : "New"}
+              </span>
             </div>
           </div>
         </div>
