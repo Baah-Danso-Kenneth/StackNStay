@@ -1,6 +1,6 @@
 """
-RAG Chat Router - LangGraph Conversational Agent
-Handles property search conversations with memory
+RAG Chat Router - Smart Routing Agent
+Handles both property search AND general StackNStay knowledge questions
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -14,6 +14,7 @@ from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 from app.services.vector_store import vector_store
+from app.services.knowledge_store import knowledge_store
 
 load_dotenv()
 
@@ -34,21 +35,13 @@ class ChatRequest(BaseModel):
     filters: Optional[Dict[str, Any]] = None
 
 
-class PropertyRecommendation(BaseModel):
-    property_id: int
-    title: str
-    price_per_night: float
-    location_city: Optional[str] = None
-    image: Optional[str] = None
-    match_score: float
-    highlight: Optional[str] = None
-
-
 class ChatResponse(BaseModel):
     response: str
     properties: List[Dict[str, Any]]
+    knowledge_snippets: List[Dict[str, Any]]
     conversation_id: str
     suggested_actions: List[str]
+    query_type: str  # "property_search" or "knowledge" or "mixed"
 
 
 # ============================================
@@ -56,10 +49,12 @@ class ChatResponse(BaseModel):
 # ============================================
 
 class AgentState(BaseModel):
-    """State for the conversational agent"""
+    """State for the smart routing agent"""
     messages: List[Any] = []
     user_query: str = ""
-    search_results: List[Dict[str, Any]] = []
+    query_type: str = ""  # "property_search", "knowledge", or "mixed"
+    property_results: List[Dict[str, Any]] = []
+    knowledge_results: List[Dict[str, Any]] = []
     filters: Dict[str, Any] = {}
     final_response: str = ""
     conversation_id: str = ""
@@ -69,51 +64,43 @@ class AgentState(BaseModel):
 # LANGGRAPH NODES
 # ============================================
 
-async def extract_intent_node(state: AgentState) -> AgentState:
+async def route_query_node(state: AgentState) -> AgentState:
     """
-    Extract user intent and filters from the query
+    Determine if this is a property search or knowledge question
     """
-    llm = ChatGroq(api_key=GROQ_API_KEY, model=LLM_MODEL)
+    llm = ChatGroq(api_key=GROQ_API_KEY, model=LLM_MODEL, temperature=0)
     
-    system_prompt = """You are a helpful assistant for StackNStay, a decentralized property rental platform.
-    
-Your job is to understand what the user is looking for in a property.
+    system_prompt = """You are a query classifier for StackNStay.
 
-Extract:
-- Location (city, country)
-- Price range (min/max in STX)
-- Number of bedrooms
-- Number of guests
-- Amenities (pool, wifi, parking, etc.)
-- Any other preferences
+Classify the user's query into ONE of these categories:
 
-Respond in JSON format:
-{
-  "search_query": "natural language search query",
-  "filters": {
-    "city": "Stockholm",
-    "min_price": 50,
-    "max_price": 200,
-    "bedrooms": 2,
-    "guests": 4,
-    "amenities": ["pool", "wifi"]
-  }
-}
+1. **property_search**: User wants to find/search/browse properties
+   Examples: "Find me a villa", "Show properties in Stockholm", "2-bedroom apartment"
 
-If the user is asking a follow-up question (like "show me the cheapest" or "tell me more about #2"), 
-indicate that in the search_query.
+2. **knowledge**: User has questions about StackNStay, how it works, fees, policies, etc.
+   Examples: "What is StackNStay?", "How do fees work?", "What is block height?", "How to cancel?"
+
+3. **mixed**: Query contains both property search AND general questions
+   Examples: "What is StackNStay and show me properties", "Find me a villa and explain fees"
+
+Respond with ONLY ONE WORD: property_search, knowledge, or mixed
 """
     
     messages = [
         SystemMessage(content=system_prompt),
-        HumanMessage(content=state.user_query)
+        HumanMessage(content=f"Query: {state.user_query}")
     ]
     
     response = llm.invoke(messages)
+    query_type = response.content.strip().lower()
     
-    # Parse the response (simplified - in production, use structured output)
-    # For now, just use the query as-is
-    state.filters = state.filters or {}
+    # Validate response
+    if query_type not in ["property_search", "knowledge", "mixed"]:
+        # Default to knowledge if unclear
+        query_type = "knowledge"
+    
+    state.query_type = query_type
+    print(f"🎯 Query classified as: {query_type}")
     
     return state
 
@@ -122,48 +109,95 @@ async def search_properties_node(state: AgentState) -> AgentState:
     """
     Search for properties using FAISS vector store
     """
-    try:
-        # Perform semantic search
-        results = await vector_store.search(
-            query=state.user_query,
-            k=5,
-            filters=state.filters
-        )
-        
-        state.search_results = results
-        
-    except Exception as e:
-        print(f"Error in search: {e}")
-        state.search_results = []
+    if state.query_type in ["property_search", "mixed"]:
+        try:
+            results = await vector_store.search(
+                query=state.user_query,
+                k=5,
+                filters=state.filters
+            )
+            state.property_results = results
+            print(f"🏠 Found {len(results)} properties")
+        except Exception as e:
+            print(f"Error in property search: {e}")
+            state.property_results = []
+    
+    return state
+
+
+async def search_knowledge_node(state: AgentState) -> AgentState:
+    """
+    Search knowledge base for relevant information
+    """
+    if state.query_type in ["knowledge", "mixed"]:
+        try:
+            results = await knowledge_store.search(
+                query=state.user_query,
+                k=3
+            )
+            state.knowledge_results = results
+            print(f"📚 Found {len(results)} knowledge snippets")
+        except Exception as e:
+            print(f"Error in knowledge search: {e}")
+            state.knowledge_results = []
     
     return state
 
 
 async def generate_response_node(state: AgentState) -> AgentState:
     """
-    Generate conversational response with property recommendations
+    Generate unified response based on query type
     """
     llm = ChatGroq(api_key=GROQ_API_KEY, model=LLM_MODEL, temperature=0.7)
     
-    # Build context from search results
+    # Build context based on query type
     context = ""
-    if state.search_results:
-        context = "Here are the properties I found:\n\n"
-        for i, prop in enumerate(state.search_results[:5], 1):
+    
+    # Add knowledge context
+    if state.knowledge_results:
+        context += "**StackNStay Information:**\n\n"
+        for i, chunk in enumerate(state.knowledge_results, 1):
+            context += f"{i}. **{chunk.get('title', 'Info')}**\n"
+            content = chunk.get('content', '')[:500]  # Limit length
+            context += f"{content}\n\n"
+    
+    # Add property context
+    if state.property_results:
+        context += "**Available Properties:**\n\n"
+        for i, prop in enumerate(state.property_results[:5], 1):
             context += f"{i}. **{prop.get('title', 'Unknown')}**\n"
             context += f"   - Location: {prop.get('location_city', 'N/A')}\n"
             context += f"   - Price: {prop.get('price_per_night', 'N/A')} STX/night\n"
             context += f"   - Bedrooms: {prop.get('bedrooms', 'N/A')}\n"
-            context += f"   - Guests: {prop.get('max_guests', 'N/A')}\n"
             if prop.get('amenities'):
                 amenities = prop['amenities']
                 if isinstance(amenities, list):
                     context += f"   - Amenities: {', '.join(amenities[:5])}\n"
             context += "\n"
-    else:
-        context = "I couldn't find any properties matching your criteria."
     
-    system_prompt = f"""You are a friendly property rental assistant for StackNStay.
+    # Handle no results
+    if not state.knowledge_results and not state.property_results:
+        if state.query_type == "property_search":
+            context = "No properties found matching the criteria."
+        else:
+            context = "I don't have specific information about that in my knowledge base."
+    
+    # Create system prompt based on query type
+    if state.query_type == "knowledge":
+        system_prompt = f"""You are a helpful assistant for StackNStay, a decentralized property rental platform.
+
+The user asked: "{state.user_query}"
+
+Here's the relevant information from our knowledge base:
+
+{context}
+
+Provide a clear, helpful answer based on this information. Be conversational and friendly.
+If the information doesn't fully answer their question, say so and suggest they contact support.
+Keep your response concise (2-4 sentences max).
+"""
+    elif state.query_type == "property_search":
+        system_prompt = f"""You are a friendly property rental assistant for StackNStay.
 
 The user asked: "{state.user_query}"
 
@@ -172,7 +206,17 @@ The user asked: "{state.user_query}"
 Provide a helpful, conversational response. Highlight the best matches and explain why they're good fits.
 Be enthusiastic and helpful. Keep it concise (2-3 sentences max).
 
-If properties were found, suggest what the user might want to do next (e.g., "learn more", "see cheaper options", "book").
+If properties were found, suggest what the user might want to do next.
+"""
+    else:  # mixed
+        system_prompt = f"""You are a helpful assistant for StackNStay.
+
+The user asked: "{state.user_query}"
+
+{context}
+
+Answer their question AND show them relevant properties. Be conversational and helpful.
+Keep it concise but cover both aspects of their query.
 """
     
     messages = state.messages + [
@@ -194,19 +238,21 @@ If properties were found, suggest what the user might want to do next (e.g., "le
 # BUILD LANGGRAPH
 # ============================================
 
-def create_chat_graph():
-    """Create the LangGraph conversational agent"""
+def create_smart_chat_graph():
+    """Create the smart routing LangGraph agent"""
     workflow = StateGraph(AgentState)
     
     # Add nodes
-    workflow.add_node("extract_intent", extract_intent_node)
+    workflow.add_node("route_query", route_query_node)
     workflow.add_node("search_properties", search_properties_node)
+    workflow.add_node("search_knowledge", search_knowledge_node)
     workflow.add_node("generate_response", generate_response_node)
     
     # Define edges
-    workflow.set_entry_point("extract_intent")
-    workflow.add_edge("extract_intent", "search_properties")
-    workflow.add_edge("search_properties", "generate_response")
+    workflow.set_entry_point("route_query")
+    workflow.add_edge("route_query", "search_properties")
+    workflow.add_edge("search_properties", "search_knowledge")
+    workflow.add_edge("search_knowledge", "generate_response")
     workflow.add_edge("generate_response", END)
     
     # Compile with memory
@@ -217,7 +263,7 @@ def create_chat_graph():
 
 
 # Create the graph
-chat_graph = create_chat_graph()
+smart_chat_graph = create_smart_chat_graph()
 
 
 # ============================================
@@ -227,16 +273,15 @@ chat_graph = create_chat_graph()
 @router.post("/", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    Chat with the RAG agent
+    Smart chat endpoint - handles both property search and knowledge questions
     """
     try:
-        # Ensure vector store is loaded
+        # Ensure stores are loaded
         if not vector_store.index:
-            if not vector_store.load():
-                raise HTTPException(
-                    status_code=503,
-                    detail="Vector store not initialized. Please run /api/index first."
-                )
+            vector_store.load()
+        
+        if not knowledge_store.index:
+            knowledge_store.load()
         
         # Create conversation ID if not provided
         conversation_id = request.conversation_id or f"conv_{os.urandom(8).hex()}"
@@ -249,34 +294,51 @@ async def chat(request: ChatRequest):
             messages=[]
         )
         
-        # Run the graph
+        # Run the smart routing graph
         config = {"configurable": {"thread_id": conversation_id}}
-        final_state = await chat_graph.ainvoke(initial_state.dict(), config)
+        final_state = await smart_chat_graph.ainvoke(initial_state.dict(), config)
         
         # Extract results
-        properties = final_state.get("search_results", [])[:5]
+        properties = final_state.get("property_results", [])[:5]
+        knowledge = final_state.get("knowledge_results", [])[:3]
         response_text = final_state.get("final_response", "I'm sorry, I couldn't process that request.")
+        query_type = final_state.get("query_type", "unknown")
         
-        # Generate suggested actions
+        # Generate suggested actions based on query type
         suggested_actions = []
-        if properties:
+        
+        if query_type == "property_search" and properties:
             suggested_actions = [
                 "Show me cheaper options",
                 "Tell me more about the first property",
-                "Find properties with a pool"
+                "What amenities are available?"
+            ]
+        elif query_type == "knowledge":
+            suggested_actions = [
+                "How do I get started?",
+                "Tell me about fees",
+                "Show me available properties"
+            ]
+        elif query_type == "mixed":
+            suggested_actions = [
+                "Tell me more about these properties",
+                "Explain the booking process",
+                "Show me similar properties"
             ]
         else:
             suggested_actions = [
-                "Try a different location",
-                "Adjust my budget",
-                "See all available properties"
+                "What is StackNStay?",
+                "Show me properties",
+                "How does it work?"
             ]
         
         return ChatResponse(
             response=response_text,
             properties=properties,
+            knowledge_snippets=knowledge,
             conversation_id=conversation_id,
-            suggested_actions=suggested_actions
+            suggested_actions=suggested_actions,
+            query_type=query_type
         )
         
     except Exception as e:
@@ -289,6 +351,9 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "vector_store_loaded": vector_store.index is not None,
-        "properties_indexed": len(vector_store.property_metadata)
+        "property_store_loaded": vector_store.index is not None,
+        "knowledge_store_loaded": knowledge_store.index is not None,
+        "properties_indexed": len(vector_store.property_metadata),
+        "knowledge_chunks": len(knowledge_store.knowledge_chunks)
     }
+

@@ -1,6 +1,6 @@
 # StackNStay Backend - RAG Chatbot & Recommendations
 
-AI-powered property search with LangGraph conversational agent and FAISS vector store.
+AI-powered property search with **Smart Routing** - handles both property search AND general StackNStay knowledge questions!
 
 ## 🚀 Quick Start
 
@@ -19,8 +19,8 @@ cp .env.example .env
 
 Edit `.env` and add your API keys:
 
-- **GROQ_API_KEY**: Get from [console.groq.com](https://console.groq.com)
-- **COHERE_API_KEY**: Get from [dashboard.cohere.com](https://dashboard.cohere.com) (FREE tier)
+- **GROQ_API_KEY**: Get from [console.groq.com](https://console.groq.com) (FREE)
+- **COHERE_API_KEY**: Get from [dashboard.cohere.com](https://dashboard.cohere.com) (FREE)
 
 ### 3. Configure Blockchain
 
@@ -35,24 +35,68 @@ cd app
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 5. Index Properties
+### 5. Index Everything
 
 ```bash
+# Index properties from blockchain
 curl -X POST http://localhost:8000/api/index
+
+# Index knowledge base (FAQ, guides)
+curl -X POST http://localhost:8000/api/index/knowledge
 ```
 
-This fetches properties from blockchain and creates the FAISS index.
+---
+
+## 🎯 Smart Routing Chat
+
+The chatbot **automatically detects** what type of question you're asking:
+
+### **Property Search Questions**
+```bash
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Find me a 2-bedroom apartment in Stockholm"}'
+```
+
+**Response:**
+- `query_type`: "property_search"
+- `properties`: [list of matching properties]
+- `knowledge_snippets`: []
+
+### **Knowledge Questions**
+```bash
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is StackNStay and how do fees work?"}'
+```
+
+**Response:**
+- `query_type`: "knowledge"
+- `properties`: []
+- `knowledge_snippets`: [relevant FAQ sections]
+
+### **Mixed Questions**
+```bash
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is StackNStay and show me properties in Berlin"}'
+```
+
+**Response:**
+- `query_type`: "mixed"
+- `properties`: [list of properties in Berlin]
+- `knowledge_snippets`: [info about StackNStay]
 
 ---
 
 ## 📡 API Endpoints
 
-### Chat (LangGraph RAG)
+### Chat (Smart Routing)
 
 ```bash
 POST /api/chat
 {
-  "message": "Find me a 2-bedroom apartment in Stockholm under 100 STX",
+  "message": "Your question here",
   "conversation_id": "optional-uuid",
   "filters": {
     "city": "Stockholm",
@@ -64,10 +108,12 @@ POST /api/chat
 **Response:**
 ```json
 {
-  "response": "I found 3 great apartments in Stockholm...",
+  "response": "AI-generated response",
   "properties": [...],
+  "knowledge_snippets": [...],
   "conversation_id": "uuid",
-  "suggested_actions": ["Show me cheaper options", "Tell me more"]
+  "suggested_actions": ["...", "...", "..."],
+  "query_type": "property_search|knowledge|mixed"
 }
 ```
 
@@ -95,10 +141,17 @@ POST /api/recommendations
 }
 ```
 
-### Manual Indexing
+### Indexing
 
 ```bash
+# Index properties from blockchain
 POST /api/index
+
+# Index knowledge base
+POST /api/index/knowledge
+
+# Check status
+GET /api/index/status
 ```
 
 ### Health Check
@@ -112,23 +165,69 @@ GET /health
 ## 🏗️ Architecture
 
 ```
-User Query
-    ↓
-LangGraph Agent
-    ├─ Extract Intent (LLM)
-    ├─ Search FAISS (Cohere embeddings)
-    └─ Generate Response (Groq LLM)
-    ↓
-Response + Property Cards
+User Query: "What is StackNStay and find me a villa"
+                    ↓
+         Smart Routing Agent (LLM)
+                    ↓
+         Classifies as: "mixed"
+                    ↓
+    ┌───────────────┴───────────────┐
+    │                               │
+Property RAG                  Knowledge RAG
+(FAISS + Properties)          (FAISS + FAQ)
+    │                               │
+    └───────────────┬───────────────┘
+                    ↓
+         Unified Response (LLM)
+                    ↓
+    "StackNStay is a decentralized platform...
+     Here are 3 villas I found for you..."
 ```
 
 ### Components
 
 - **blockchain.py**: Fetches properties from Stacks smart contract
-- **vector_store.py**: FAISS indexing with Cohere embeddings
-- **chat.py**: LangGraph conversational agent with memory
-- **search.py**: Recommendations and search endpoints
+- **vector_store.py**: FAISS indexing for property search
+- **knowledge_store.py**: FAISS indexing for FAQ/knowledge base
+- **chat.py**: Smart routing LangGraph agent
+- **search.py**: Recommendations and indexing endpoints
 - **main.py**: FastAPI application
+- **knowledge_base.md**: All StackNStay information (fees, policies, guides)
+
+---
+
+## 🎨 Frontend Integration
+
+### Chat Component Example
+
+```typescript
+const ChatBot = () => {
+  const [messages, setMessages] = useState([]);
+  
+  const sendMessage = async (message) => {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    
+    const data = await response.json();
+    
+    // Display based on query type
+    if (data.query_type === 'knowledge') {
+      // Show FAQ answer
+      displayAnswer(data.response);
+    } else if (data.query_type === 'property_search') {
+      // Show property cards
+      displayProperties(data.properties);
+    } else {
+      // Show both
+      displayAnswer(data.response);
+      displayProperties(data.properties);
+    }
+  };
+};
+```
 
 ---
 
@@ -137,11 +236,11 @@ Response + Property Cards
 ### Required
 
 1. **Groq** (FREE): https://console.groq.com
-   - Used for: LLM chat responses
+   - Used for: LLM chat responses and query routing
    - Free tier: Generous limits
 
 2. **Cohere** (FREE): https://dashboard.cohere.com
-   - Used for: Text embeddings
+   - Used for: Text embeddings (both properties and knowledge)
    - Free tier: 1000 calls/month
 
 ### Optional
@@ -154,10 +253,35 @@ Response + Property Cards
 
 ## 📦 Data Storage
 
-- **FAISS Index**: `data/vector_store/faiss_index.bin`
+- **Property FAISS Index**: `data/vector_store/faiss_index.bin`
 - **Property Metadata**: `data/vector_store/property_metadata.json`
+- **Knowledge FAISS Index**: `knowledge_store/knowledge_index.bin`
+- **Knowledge Chunks**: `knowledge_store/knowledge_chunks.json`
 
-The index is automatically loaded on startup. Re-index with `POST /api/index`.
+Indexes are automatically loaded on startup. Re-index with:
+- `POST /api/index` (properties)
+- `POST /api/index/knowledge` (FAQ)
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run test suite
+python test_setup.py
+
+# Test smart routing
+python test_smart_chat.py
+
+# Manual tests
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is StackNStay?"}'
+
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Find me a villa in Miami"}'
+```
 
 ---
 
@@ -165,64 +289,75 @@ The index is automatically loaded on startup. Re-index with `POST /api/index`.
 
 1. Push to GitHub
 2. Connect Railway to your repo
-3. Add environment variables in Railway dashboard
+3. Add environment variables:
+   - `GROQ_API_KEY`
+   - `COHERE_API_KEY`
+   - `STACKS_CONTRACT_ADDRESS`
+   - `STACKS_API_URL`
 4. Deploy!
-
-Railway will automatically:
-- Install dependencies from `requirements.txt`
-- Run the FastAPI server
-- Persist the vector store
-
----
-
-## 🧪 Testing
-
-```bash
-# Health check
-curl http://localhost:8000/health
-
-# Index properties
-curl -X POST http://localhost:8000/api/index
-
-# Chat
-curl -X POST http://localhost:8000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Show me properties in Stockholm"}'
-
-# Search
-curl -X POST http://localhost:8000/api/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "beachfront villa", "limit": 5}'
-```
+5. Index both stores:
+   ```bash
+   curl -X POST https://your-app.railway.app/api/index
+   curl -X POST https://your-app.railway.app/api/index/knowledge
+   ```
 
 ---
 
 ## 🎯 Features
 
-✅ **LangGraph Conversational Agent** - Multi-turn conversations with memory  
-✅ **Semantic Search** - Find properties by natural language  
+✅ **Smart Query Routing** - Auto-detects property search vs knowledge questions  
+✅ **Dual RAG System** - Separate indexes for properties and FAQ  
+✅ **LangGraph Agent** - Multi-turn conversations with memory  
+✅ **Semantic Search** - Natural language property search  
+✅ **Knowledge Base** - Answers about fees, policies, how-to guides  
 ✅ **Smart Recommendations** - Similar property suggestions  
 ✅ **FAISS Vector Store** - Fast similarity search  
-✅ **Cohere Embeddings** - Lightweight, no PyTorch needed  
+✅ **Cohere Embeddings** - Lightweight, no PyTorch!  
 ✅ **Groq LLM** - Fast, free chat responses  
 ✅ **Blockchain Integration** - Fetch from Stacks smart contract  
-✅ **IPFS Metadata** - Decentralized property data  
+✅ **IPFS Support** - Decentralized metadata  
+
+---
+
+## 💡 Example Queries
+
+**Knowledge Questions:**
+- "What is StackNStay?"
+- "How do fees work?"
+- "What is block height?"
+- "How do I cancel a booking?"
+- "Why are fees so low?"
+- "How does escrow work?"
+
+**Property Search:**
+- "Find me a 2-bedroom in Stockholm"
+- "Show me villas with pools"
+- "Properties under 100 STX per night"
+- "Beachfront apartments"
+
+**Mixed:**
+- "What is StackNStay and show me properties"
+- "Explain fees and find me a cheap apartment"
+- "How does booking work? Also show me villas"
 
 ---
 
 ## 🐛 Troubleshooting
 
 **"Vector store not initialized"**
-- Run `POST /api/index` to create the index
+→ Run `POST /api/index` and `POST /api/index/knowledge`
 
 **"Cohere API error"**
-- Check your `COHERE_API_KEY` in `.env`
-- Verify you haven't exceeded free tier limits
+→ Check API key in `.env`
 
 **"No properties found"**
-- Verify `STACKS_CONTRACT_ADDRESS` is correct
-- Check that properties exist on blockchain
-- Ensure IPFS gateway is accessible
+→ Verify contract address and run indexing
+
+**"Knowledge base not loaded"**
+→ Run `POST /api/index/knowledge`
+
+**"Import errors"**
+→ Run `pip install -r requirements.txt`
 
 ---
 

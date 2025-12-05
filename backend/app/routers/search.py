@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional
 
 from app.services.vector_store import vector_store
 from app.services.blockchain import blockchain_service
+from app.services.knowledge_store import knowledge_store
 
 router = APIRouter(prefix="/api", tags=["search"])
 
@@ -140,5 +141,25 @@ async def index_status():
     return {
         "indexed": vector_store.index is not None,
         "property_count": len(vector_store.property_metadata),
-        "index_dimension": vector_store.dimension if vector_store.index else None
+        "index_dimension": vector_store.dimension if vector_store.index else None,
+        "knowledge_indexed": knowledge_store.index is not None,
+        "knowledge_chunks": len(knowledge_store.knowledge_chunks)
     }
+
+
+@router.post("/index/knowledge")
+async def index_knowledge():
+    """
+    Index the knowledge base (FAQ, guides, etc.)
+    """
+    try:
+        count = await knowledge_store.index_knowledge_base()
+        
+        return {
+            "status": "success",
+            "chunks_indexed": count,
+            "message": f"Successfully indexed {count} knowledge chunks"
+        }
+    except Exception as e:
+        print(f"Error indexing knowledge base: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
