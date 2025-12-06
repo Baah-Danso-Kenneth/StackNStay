@@ -12,7 +12,11 @@ import { ChatMessage } from './ChatMessage';
 import { useChat } from '@/hooks/use-chat';
 import { useAuth } from '@/hooks/use-auth';
 
-export function ChatInterface() {
+interface ChatInterfaceProps {
+    onClose?: () => void;
+}
+
+export function ChatInterface({ onClose }: ChatInterfaceProps) {
     const [inputValue, setInputValue] = useState('');
     const { messages, isLoading, suggestedActions, sendMessage, sendSuggestedAction, clearChat } = useChat();
     const { userData } = useAuth();
@@ -87,8 +91,8 @@ export function ChatInterface() {
 
             {/* Messages - Scrollable Area */}
             <div className="flex-1 min-h-0 overflow-hidden">
-                <ScrollArea className="h-full" ref={scrollRef}>
-                    <div className="p-4 space-y-6">
+                <ScrollArea className="h-full px-4" ref={scrollRef}>
+                    <div className="py-6 space-y-6 pb-20">
                         {messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6 relative group">
@@ -127,7 +131,7 @@ export function ChatInterface() {
                             </div>
                         ) : (
                             messages.map((message) => (
-                                <ChatMessage key={message.id} message={message} />
+                                <ChatMessage key={message.id} message={message} onClose={onClose} />
                             ))
                         )}
 
@@ -172,7 +176,7 @@ export function ChatInterface() {
             </div>
 
             {/* Input - Fixed at Bottom */}
-            <div className="p-4 border-t bg-background flex-shrink-0">
+            <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0 z-10">
                 <div className="flex gap-2">
                     <Input
                         ref={inputRef}

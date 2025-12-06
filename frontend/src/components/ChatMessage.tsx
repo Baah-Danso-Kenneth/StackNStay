@@ -11,9 +11,10 @@ import type { Message } from '@/hooks/use-chat';
 
 interface ChatMessageProps {
     message: Message;
+    onClose?: () => void;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, onClose }: ChatMessageProps) {
     const isUser = message.type === 'user';
     const [displayedText, setDisplayedText] = useState(isUser ? message.text : '');
     const [isTyping, setIsTyping] = useState(!isUser);
@@ -111,7 +112,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     <div className="w-full mt-2 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {message.properties.map((property) => (
-                                <PropertyChatCard key={property.property_id} property={property} />
+                                <PropertyChatCard key={property.property_id} property={property} onClose={onClose} />
                             ))}
                         </div>
                     </div>

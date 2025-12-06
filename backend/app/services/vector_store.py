@@ -172,7 +172,8 @@ class VectorStore:
         self,
         query: str,
         k: int = 5,
-        filters: Optional[Dict[str, Any]] = None
+        filters: Optional[Dict[str, Any]] = None,
+        min_score: float = 0.0
     ) -> List[Dict[str, Any]]:
         """
         Semantic search for properties
@@ -198,6 +199,10 @@ class VectorStore:
                 property_data = self.property_metadata[idx].copy()
                 property_data["match_score"] = float(scores[0][i])
                 
+                # Filter by score
+                if property_data["match_score"] < min_score:
+                    continue
+                
                 # Apply filters if provided
                 if filters:
                     if not self._matches_filters(property_data, filters):
@@ -220,7 +225,22 @@ class VectorStore:
             if property_data.get("price_per_night", float('inf')) > filters["max_price"]:
                 return False
         
-        # City
+        # Location (Fuzzy match)
+        if "location" in filters:
+            search_loc = filters["location"].lower()
+            city = property_data.get("location_city", "").lower()
+            country = property_data.get("location_country", "").lower()
+            title = property_data.get("title", "").lower()
+            desc = property_data.get("description", "").lower()
+            
+            # Check if location term appears in any relevant field
+            if (search_loc not in city and 
+                search_loc not in country and 
+                search_loc not in title and 
+                search_loc not in desc):
+                return False
+        
+        # City (Exact match)
         if "city" in filters:
             if property_data.get("location_city", "").lower() != filters["city"].lower():
                 return False

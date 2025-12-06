@@ -15,6 +15,8 @@ import HostLayout from "./layouts/HostLayout";
 import Dashboard from "./pages/host/Dashboard";
 import CreateListing from "./pages/host/CreateListing";
 import { Navigate } from "react-router-dom";
+import AIChatButton from "./components/AIChatButton";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,8 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AIChatButton />
+        <ScrollToTop />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

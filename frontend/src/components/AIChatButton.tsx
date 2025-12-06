@@ -21,8 +21,8 @@ const AIChatButton = () => {
                 className="fixed bottom-6 right-6 z-50 group"
                 aria-label="Open AI Assistant"
             >
-                {/* Pulsing ring animation */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-accent opacity-75 animate-ping"></div>
+                {/* Pulsing ring animation - REMOVED for subtlety */}
+                {/* <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-accent opacity-75 animate-ping"></div> */}
 
                 {/* Outer glow */}
                 <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-accent blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
@@ -54,7 +54,7 @@ const AIChatButton = () => {
             {/* Chat Dialog */}
             <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
                 <DialogContent className="max-w-4xl h-[80vh] p-0 gap-0">
-                    <ChatInterface />
+                    <ChatInterface onClose={() => setIsChatOpen(false)} />
                 </DialogContent>
             </Dialog>
         </>

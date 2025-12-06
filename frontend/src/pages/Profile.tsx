@@ -1,28 +1,39 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Award, MapPin, Calendar, ShieldCheck, Edit, Loader2 } from "lucide-react";
+import { Star, Award, MapPin, Calendar, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
-import { useBadges } from "@/hooks/use-badge";
 import { useReputation } from "@/hooks/use-reputation";
 import { WalletAddress } from "@/components/WalletAddress";
-import NoBadges from "@/components/NoBadges";
+import { BadgeCollection } from "@/components/BadgeCollection";
 import Navbar from "@/components/Navbar";
+import { useQuery } from "@tanstack/react-query";
+import { getUserBookings, getUserProperties } from "@/lib/escrow";
 
 const Profile = () => {
     const { t } = useTranslation();
     const { userData } = useAuth();
-    const { badges, isLoading: badgesLoading, error: badgesError } = useBadges();
     const { stats, formattedRating, reviews, isLoading: reputationLoading } = useReputation();
 
-    // Mock data for non-blockchain fields
-    const userStats = {
-        tripsTaken: 12, // TODO: Fetch from booking contract
-        propertiesListed: 2, // TODO: Fetch from property contract
-        joinedDate: "October 2023",
-        verified: true,
-    };
+    // Fetch real user data from blockchain
+    const { data: userBookings = [] } = useQuery({
+        queryKey: ["user-bookings-count", userData?.profile.stxAddress.testnet],
+        enabled: !!userData,
+        queryFn: async () => {
+            if (!userData) return [];
+            return getUserBookings(userData.profile.stxAddress.testnet, 100);
+        },
+    });
+
+    const { data: userProperties = [] } = useQuery({
+        queryKey: ["user-properties-count", userData?.profile.stxAddress.testnet],
+        enabled: !!userData,
+        queryFn: async () => {
+            if (!userData) return [];
+            return getUserProperties(userData.profile.stxAddress.testnet, 100);
+        },
+    });
 
     return (
         <div className="min-h-screen bg-background">
@@ -45,23 +56,14 @@ const Profile = () => {
                         <div className="mb-4 space-y-1">
                             <h1 className="text-3xl font-heading font-bold tracking-tight flex items-center gap-2">
                                 User Account
-                                {userStats.verified && <ShieldCheck className="w-6 h-6 text-emerald-500" />}
                             </h1>
                             <div className="flex items-center gap-4">
                                 <WalletAddress address={userData?.profile.stxAddress.mainnet || ""} className="scale-90 origin-left" />
-                                <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" /> Joined {userStats.joinedDate}
-                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="absolute bottom-4 right-8">
-                        <Button variant="outline" className="gap-2">
-                            <Edit className="w-4 h-4" />
-                            Edit Profile
-                        </Button>
-                    </div>
+
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-20">
@@ -92,12 +94,20 @@ const Profile = () => {
 
                                 <div className="mt-6 space-y-3">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Trips Taken</span>
-                                        <span className="font-medium">{userStats.tripsTaken}</span>
+                                        <span className="text-muted-foreground">Trips Taken (as Guest)</span>
+                                        <span className="font-medium">
+                                            {userBookings.filter(b => b.guest === userData?.profile.stxAddress.testnet).length}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-muted-foreground">Properties Listed</span>
-                                        <span className="font-medium">{userStats.propertiesListed}</span>
+                                        <span className="font-medium">{userProperties.length}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Total Bookings (as Host)</span>
+                                        <span className="font-medium">
+                                            {userBookings.filter(b => b.host === userData?.profile.stxAddress.testnet).length}
+                                        </span>
                                     </div>
                                 </div>
                             </CardContent>
@@ -151,93 +161,12 @@ const Profile = () => {
 
                     {/* Right Column: Badges & Achievements */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-heading font-bold">Badges & Milestones</h2>
-                            {badges.length > 0 && (
-                                <span className="text-sm text-muted-foreground">{badges.length} Unlocked</span>
-                            )}
-                        </div>
-
-                        {badgesLoading ? (
-                            <div className="flex flex-col items-center justify-center py-16 px-4">
-                                <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-                                <p className="text-sm text-muted-foreground">Loading badges...</p>
-                            </div>
-                        ) : badgesError ? (
-                            <div className="flex flex-col items-center justify-center py-16 px-4">
-                                <Award className="w-12 h-12 text-destructive mb-4" />
-                                <p className="text-sm text-destructive">Error loading badges: {badgesError}</p>
-                            </div>
-                        ) : badges.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                {badges.map((badge) => {
-                                    const earnedDate = new Date(badge.earnedAt * 1000).toLocaleDateString('en-US', {
-                                        month: 'short',
-                                        year: 'numeric'
-                                    });
-
-                                    return (
-                                        <div
-                                            key={badge.id}
-                                            className="relative group overflow-hidden rounded-xl border transition-all duration-500 bg-[#1a0b2e] border-[#a855f7]/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.5)] hover:border-[#a855f7]"
-                                        >
-                                            {/* Cyberpunk Card Header */}
-                                            <div className="px-4 py-2 text-xs font-bold uppercase tracking-widest border-b bg-[#2d1b4e] text-[#d8b4fe] border-[#a855f7]/30">
-                                                {badge.typeInfo?.name || 'Achievement'} Badge
-                                            </div>
-
-                                            {/* Card Content */}
-                                            <div className="p-6 flex flex-col items-center text-center relative z-10">
-                                                {/* Hexagon Icon Container */}
-                                                <div className="relative mb-6 group-hover:scale-110 transition-transform duration-500">
-                                                    <div className="absolute inset-0 blur-xl rounded-full bg-[#a855f7]/40"></div>
-                                                    <div
-                                                        className="relative w-24 h-24 flex items-center justify-center clip-path-hexagon bg-gradient-to-br from-[#a855f7] to-[#7e22ce]"
-                                                        style={{ backgroundColor: badge.color }}
-                                                    >
-                                                        <div className="w-[96%] h-[96%] bg-[#1a0b2e] clip-path-hexagon flex items-center justify-center">
-                                                            <div className="text-4xl filter drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]">
-                                                                {badge.icon}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Details */}
-                                                <div className="space-y-4 w-full">
-                                                    <div className="space-y-1">
-                                                        <p className="text-[10px] text-[#a855f7] font-mono uppercase tracking-wider">Achievement</p>
-                                                        <h3 className="font-bold text-white text-lg">{badge.typeInfo?.name || 'Badge'}</h3>
-                                                    </div>
-
-                                                    <div className="h-px w-full bg-gradient-to-r from-transparent via-[#a855f7]/50 to-transparent"></div>
-
-                                                    <div className="space-y-1">
-                                                        <p className="text-[10px] text-[#a855f7] font-mono uppercase tracking-wider">Description</p>
-                                                        <p className="text-xs text-gray-300 leading-relaxed">
-                                                            {badge.typeInfo?.description || 'Achievement unlocked'}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="pt-2">
-                                                        <Badge variant="outline" className="border-[#a855f7] text-[#d8b4fe] bg-[#a855f7]/10 text-[10px] px-2 py-0.5">
-                                                            UNLOCKED: {earnedDate}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Decorative Corners */}
-                                            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#a855f7] rounded-tl-md opacity-50"></div>
-                                            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#a855f7] rounded-tr-md opacity-50"></div>
-                                            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#a855f7] rounded-bl-md opacity-50"></div>
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#a855f7] rounded-br-md opacity-50"></div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <NoBadges />
+                        {userData?.profile?.stxAddress?.testnet && (
+                            <BadgeCollection
+                                userAddress={userData.profile.stxAddress.testnet}
+                                title="Badges & Milestones"
+                                showLocked={true}
+                            />
                         )}
                     </div>
                 </div>

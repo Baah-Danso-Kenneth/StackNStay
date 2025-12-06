@@ -6,8 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.routers import chat, search
+from app.routers import chat, search, admin
 from app.services.vector_store import vector_store
+from app.services.blockchain import blockchain_service
 
 
 @asynccontextmanager
@@ -25,7 +26,17 @@ async def lifespan(app: FastAPI):
     if loaded:
         print(f"✅ Loaded {len(vector_store.property_metadata)} properties")
     else:
-        print("⚠️ No existing index found. Use POST /api/index to create one.")
+        print("⚠️ No existing index found. Attempting to index from blockchain...")
+        try:
+            # Auto-index on startup if missing
+            properties = await blockchain_service.get_all_properties()
+            if properties:
+                await vector_store.index_properties(properties)
+                print(f"✅ Successfully auto-indexed {len(properties)} properties")
+            else:
+                print("⚠️ No properties found on blockchain to index")
+        except Exception as e:
+            print(f"❌ Failed to auto-index properties: {e}")
     
     yield
     
@@ -53,6 +64,7 @@ app.add_middleware(
 # Include routers
 app.include_router(chat.router)
 app.include_router(search.router)
+app.include_router(admin.router)
 
 
 @app.get("/")
