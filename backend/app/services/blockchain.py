@@ -240,8 +240,10 @@ class BlockchainService:
                             
                             if prop_data:
                                 # Add ID and other missing fields
-                                prop_data["property_id"] = i
-                                prop_data["price_per_night"] = prop_data.get("price", 0) # Handle schema mismatch
+                                if "property_id" not in prop_data:
+                                    prop_data["property_id"] = i
+                                    
+                                prop_data["price_per_night"] = prop_data.get("price", prop_data.get("price_per_night", 0))
                                 prop_data["location_city"] = prop_data.get("location_city", prop_data.get("location", "Unknown"))
                                 
                                 properties.append(prop_data)

@@ -12,9 +12,10 @@ import type { Property } from '@/lib/api/chat';
 
 interface PropertyChatCardProps {
     property: Property;
+    onClose?: () => void;
 }
 
-export function PropertyChatCard({ property }: PropertyChatCardProps) {
+export function PropertyChatCard({ property, onClose }: PropertyChatCardProps) {
     const navigate = useNavigate();
 
     const imageUrl = property.images && property.images.length > 0
@@ -25,7 +26,7 @@ export function PropertyChatCard({ property }: PropertyChatCardProps) {
 
     return (
         <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-            <div className="relative h-40">
+            <div className="relative h-32">
                 <img
                     src={imageUrl}
                     alt={property.title}
@@ -89,7 +90,10 @@ export function PropertyChatCard({ property }: PropertyChatCardProps) {
                     </div>
                     <Button
                         size="sm"
-                        onClick={() => navigate(`/property/${property.property_id}`)}
+                        onClick={() => {
+                            navigate(`/property/${property.property_id}`);
+                            onClose?.();
+                        }}
                     >
                         View
                     </Button>

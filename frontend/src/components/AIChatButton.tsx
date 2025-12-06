@@ -54,7 +54,7 @@ const AIChatButton = () => {
             {/* Chat Dialog */}
             <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
                 <DialogContent className="max-w-4xl h-[80vh] p-0 gap-0">
-                    <ChatInterface />
+                    <ChatInterface onClose={() => setIsChatOpen(false)} />
                 </DialogContent>
             </Dialog>
         </>

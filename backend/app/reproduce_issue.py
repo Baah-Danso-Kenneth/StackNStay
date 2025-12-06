@@ -21,8 +21,8 @@ async def main():
     
     # 1. Inspect Metadata
     print("\n--- Property Metadata Sample ---")
-    for i, prop in enumerate(vector_store.property_metadata[:5]):
-        print(f"[{i}] {prop.get('title')} - {prop.get('location_city')}, {prop.get('location_country')}")
+    for i, prop in enumerate(vector_store.property_metadata[:4]):
+        print(f"[{i}] DUMP: {prop}")
 
     # 2. Test Search "Ghana"
     query = "Ghana"
