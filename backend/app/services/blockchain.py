@@ -20,6 +20,7 @@ CONTRACT_REPUTATION = os.getenv("STACKS_CONTRACT_REPUTATION", "stackstay-reputat
 CONTRACT_DISPUTE = os.getenv("STACKS_CONTRACT_DISPUTE", "stackstay-dispute")
 
 IPFS_GATEWAY = os.getenv("IPFS_GATEWAY")
+PINATA_JWT = os.getenv("PINATA_JWT")
 
 # Badge type constants (matching Clarity contract)
 BADGE_TYPES = {
@@ -126,16 +127,58 @@ class BlockchainService:
         Parse Clarity tuple response into Python dict
         This is a simplified parser - in production, use a proper Clarity parser
         """
-        # For now, return a mock structure
-        # TODO: Implement proper Clarity tuple parsing
-        return {
-            "property_id": property_id,
-            "owner": "SP...",  # Parse from result
-            "price_per_night": 100,  # Parse from result
-            "location_tag": 1,  # Parse from result
-            "metadata_uri": "",  # Parse from result
-            "active": True,  # Parse from result
-        }
+        """
+        Parse Clarity tuple response into Python dict
+        """
+        try:
+            # 1. Extract Metadata URI (look for ipfs:// pattern in hex)
+            # ipfs:// in hex is 697066733a2f2f
+            metadata_uri = ""
+            if "697066733a2f2f" in clarity_result:
+                # Find the start of the string
+                start_index = clarity_result.find("697066733a2f2f")
+                # Extract until we hit a non-printable char or end (simplified)
+                # We'll take a chunk and clean it
+                hex_chunk = clarity_result[start_index:]
+                
+                # Convert hex to ascii until it fails or hits control char
+                try:
+                    # Take up to 200 chars (100 bytes * 2 hex chars)
+                    candidate_hex = hex_chunk[:200]
+                    # Ensure even length
+                    if len(candidate_hex) % 2 != 0:
+                        candidate_hex = candidate_hex[:-1]
+                        
+                    decoded = bytes.fromhex(candidate_hex).decode('utf-8', errors='ignore')
+                    # Clean up: take until the first non-printable or weird char
+                    import string
+                    valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+                    clean_uri = ""
+                    for char in decoded:
+                        if char in valid_chars or char in [':', '/']:
+                            clean_uri += char
+                        else:
+                            break
+                    metadata_uri = clean_uri
+                except Exception as e:
+                    print(f"Error decoding hex string: {e}")
+
+            # 2. Extract Price (look for uint pattern)
+            # This is harder without a schema, but we can default to 100 if parsing fails
+            # or try to find the last uint in the tuple
+            price = 100
+            
+            return {
+                "property_id": property_id,
+                "owner": "SP...",  # Placeholder
+                "price_per_night": price,
+                "location_tag": 1,
+                "metadata_uri": metadata_uri,
+                "active": True,
+            }
+        except Exception as e:
+            print(f"Error parsing property response: {e}")
+            return None
     
     async def fetch_ipfs_metadata(self, ipfs_hash: str) -> Optional[Dict[str, Any]]:
         """
@@ -160,6 +203,55 @@ class BlockchainService:
         except Exception as e:
             print(f"Error in fetch_ipfs_metadata: {e}")
             return None
+
+    async def fetch_from_pinata(self) -> List[Dict[str, Any]]:
+        """
+        Directly fetch pinned properties from Pinata
+        Used as fallback when blockchain index is empty
+        """
+        if not PINATA_JWT:
+            print("⚠️ PINATA_JWT not found. Cannot fetch from Pinata.")
+            return []
+            
+        print("🔍 Fetching pins directly from Pinata...")
+        properties = []
+        
+        try:
+            url = "https://api.pinata.cloud/data/pinList?status=pinned&pageLimit=20"
+            headers = {"Authorization": f"Bearer {PINATA_JWT}"}
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers, timeout=10.0)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    rows = data.get("rows", [])
+                    print(f"📄 Found {len(rows)} pins on Pinata")
+                    
+                    for i, pin in enumerate(rows):
+                        meta = pin.get("metadata", {})
+                        name = meta.get("name", "")
+                        ipfs_hash = pin.get("ipfs_pin_hash")
+                        
+                        # Filter by name convention "property-..."
+                        if name.startswith("property-") and ipfs_hash:
+                            print(f"  📥 Fetching metadata for {name} ({ipfs_hash})...")
+                            prop_data = await self.fetch_ipfs_metadata(ipfs_hash)
+                            
+                            if prop_data:
+                                # Add ID and other missing fields
+                                prop_data["property_id"] = i
+                                prop_data["price_per_night"] = prop_data.get("price", 0) # Handle schema mismatch
+                                prop_data["location_city"] = prop_data.get("location_city", prop_data.get("location", "Unknown"))
+                                
+                                properties.append(prop_data)
+                else:
+                    print(f"❌ Error listing pins: {response.status_code}")
+                    
+        except Exception as e:
+            print(f"❌ Error fetching from Pinata: {e}")
+            
+        return properties
     
     async def get_user_badges(self, user_address: str) -> List[str]:
         """
@@ -377,6 +469,14 @@ class BlockchainService:
                 print(f"❌ Error loading property {property_id}: {e}")
                 continue
         
+        if not properties:
+            print("⚠️ No properties found on blockchain. Attempting direct Pinata fetch...")
+            properties = await self.fetch_from_pinata()
+            
+            if not properties:
+                print("⚠️ No properties found on Pinata either.")
+                return []
+            
         return properties
 
 

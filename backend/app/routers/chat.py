@@ -100,8 +100,56 @@ Respond with ONLY ONE WORD: property_search, knowledge, or mixed
         query_type = "knowledge"
     
     state.query_type = query_type
-    print(f"🎯 Query classified as: {query_type}")
+    return state
+
+
+async def extract_filters_node(state: AgentState) -> AgentState:
+    """
+    Extract structured filters from user query
+    """
+    if state.query_type not in ["property_search", "mixed"]:
+        return state
+        
+    llm = ChatGroq(api_key=GROQ_API_KEY, model=LLM_MODEL, temperature=0)
     
+    system_prompt = """You are a smart filter extractor for property search.
+    
+    Extract the following filters from the user's query if present:
+    - location (city or country name)
+    - min_price (number)
+    - max_price (number)
+    - bedrooms (number, minimum bedrooms)
+    - guests (number, minimum capacity)
+    
+    Return ONLY a JSON object. Do not include markdown formatting.
+    Example: {"location": "Ghana", "bedrooms": 2}
+    If no filters found, return {}
+    """
+    
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=f"Query: {state.user_query}")
+    ]
+    
+    try:
+        response = llm.invoke(messages)
+        content = response.content.strip()
+        # Clean up potential markdown code blocks
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.endswith("```"):
+            content = content[:-3]
+            
+        import json
+        filters = json.loads(content)
+        
+        # Merge with existing filters (if any)
+        state.filters.update(filters)
+        print(f"🔍 Extracted filters: {state.filters}")
+        
+    except Exception as e:
+        print(f"Error extracting filters: {e}")
+        
     return state
 
 
@@ -244,13 +292,15 @@ def create_smart_chat_graph():
     
     # Add nodes
     workflow.add_node("route_query", route_query_node)
+    workflow.add_node("extract_filters", extract_filters_node)
     workflow.add_node("search_properties", search_properties_node)
     workflow.add_node("search_knowledge", search_knowledge_node)
     workflow.add_node("generate_response", generate_response_node)
     
     # Define edges
     workflow.set_entry_point("route_query")
-    workflow.add_edge("route_query", "search_properties")
+    workflow.add_edge("route_query", "extract_filters")
+    workflow.add_edge("extract_filters", "search_properties")
     workflow.add_edge("search_properties", "search_knowledge")
     workflow.add_edge("search_knowledge", "generate_response")
     workflow.add_edge("generate_response", END)
