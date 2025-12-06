@@ -1,12 +1,7 @@
-/**
- * Chat Interface Component
- * Main chat UI with messages, input, and suggested actions
- */
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Trash2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage } from './ChatMessage';
 import { useChat } from '@/hooks/use-chat';
@@ -16,7 +11,7 @@ interface ChatInterfaceProps {
     onClose?: () => void;
 }
 
-export function ChatInterface({ onClose }: ChatInterfaceProps) {
+function ChatInterface({ onClose }: ChatInterfaceProps) {
     const [inputValue, setInputValue] = useState('');
     const { messages, isLoading, suggestedActions, sendMessage, sendSuggestedAction, clearChat } = useChat();
     const { userData } = useAuth();
@@ -61,8 +56,8 @@ export function ChatInterface({ onClose }: ChatInterfaceProps) {
 
     return (
         <div className="flex flex-col h-full bg-gradient-to-b from-background to-muted/20">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b bg-white/80 dark:bg-background/80 backdrop-blur-md flex-shrink-0">
+            {/* FIXED HEADER - Never scrolls */}
+            <div className="flex-shrink-0 flex items-center justify-between p-4 border-b bg-white/80 dark:bg-background/80 backdrop-blur-md shadow-sm z-10">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20 animate-in zoom-in duration-500">
                         <Sparkles className="w-5 h-5 text-white animate-pulse" />
@@ -89,94 +84,92 @@ export function ChatInterface({ onClose }: ChatInterfaceProps) {
                 )}
             </div>
 
-            {/* Messages - Scrollable Area */}
-            <div className="flex-1 min-h-0 overflow-hidden">
-                <ScrollArea className="h-full px-4" ref={scrollRef}>
-                    <div className="py-6 space-y-6 pb-20">
-                        {messages.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6 relative group">
-                                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-accent opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
-                                    <Sparkles className="w-12 h-12 text-primary relative z-10" />
-                                </div>
-                                <h3 className="text-2xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                                    Hi {userName}! 👋
-                                </h3>
-                                <p className="text-muted-foreground max-w-md mb-8 text-lg">
-                                    I'm your personal assistant. How can I help you find your perfect stay today?
-                                </p>
-                                <div className="flex flex-wrap gap-3 justify-center max-w-lg">
-                                    <Badge
-                                        variant="outline"
-                                        className="cursor-pointer hover:bg-accent"
-                                        onClick={() => handleSuggestedAction("What is StackNStay?")}
-                                    >
-                                        What is StackNStay?
-                                    </Badge>
-                                    <Badge
-                                        variant="outline"
-                                        className="cursor-pointer hover:bg-accent"
-                                        onClick={() => handleSuggestedAction("Find me a 2-bedroom apartment")}
-                                    >
-                                        Find properties
-                                    </Badge>
-                                    <Badge
-                                        variant="outline"
-                                        className="cursor-pointer hover:bg-accent"
-                                        onClick={() => handleSuggestedAction("How do fees work?")}
-                                    >
-                                        How do fees work?
-                                    </Badge>
-                                </div>
+            {/* SCROLLABLE MESSAGES AREA */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden" ref={scrollRef}>
+                <div className="p-4 space-y-6">
+                    {messages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6 relative group">
+                                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-accent opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
+                                <Sparkles className="w-12 h-12 text-primary relative z-10" />
                             </div>
-                        ) : (
-                            messages.map((message) => (
-                                <ChatMessage key={message.id} message={message} onClose={onClose} />
-                            ))
-                        )}
+                            <h3 className="text-2xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                                Hi {userName}! 👋
+                            </h3>
+                            <p className="text-muted-foreground max-w-md mb-8 text-lg">
+                                I'm your personal assistant. How can I help you find your perfect stay today?
+                            </p>
+                            <div className="flex flex-wrap gap-3 justify-center max-w-lg">
+                                <Badge
+                                    variant="outline"
+                                    className="cursor-pointer hover:bg-accent px-3 py-1.5 text-sm"
+                                    onClick={() => handleSuggestedAction("What is StackNStay?")}
+                                >
+                                    What is StackNStay?
+                                </Badge>
+                                <Badge
+                                    variant="outline"
+                                    className="cursor-pointer hover:bg-accent px-3 py-1.5 text-sm"
+                                    onClick={() => handleSuggestedAction("Find me a 2-bedroom apartment")}
+                                >
+                                    Find properties
+                                </Badge>
+                                <Badge
+                                    variant="outline"
+                                    className="cursor-pointer hover:bg-accent px-3 py-1.5 text-sm"
+                                    onClick={() => handleSuggestedAction("How do fees work?")}
+                                >
+                                    How do fees work?
+                                </Badge>
+                            </div>
+                        </div>
+                    ) : (
+                        messages.map((message) => (
+                            <ChatMessage key={message.id} message={message} onClose={onClose} />
+                        ))
+                    )}
 
-                        {/* Loading Indicator */}
-                        {isLoading && (
-                            <div className="flex gap-3">
-                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                                    <Loader2 className="w-5 h-5 text-white animate-spin" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="rounded-2xl px-4 py-3 bg-muted max-w-[80%]">
-                                        <div className="flex gap-1">
-                                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                                        </div>
+                    {/* Loading Indicator */}
+                    {isLoading && (
+                        <div className="flex gap-3 animate-in fade-in duration-300">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="rounded-2xl px-4 py-3 bg-muted max-w-[80%] shadow-sm">
+                                    <div className="flex gap-1">
+                                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {/* Suggested Actions */}
-                        {suggestedActions.length > 0 && !isLoading && (
-                            <div className="mt-6 pt-4 border-t border-border/50">
-                                <p className="text-xs text-muted-foreground mb-3 font-medium">💡 Suggested questions:</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {suggestedActions.map((action, idx) => (
-                                        <Badge
-                                            key={idx}
-                                            variant="secondary"
-                                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all hover:scale-105 shadow-sm"
-                                            onClick={() => handleSuggestedAction(action)}
-                                        >
-                                            {action}
-                                        </Badge>
-                                    ))}
-                                </div>
+                    {/* Suggested Actions (Bottom) */}
+                    {suggestedActions.length > 0 && !isLoading && messages.length > 0 && (
+                        <div className="pt-4 border-t border-border/50 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <p className="text-xs text-muted-foreground mb-3 font-medium">💡 You might want to ask:</p>
+                            <div className="flex flex-wrap gap-2">
+                                {suggestedActions.map((action, idx) => (
+                                    <Badge
+                                        key={idx}
+                                        variant="secondary"
+                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all hover:scale-105 shadow-sm px-3 py-1.5"
+                                        onClick={() => handleSuggestedAction(action)}
+                                    >
+                                        {action}
+                                    </Badge>
+                                ))}
                             </div>
-                        )}
-                    </div>
-                </ScrollArea>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Input - Fixed at Bottom */}
-            <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0 z-10">
+            {/* FIXED INPUT AREA - Always visible at bottom */}
+            <div className="flex-shrink-0 p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 shadow-lg">
                 <div className="flex gap-2">
                     <Input
                         ref={inputRef}
@@ -191,7 +184,7 @@ export function ChatInterface({ onClose }: ChatInterfaceProps) {
                         onClick={handleSend}
                         disabled={!inputValue.trim() || isLoading}
                         size="icon"
-                        className="flex-shrink-0"
+                        className="flex-shrink-0 shadow-sm hover:shadow-md transition-all"
                     >
                         {isLoading ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -204,3 +197,5 @@ export function ChatInterface({ onClose }: ChatInterfaceProps) {
         </div>
     );
 }
+
+export default ChatInterface;

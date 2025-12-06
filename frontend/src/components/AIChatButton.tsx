@@ -6,7 +6,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { ChatInterface } from "./ChatInterface";
+import ChatInterface from "./ChatInterface";
+
 
 const AIChatButton = () => {
     const [isHovered, setIsHovered] = useState(false);

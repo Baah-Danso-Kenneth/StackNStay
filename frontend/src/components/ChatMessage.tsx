@@ -52,7 +52,7 @@ export function ChatMessage({ message, onClose }: ChatMessageProps) {
     };
 
     return (
-        <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} animate-in slide-in-from-bottom-2 fade-in duration-300`}>
+        <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} animate-in slide-in-from-bottom-2 fade-in duration-300 w-full`}>
             {/* Avatar */}
             <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${isUser ? 'bg-primary' : 'bg-gradient-to-br from-primary to-accent'
                 }`}>
@@ -63,8 +63,8 @@ export function ChatMessage({ message, onClose }: ChatMessageProps) {
                 )}
             </div>
 
-            {/* Message Content */}
-            <div className={`flex-1 space-y-2 ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
+            {/* Message Content Container */}
+            <div className={`flex-1 space-y-2 ${isUser ? 'items-end' : 'items-start'} flex flex-col min-w-0`}>
                 {/* Query Type Badge (AI only) */}
                 {!isUser && message.query_type && (
                     <Badge variant="outline" className="text-xs bg-background/50 backdrop-blur-sm">
@@ -74,30 +74,30 @@ export function ChatMessage({ message, onClose }: ChatMessageProps) {
                     </Badge>
                 )}
 
-                {/* Text Message */}
-                <div className={`rounded-2xl px-4 py-3 max-w-[85%] shadow-sm ${isUser
+                {/* Text Message Bubble */}
+                <div className={`rounded-2xl px-4 py-3 max-w-[90%] shadow-sm break-words ${isUser
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-white/80 dark:bg-muted/80 backdrop-blur-md border border-border/50'
                     }`}>
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">
                         {renderText(displayedText)}
                         {isTyping && <span className="inline-block w-1.5 h-4 ml-1 align-middle bg-primary/50 animate-pulse"></span>}
                     </p>
                 </div>
 
-                {/* Knowledge Snippets */}
+                {/* Knowledge Snippets - No nested scroll, just stack them */}
                 {!isUser && message.knowledge_snippets && message.knowledge_snippets.length > 0 && (
-                    <div className="w-full mt-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <div className="w-full max-w-[90%] mt-2 space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                             <BookOpen className="w-4 h-4" />
                             <span>Related Information</span>
                         </div>
-                        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                        <div className="space-y-2">
                             {message.knowledge_snippets.map((snippet, idx) => (
-                                <Card key={idx} className="bg-accent/10 hover:bg-accent/20 transition-colors">
+                                <Card key={idx} className="bg-accent/10 hover:bg-accent/20 transition-colors border-none">
                                     <CardContent className="p-3">
                                         <h4 className="font-semibold text-sm mb-1">{snippet.title}</h4>
-                                        <p className="text-xs text-muted-foreground line-clamp-3">
+                                        <p className="text-xs text-muted-foreground">
                                             {snippet.content}
                                         </p>
                                     </CardContent>
@@ -107,10 +107,10 @@ export function ChatMessage({ message, onClose }: ChatMessageProps) {
                     </div>
                 )}
 
-                {/* Property Cards */}
+                {/* Property Cards - Single column stack, no nested scroll */}
                 {!isUser && message.properties && message.properties.length > 0 && (
-                    <div className="w-full mt-2 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="w-full max-w-[90%] mt-2">
+                        <div className="flex flex-col gap-3">
                             {message.properties.map((property) => (
                                 <PropertyChatCard key={property.property_id} property={property} onClose={onClose} />
                             ))}
@@ -119,7 +119,7 @@ export function ChatMessage({ message, onClose }: ChatMessageProps) {
                 )}
 
                 {/* Timestamp */}
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground px-1">
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
             </div>
