@@ -19,24 +19,19 @@ async def lifespan(app: FastAPI):
     # Startup
     print("🚀 Starting StackNStay API...")
     
-    # Try to load existing vector store
-    print("📂 Loading vector store from disk...")
-    loaded = vector_store.load()
-    
-    if loaded:
-        print(f"✅ Loaded {len(vector_store.property_metadata)} properties")
-    else:
-        print("⚠️ No existing index found. Attempting to index from blockchain...")
-        try:
-            # Auto-index on startup if missing
-            properties = await blockchain_service.get_all_properties()
-            if properties:
-                await vector_store.index_properties(properties)
-                print(f"✅ Successfully auto-indexed {len(properties)} properties")
-            else:
-                print("⚠️ No properties found on blockchain to index")
-        except Exception as e:
-            print(f"❌ Failed to auto-index properties: {e}")
+    print("🔗 Fetching fresh data from blockchain and IPFS...")
+    try:
+        properties = await blockchain_service.get_all_properties()
+        
+        if properties:
+            await vector_store.index_properties(properties)
+            print(f"✅ Successfully indexed {len(properties)} properties")
+            vector_store.save()
+        else:
+            print("⚠️ No properties found")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
     
     yield
     
