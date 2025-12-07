@@ -25,8 +25,9 @@ export function PropertyChatCard({ property, onClose }: PropertyChatCardProps) {
     const matchScore = property.match_score ? Math.round(property.match_score * 100) : null;
 
     return (
-        <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-            <div className="relative h-32">
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group flex flex-row h-28">
+            {/* Image Section (Left) */}
+            <div className="relative w-28 h-full flex-shrink-0">
                 <img
                     src={imageUrl}
                     alt={property.title}
@@ -36,60 +37,43 @@ export function PropertyChatCard({ property, onClose }: PropertyChatCardProps) {
                     }}
                 />
                 {matchScore && (
-                    <Badge className="absolute top-2 right-2 bg-primary/90 backdrop-blur-sm">
-                        <Star className="w-3 h-3 mr-1" />
-                        {matchScore}% match
+                    <Badge className="absolute top-1 left-1 bg-primary/90 backdrop-blur-sm text-[10px] px-1.5 py-0.5">
+                        {matchScore}%
                     </Badge>
                 )}
             </div>
 
-            <CardContent className="p-4 space-y-3">
-                {/* Title */}
-                <h3 className="font-semibold text-base line-clamp-1">
-                    {property.title}
-                </h3>
+            {/* Content Section (Right) */}
+            <CardContent className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                <div>
+                    {/* Title */}
+                    <h3 className="font-semibold text-sm line-clamp-1 mb-1" title={property.title}>
+                        {property.title}
+                    </h3>
 
-                {/* Location */}
-                {property.location_city && (
-                    <div className="flex items-center text-sm text-muted-foreground">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {property.location_city}
-                        {property.location_country && `, ${property.location_country}`}
-                    </div>
-                )}
-
-                {/* Details */}
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    {property.max_guests && (
-                        <div className="flex items-center">
-                            <Users className="w-4 h-4 mr-1" />
-                            {property.max_guests}
-                        </div>
-                    )}
-                    {property.bedrooms && (
-                        <div className="flex items-center">
-                            <Bed className="w-4 h-4 mr-1" />
-                            {property.bedrooms}
-                        </div>
-                    )}
-                    {property.bathrooms && (
-                        <div className="flex items-center">
-                            <Bath className="w-4 h-4 mr-1" />
-                            {property.bathrooms}
+                    {/* Location */}
+                    {property.location_city && (
+                        <div className="flex items-center text-xs text-muted-foreground mb-1">
+                            <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">
+                                {property.location_city}
+                                {property.location_country && `, ${property.location_country}`}
+                            </span>
                         </div>
                     )}
                 </div>
 
-                {/* Price */}
-                <div className="flex items-center justify-between pt-2 border-t">
+                {/* Footer: Price & Action */}
+                <div className="flex items-end justify-between mt-1">
                     <div>
-                        <span className="text-lg font-bold text-primary">
+                        <span className="text-base font-bold text-primary">
                             {property.price_per_night} STX
                         </span>
-                        <span className="text-sm text-muted-foreground"> /night</span>
+                        <span className="text-xs text-muted-foreground">/night</span>
                     </div>
                     <Button
                         size="sm"
+                        className="h-7 px-3 text-xs"
                         onClick={() => {
                             navigate(`/property/${property.property_id}`);
                             onClose?.();

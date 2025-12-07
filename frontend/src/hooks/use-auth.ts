@@ -6,6 +6,7 @@ import {
     UserSession
 } from "@stacks/connect"
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -16,6 +17,7 @@ const userSession = new UserSession({ appConfig })
 
 export function useAuth() {
     const [userData, setUserData] = useState<UserData | null>(null);
+    const navigate = useNavigate();
 
     const appDetails = {
         name: "StackNStay",
@@ -27,8 +29,8 @@ export function useAuth() {
         showConnect({
             appDetails,
             onFinish: () => {
-                // Redirect to properties page after successful connection
-                window.location.href = '/properties';
+                // Use client-side navigation to avoid full-page reloads
+                navigate('/properties');
             },
             userSession
         })
@@ -37,8 +39,8 @@ export function useAuth() {
     const disconnectWallet = () => {
         userSession.signUserOut();
         setUserData(null);
-        // Redirect to home screen after logout
-        window.location.href = '/';
+        // Use client-side navigation to avoid full reload
+        navigate('/');
     }
 
 
@@ -46,8 +48,8 @@ export function useAuth() {
         if (userSession.isSignInPending()) {
             userSession.handlePendingSignIn().then((userData) => {
                 setUserData(userData);
-                // Redirect to properties after sign-in completes
-                window.location.href = '/properties';
+                // Navigate to properties after sign-in completes
+                navigate('/properties');
             });
         } else if (userSession.isUserSignedIn()) {
             setUserData(userSession.loadUserData());
