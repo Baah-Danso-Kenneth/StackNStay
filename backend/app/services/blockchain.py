@@ -324,15 +324,15 @@ class BlockchainService:
                             prop_data = await self.fetch_ipfs_metadata(ipfs_hash)
                             
                             if prop_data:
-                                # Assign sequential IDs
-                                prop_data["property_id"] = len(properties)
+                                # Keep original property_id from IPFS if it exists
+                                if "property_id" not in prop_data:
+                                    prop_data["property_id"] = len(properties)
                                 
-                                # Ensure required fields
-                                if "price_per_night" not in prop_data and "price" in prop_data:
+                                # Use price from IPFS, fallback to price_per_night
+                                if "price" in prop_data and "price_per_night" not in prop_data:
                                     prop_data["price_per_night"] = prop_data["price"]
-                                
-                                # Default price if missing
-                                if prop_data.get("price_per_night", 0) == 0:
+                                elif "price_per_night" not in prop_data:
+                                    # Only set default if BOTH are missing
                                     bedrooms = prop_data.get("bedrooms", 1)
                                     prop_data["price_per_night"] = bedrooms * 45 + 10
                                 

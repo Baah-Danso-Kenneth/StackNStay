@@ -18,6 +18,7 @@ export interface PropertyMetadata {
     title: string;
     description: string;
     location: string;
+    location_country: string;
     location_city: string;
     images: string[]; // IPFS URLs like ipfs://...
     amenities: string[];
