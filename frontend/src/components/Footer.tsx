@@ -14,7 +14,15 @@ const Footer = () => {
     ];
 
     const changeLanguage = (lng: string) => {
-        i18n.changeLanguage(lng);
+        try {
+            // Persist selection so language detector and reloads honour it
+            localStorage.setItem('i18nextLng', lng);
+        } catch (e) {
+            // ignore if storage not available
+        }
+
+        // Use async change and let react-i18next update components
+        void i18n.changeLanguage(lng);
     };
 
     return (
@@ -95,18 +103,23 @@ const Footer = () => {
 
                         {/* Language Selector */}
                         <div className="flex flex-wrap gap-2">
-                            {languages.map((lang) => (
-                                <button
-                                    key={lang.code}
-                                    onClick={() => changeLanguage(lang.code)}
-                                    className={`px-3 py-1 text-xs rounded-md transition-colors ${i18n.language === lang.code
-                                            ? 'bg-primary text-primary-foreground font-medium'
-                                            : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
-                                        }`}
-                                >
-                                    {lang.label}
-                                </button>
-                            ))}
+                            {languages.map((lang) => {
+                                const active = (i18n.resolvedLanguage || i18n.language || '').startsWith(lang.code);
+                                return (
+                                    <button
+                                        key={lang.code}
+                                        onClick={() => changeLanguage(lang.code)}
+                                        aria-pressed={active}
+                                        aria-label={`Switch language to ${lang.label}`}
+                                        className={`px-3 py-1 text-xs rounded-md transition-colors ${active
+                                                ? 'bg-primary text-primary-foreground font-medium'
+                                                : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                                            }`}
+                                    >
+                                        {lang.label}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

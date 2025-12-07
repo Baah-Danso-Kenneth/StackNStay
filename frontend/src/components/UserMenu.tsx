@@ -19,7 +19,7 @@ export const UserMenu = ({ address, onDisconnect }: UserMenuProps) => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2 px-2">
+                <Button variant="stacker" className="gap-2 px-2">
                     <WalletAddress address={address} />
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </Button>

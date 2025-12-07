@@ -39,17 +39,17 @@ export const WalletAddress = ({ address, className }: WalletAddressProps) => {
 
     return (
         <div className={cn("flex items-center gap-2", className)}>
-            <div className="group relative flex items-center gap-3 pl-1 pr-4 py-1.5 bg-background/50 backdrop-blur-md border border-border/50 hover:border-primary/50 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-primary/10 cursor-default">
+            <div className="group relative flex items-center gap-3 pl-1 pr-4 py-1.5 bg-background/50 backdrop-blur-md border border-border/50 rounded-full transition-all duration-300 shadow-sm  cursor-default">
 
                 {/* Avatar */}
-                <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-background shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-background shadow-sm  transition-transform duration-300">
                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-full"></div>
                 </div>
 
                 {/* Address & Status */}
                 <div className="flex flex-col">
-                    <span className="text-xs font-bold text-foreground tracking-tight flex items-center gap-1.5 transition-colors group-hover:text-primary">
+                    <span className="text-xs font-bold text-foreground tracking-tight flex items-center gap-1.5 transition-colors ">
                         {truncateAddress(address)}
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     </span>
@@ -59,14 +59,14 @@ export const WalletAddress = ({ address, className }: WalletAddressProps) => {
                 </div>
 
                 {/* Actions (reveal on hover) */}
-                <div className="absolute right-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 flex items-center gap-1 bg-background/95 backdrop-blur-sm rounded-full px-1 shadow-sm border border-border/50">
+                <div className="absolute right-1 opacity-0  transition-all duration-300 translate-x-2  flex items-center gap-1 bg-background/95 backdrop-blur-sm rounded-full px-1 shadow-sm border border-border/50">
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+                                    className="h-7 w-7 rounded-full  hover:text-primary transition-colors"
                                     onClick={copyToClipboard}
                                 >
                                     {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}

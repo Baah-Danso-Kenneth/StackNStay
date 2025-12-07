@@ -88,6 +88,7 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
+            
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -103,13 +104,14 @@ const Navbar = () => {
             {/* Wallet Connect / User Menu */}
             {userData ? (
               <UserMenu
-                address={userData.profile.stxAddress.mainnet}
+                address={userData.profile.stxAddress.testnet
+                }
                 onDisconnect={disconnectWallet}
               />
             ) : (
               <Button
                 onClick={connectWallet}
-                className="gradient-hero text-primary-foreground shadow-elegant hover:shadow-glow transition-smooth font-semibold"
+                className="gradient-hero text-primary-foreground shadow-elegant  transition-smooth font-semibold"
               >
                 <Wallet className="w-4 h-4 mr-2" />
                 {t('nav.connectWallet')}
