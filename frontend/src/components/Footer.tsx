@@ -1,9 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Github, Twitter, Mail } from "lucide-react";
 
 const Footer = () => {
     const { t, i18n } = useTranslation();
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+
+    // Listen for language changes from i18n
+    useEffect(() => {
+        const handleLanguageChanged = (lng: string) => {
+            setCurrentLanguage(lng);
+        };
+
+        i18n.on('languageChanged', handleLanguageChanged);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, [i18n]);
 
     const languages = [
         { code: 'de', label: 'GER' },
@@ -21,8 +35,8 @@ const Footer = () => {
             // ignore if storage not available
         }
 
-        // Use async change and let react-i18next update components
-        void i18n.changeLanguage(lng);
+        // Change language - will trigger re-render via useEffect listener
+        i18n.changeLanguage(lng).catch((err) => console.error('Language change error:', err));
     };
 
     return (
@@ -104,7 +118,7 @@ const Footer = () => {
                         {/* Language Selector */}
                         <div className="flex flex-wrap gap-2">
                             {languages.map((lang) => {
-                                const active = (i18n.resolvedLanguage || i18n.language || '').startsWith(lang.code);
+                                const active = (currentLanguage || '').startsWith(lang.code);
                                 return (
                                     <button
                                         key={lang.code}
