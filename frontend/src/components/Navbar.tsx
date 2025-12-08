@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Wallet, Moon, Sun } from "lucide-react";
+import { Wallet, Moon, Sun, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { UserMenu } from "./UserMenu";
 
@@ -12,6 +13,7 @@ const Navbar = () => {
   const { theme, setTheme } = useTheme();
   const { userData, connectWallet, disconnectWallet } = useAuth();
   const { t } = useTranslation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -78,13 +80,23 @@ const Navbar = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            {/* Mobile menu toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileOpen((s) => !s)}
+              className="md:hidden h-8 w-8 text-muted-foreground hover:bg-muted"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
             {userData && (
               <Link to="/host/dashboard">
                 <Button
                   variant="ghost"
                   className="hidden md:flex text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted/50"
                 >
-                  Switch to Hosting
+                  {t('nav.switchToHosting')}
                 </Button>
               </Link>
             )}
@@ -120,6 +132,62 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+      {/* Mobile menu panel */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-x-0 top-20 z-50 bg-background/95 border-t border-border shadow-lg">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-col gap-4">
+              <Link
+                to="/"
+                onClick={() => setMobileOpen(false)}
+                className="text-sm font-medium text-foreground/90"
+              >
+                {t('nav.home')}
+              </Link>
+
+              <Link
+                to="/properties"
+                onClick={() => setMobileOpen(false)}
+                className="text-sm font-medium text-foreground/90"
+              >
+                {t('nav.properties')}
+              </Link>
+
+              {userData && (
+                <>
+                  <Link to="/my-bookings" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-foreground/90">
+                    {t('nav.myBookings')}
+                  </Link>
+                  <Link to="/history" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-foreground/90">
+                    {t('nav.history')}
+                  </Link>
+                </>
+              )}
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="rounded-full"
+                >
+                  <Sun className="h-5 w-5" />
+                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                </Button>
+
+                {userData ? (
+                  <UserMenu address={userData.profile.stxAddress.testnet} onDisconnect={disconnectWallet} />
+                ) : (
+                  <Button onClick={() => { connectWallet(); setMobileOpen(false); }} className="gradient-hero text-primary-foreground shadow-elegant font-semibold">
+                    <Wallet className="w-4 h-4 mr-2" />
+                    {t('nav.connectWallet')}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

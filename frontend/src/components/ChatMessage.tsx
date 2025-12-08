@@ -3,7 +3,7 @@
  * Displays individual chat messages with properties and knowledge
  */
 import { useState, useEffect } from 'react';
-import { Bot, User, BookOpen } from 'lucide-react';
+import { Bot, User, BookOpen, Home, Shuffle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PropertyChatCard } from './PropertyChatCard';
@@ -67,10 +67,27 @@ export function ChatMessage({ message, onClose }: ChatMessageProps) {
             <div className={`flex-1 space-y-2 ${isUser ? 'items-end' : 'items-start'} flex flex-col min-w-0`}>
                 {/* Query Type Badge (AI only) */}
                 {!isUser && message.query_type && (
-                    <Badge variant="outline" className="text-xs bg-background/50 backdrop-blur-sm">
-                        {message.query_type === 'property_search' && '🏠 Property Search'}
-                        {message.query_type === 'knowledge' && '📚 Knowledge'}
-                        {message.query_type === 'mixed' && '🔀 Mixed Query'}
+                    <Badge variant="outline" className="text-xs bg-background/50 backdrop-blur-sm flex items-center gap-2">
+                        {message.query_type === 'property_search' && (
+                            <>
+                                <Home className="w-4 h-4" />
+                                <span>Property Search</span>
+                            </>
+                        )}
+
+                        {message.query_type === 'knowledge' && (
+                            <>
+                                <BookOpen className="w-4 h-4" />
+                                <span>Knowledge</span>
+                            </>
+                        )}
+
+                        {message.query_type === 'mixed' && (
+                            <>
+                                <Shuffle className="w-4 h-4" />
+                                <span>Mixed Query</span>
+                            </>
+                        )}
                     </Badge>
                 )}
 

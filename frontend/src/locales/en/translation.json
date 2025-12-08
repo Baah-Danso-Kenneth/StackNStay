@@ -4,7 +4,8 @@
         "properties": "Properties",
         "myBookings": "My Bookings",
         "history": "History",
-        "connectWallet": "Connect Wallet"
+        "connectWallet": "Connect Wallet",
+        "switchToHosting": "Switch to Hosting"
     },
     "hero": {
         "badge": "Decentralized Rental Platform",
@@ -13,6 +14,14 @@
         "subtitle": "Book unique stays directly with hosts using smart contracts on the Stacks blockchain. No intermediaries, lower fees, and complete transparency.",
         "exploreButton": "Explore Properties",
         "learnButton": "Learn More",
+        "node1Title": "Connect",
+        "node1Subtitle": "Secure Wallet",
+        "node2Title": "Discover",
+        "node2Subtitle": "Find Homes",
+        "node3Title": "Secure",
+        "node3Subtitle": "Smart Contracts",
+        "node4Title": "Global",
+        "node4Subtitle": "Anywhere",
         "stats": {
             "properties": "Properties",
             "countries": "Countries",
@@ -41,19 +50,29 @@
         }
     },
     "howItWorks": {
-        "title": "How It Works",
-        "subtitle": "Get started in three simple steps",
+        "badge": "Seamless Experience",
+        "title": "How It",
+        "titleHighlight": "Works",
+        "subtitle": "Experience the future of property booking in four simple steps.",
         "step1": {
             "title": "Connect Wallet",
-            "description": "Link your Stacks wallet to get started"
+            "description": "Link your Stacks wallet to access the platform. No email required.",
+            "badge": "Secure Login"
         },
         "step2": {
-            "title": "Browse Properties",
-            "description": "Find your perfect vacation rental"
+            "title": "Browse & Book",
+            "description": "Find your perfect stay and book instantly with minimal platform fees.",
+            "badge": "Instant Search"
         },
         "step3": {
-            "title": "Book Securely",
-            "description": "Complete your booking with a smart contract"
+            "title": "Smart Escrow",
+            "description": "Funds are held securely in a smart contract until you check in.",
+            "badge": "Protected"
+        },
+        "step4": {
+            "title": "Enjoy & Review",
+            "description": "Payment releases automatically. Leave a verified on-chain review.",
+            "badge": "Earn Rewards"
         }
     },
     "faq": {
@@ -112,10 +131,16 @@
         "error": "Error",
         "tryAgain": "Try Again",
         "property": "Property",
+        "verifiedUser": "Verified User",
         "properties_one": "Property",
         "properties_other": "Properties"
     },
     "pages": {
+        "index": {
+            "ctaTitle": "Ready to Get Started?",
+            "ctaSubtitle": "Join thousands of users already experiencing the future of property rental",
+            "ctaButton": "View All Properties"
+        },
         "properties": {
             "title": "Explore Properties",
             "subtitle": "Discover verified rental spaces from around the world",
@@ -194,5 +219,36 @@
                 }
             }
         }
+    },
+    "baseContent": {
+        "title": "Redefining Rentals",
+        "titleHighlight": "in the Digital Age",
+        "subtitle": "We've stripped away the noise to focus on what matters: direct, trustless connections between hosts and guests. Experience the freedom of decentralized living.",
+        "fee1Title": "Middleman Fees",
+        "fee1Description": "Keep more of what you earn.",
+        "fee2Title": "100% Transparency",
+        "fee2Description": "Immutable on-chain records.",
+        "startHosting": "Start Hosting"
+    },
+    "kindWords": {
+        "title": "Trusted by Our Community",
+        "subtitle": "Real experiences from real users in our decentralized rental ecosystem"
+    },
+    "wallet": {
+        "connected": "Connected",
+        "copyAddress": "Copy Address",
+        "copied": "Copied!"
+    },
+    "userMenu": {
+        "myProfile": "My Profile",
+        "disconnectWallet": "Disconnect Wallet"
+    },
+    "testimonials": {
+        "sarah": "Booking with STX was incredibly smooth. No currency conversion fees, and the smart contract escrow gave me total peace of mind.",
+        "kwame": "Finally, a platform that respects privacy. I love that I can book a vacation rental directly from my wallet without jumping through hoops.",
+        "wei": "The transparency is unmatched. Being able to see the property history on-chain before booking made me feel so much more secure.",
+        "elena": "As a host, getting paid instantly upon check-in without waiting weeks for bank transfers is a game changer. StackNStay is the future.",
+        "david": "Seamless experience from start to finish. The decentralized review system feels much more authentic than other platforms.",
+        "priya": "I was skeptical about crypto rentals at first, but the user interface is so intuitive. It felt just like a regular booking app, but better."
     }
 }

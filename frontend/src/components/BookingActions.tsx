@@ -69,7 +69,6 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
             await openContractCall({
                 ...contractCallOptions,
                 onFinish: async (data) => {
-                    console.log("✅ Payment release transaction submitted:", data);
                     toast({
                         title: "Payment Released",
                         description: `Payment of ${(booking.hostPayout / 1_000_000).toFixed(2)} STX has been released to the host.`,
@@ -104,7 +103,6 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
             await openContractCall({
                 ...contractCallOptions,
                 onFinish: async (data) => {
-                    console.log("✅ Cancellation transaction submitted:", data);
                     toast({
                         title: "Booking Cancelled",
                         description: `Refund of ${refundAmount.toFixed(2)} STX (${refundPercentage}%) will be processed.`,

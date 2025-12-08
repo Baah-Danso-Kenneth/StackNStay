@@ -6,6 +6,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { User, Calendar, History, LogOut, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { WalletAddress } from "./WalletAddress";
@@ -16,6 +17,7 @@ interface UserMenuProps {
 }
 
 export const UserMenu = ({ address, onDisconnect }: UserMenuProps) => {
+    const { t } = useTranslation();
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -28,27 +30,27 @@ export const UserMenu = ({ address, onDisconnect }: UserMenuProps) => {
                 <DropdownMenuItem asChild>
                     <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                         <User className="w-4 h-4" />
-                        <span>My Profile</span>
+                        <span>{t('userMenu.myProfile')}</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                     <Link to="/my-bookings" className="flex items-center gap-2 cursor-pointer">
                         <Calendar className="w-4 h-4" />
-                        <span>My Bookings</span>
+                        <span>{t('nav.myBookings')}</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <Link to="/history" className="flex items-center gap-2 cursor-pointer">
                         <History className="w-4 h-4" />
-                        <span>History</span>
+                        <span>{t('nav.history')}</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                     <Link to="/host/dashboard" className="flex items-center gap-2 cursor-pointer font-medium">
                         <User className="w-4 h-4" />
-                        <span>Switch to Hosting</span>
+                        <span>{t('nav.switchToHosting')}</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -57,7 +59,7 @@ export const UserMenu = ({ address, onDisconnect }: UserMenuProps) => {
                     className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
                 >
                     <LogOut className="w-4 h-4" />
-                    <span>Disconnect Wallet</span>
+                    <span>{t('userMenu.disconnectWallet')}</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

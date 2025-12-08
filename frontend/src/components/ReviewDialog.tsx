@@ -66,7 +66,6 @@ export function ReviewDialog({
                 ...txOptions,
                 network: NETWORK,
                 onFinish: (data) => {
-                    console.log("✅ Review submitted:", data.txId);
                     toast.success("Review submitted successfully!");
                     setOpen(false);
                     setRating(0);
@@ -74,7 +73,6 @@ export function ReviewDialog({
                     onSuccess?.();
                 },
                 onCancel: () => {
-                    console.log("❌ Review submission cancelled");
                     toast.error("Review submission cancelled");
                 },
             });

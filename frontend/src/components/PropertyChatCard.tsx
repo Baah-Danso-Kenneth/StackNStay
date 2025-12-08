@@ -17,7 +17,7 @@ interface PropertyChatCardProps {
 
 export function PropertyChatCard({ property, onClose }: PropertyChatCardProps) {
     const navigate = useNavigate();
-
+    
     const imageUrl = property.images && property.images.length > 0
         ? getIPFSImageUrl(property.images[0])
         : '/placeholder-property.jpg';

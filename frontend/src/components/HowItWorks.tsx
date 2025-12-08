@@ -8,38 +8,38 @@ const HowItWorks = () => {
   const steps = [
     {
       number: "01",
-      title: "Connect Wallet",
-      description: "Link your Stacks wallet to access the platform. No email required.",
+      title: t('howItWorks.step1.title'),
+      description: t('howItWorks.step1.description'),
       icon: Wallet,
       color: "emerald",
-      badge: "Secure Login",
+      badge: t('howItWorks.step1.badge'),
       rotation: "group-hover:-rotate-6",
     },
     {
       number: "02",
-      title: "Browse & Book",
-      description: "Find your perfect stay and book instantly with minimal platform fees.",
+      title: t('howItWorks.step2.title'),
+      description: t('howItWorks.step2.description'),
       icon: Search,
       color: "amber",
-      badge: "Instant Search",
+      badge: t('howItWorks.step2.badge'),
       rotation: "group-hover:rotate-6",
     },
     {
       number: "03",
-      title: "Smart Escrow",
-      description: "Funds are held securely in a smart contract until you check in.",
+      title: t('howItWorks.step3.title'),
+      description: t('howItWorks.step3.description'),
       icon: CheckCircle,
       color: "primary",
-      badge: "Protected",
+      badge: t('howItWorks.step3.badge'),
       rotation: "group-hover:-rotate-3",
     },
     {
       number: "04",
-      title: "Enjoy & Review",
-      description: "Payment releases automatically. Leave a verified on-chain review.",
+      title: t('howItWorks.step4.title'),
+      description: t('howItWorks.step4.description'),
       icon: Star,
       color: "purple",
-      badge: "Earn Rewards",
+      badge: t('howItWorks.step4.badge'),
       rotation: "group-hover:rotate-12",
     },
   ];
@@ -88,16 +88,15 @@ const HowItWorks = () => {
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 animate-fade-in">
             <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-medium">Seamless Experience</span>
+            <span className="text-sm font-medium">{t('howItWorks.badge')}</span>
           </div>
 
           <h2 className="text-4xl md:text-5xl font-bold mb-6 font-heading">
-            How It <span className="text-primary">Works</span>
+            {t('howItWorks.title')} <span className="text-primary">{t('howItWorks.titleHighlight')}</span>
           </h2>
 
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Experience the future of property booking in four simple steps.
-            <span className="text-foreground/80"> Decentralized, secure, and instant.</span>
+            {t('howItWorks.subtitle')}
           </p>
         </div>
 

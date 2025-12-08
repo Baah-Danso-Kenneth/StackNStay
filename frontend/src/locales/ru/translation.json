@@ -1,198 +1,253 @@
 {
     "nav": {
-        "home": "Home",
-        "properties": "Properties",
-        "myBookings": "My Bookings",
-        "history": "History",
-        "connectWallet": "Connect Wallet"
+        "home": "Главная",
+        "properties": "Свойства",
+        "myBookings": "Мои Бронирования",
+        "history": "История",
+        "connectWallet": "Подключить Кошелек",
+        "switchToHosting": "Переключиться на Хостинг"
     },
     "hero": {
-        "badge": "Decentralized Rental Platform",
-        "title": "Decentralized",
-        "titleHighlight": "Vacation Rentals",
-        "subtitle": "Book unique stays directly with hosts using smart contracts on the Stacks blockchain. No intermediaries, lower fees, and complete transparency.",
-        "exploreButton": "Explore Properties",
-        "learnButton": "Learn More",
+        "badge": "Децентрализованная Платформа Аренды",
+        "title": "Децентрализованные",
+        "titleHighlight": "Отпускные Аренды",
+        "subtitle": "Бронируйте уникальные места прямо у хозяев, используя смарт-контракты в блокчейне Stacks. Без посредников, низкие комиссии и полная прозрачность.",
+        "exploreButton": "Обзор Недвижимости",
+        "learnButton": "Подробнее",
+        "node1Title": "Подключиться",
+        "node1Subtitle": "Безопасный Кошелек",
+        "node2Title": "Открыть",
+        "node2Subtitle": "Найти Дома",
+        "node3Title": "Безопасный",
+        "node3Subtitle": "Смарт-контракты",
+        "node4Title": "Глобальный",
+        "node4Subtitle": "Везде",
         "stats": {
-            "properties": "Properties",
-            "countries": "Countries",
-            "satisfaction": "Satisfaction"
+            "properties": "Свойства",
+            "countries": "Страны",
+            "satisfaction": "Удовлетворение"
         }
     },
     "features": {
-        "badge": "Why Choose StacksStay?",
-        "title": "Decentralized",
-        "titleHighlight": "Freedom",
-        "subtitle": "Experience the future of property rental with our blockchain-powered platform. Secure, transparent, and built for everyone.",
+        "badge": "Почему Выбрать StacksStay?",
+        "title": "Децентрализованная",
+        "titleHighlight": "Свобода",
+        "subtitle": "Испытайте будущее аренды недвижимости с нашей платформой на основе блокчейна. Безопасная, прозрачная и созданная для всех.",
         "instant": {
-            "badge": "Instant Setup",
-            "title": "Instant Booking",
-            "description": "Connect your wallet and book properties instantly. No intermediaries, no delays, just seamless peer-to-peer transactions."
+            "badge": "Мгновенная Установка",
+            "title": "Мгновенное Бронирование",
+            "description": "Подключите свой кошелек и бронируйте недвижимость мгновенно. Без посредников, без задержек, просто безопасные одноранговые транзакции."
         },
         "fees": {
-            "badge": "Lower Fees",
-            "title": "Minimal Fees",
-            "description": "Say goodbye to hefty platform fees. Pay only a 2% protocol fee per successful booking, with no hidden charges."
+            "badge": "Низкие Комиссии",
+            "title": "Минимальные Комиссии",
+            "description": "Забудьте о завышенных комиссиях платформы. Платите всего 2% комиссии протокола за каждое успешное бронирование, без скрытых платежей."
         },
         "global": {
-            "badge": "Global Access",
-            "title": "Borderless Travel",
-            "description": "Access properties from around the world with consistent quality standards and verified reviews stored on-chain."
+            "badge": "Глобальный Доступ",
+            "title": "Путешествия без Границ",
+            "description": "Получайте доступ к недвижимости со всего мира с согласованными стандартами качества и проверенными отзывами в блокчейне."
         }
     },
     "howItWorks": {
-        "title": "How It Works",
-        "subtitle": "Get started in three simple steps",
+        "badge": "Бесшовный опыт",
+        "title": "Как Это",
+        "titleHighlight": "Работает",
+        "subtitle": "Испытайте будущее бронирования недвижимости в четыре простых шага.",
         "step1": {
-            "title": "Connect Wallet",
-            "description": "Link your Stacks wallet to get started"
+            "title": "Подключить кошелек",
+            "description": "Подключите свой кошелек Stacks для доступа к платформе. Электронная почта не требуется.",
+            "badge": "Защищенный вход"
         },
         "step2": {
-            "title": "Browse Properties",
-            "description": "Find your perfect vacation rental"
+            "title": "Поиск и бронирование",
+            "description": "Найдите идеальное место и забронируйте мгновенно с минимальными комиссиями.",
+            "badge": "Мгновенный поиск"
         },
         "step3": {
-            "title": "Book Securely",
-            "description": "Complete your booking with a smart contract"
+            "title": "Умный эскроу",
+            "description": "Средства надежно удерживаются в смарт-контракте до заселения.",
+            "badge": "Защищено"
+        },
+        "step4": {
+            "title": "Наслаждайтесь и оставьте отзыв",
+            "description": "Платеж автоматически освобождается. Оставьте проверенный отзыв в блокчейне.",
+            "badge": "Зарабатывайте награды"
         }
     },
     "faq": {
-        "title": "Common Questions",
-        "subtitle": "Everything you need to know about fees, support, and how StacksStay works.",
+        "title": "Часто Задаваемые Вопросы",
+        "subtitle": "Все, что вам нужно знать о комиссиях, поддержке и том, как работает StacksStay.",
         "q1": {
-            "question": "What are the platform fees?",
-            "answer": "StacksStay charges a minimal 2% platform fee on all bookings. This is significantly lower than traditional platforms (15-20%) because our smart contracts automate the process, eliminating expensive intermediaries. Example: For a 5,000 STX booking, the fee is only 100 STX."
+            "question": "Какие комиссии платформы?",
+            "answer": "StacksStay взимает минимальную комиссию платформы в размере 2% на все бронирования. Это значительно ниже, чем традиционные платформы (15-20%), потому что наши смарт-контракты автоматизируют процесс, исключая дорогостоящих посредников. Пример: Для бронирования на 5000 STX комиссия составляет всего 100 STX."
         },
         "q2": {
-            "question": "My transaction is pending forever",
-            "answer": "Check the Stacks blockchain explorer with your transaction ID. Transactions usually confirm within 10-30 minutes depending on network congestion."
+            "question": "Моя транзакция ждет вечно",
+            "answer": "Проверьте обозреватель блокчейна Stacks с вашим ID транзакции. Транзакции обычно подтверждаются в течение 10-30 минут в зависимости от загруженности сети."
         },
         "q3": {
-            "question": "I don't have enough STX",
-            "answer": "You need enough STX to cover the booking cost plus a small transaction fee (~0.1 STX). You can buy more STX on exchanges like Coinbase, Binance, or Kraken."
+            "question": "У меня недостаточно STX",
+            "answer": "Вам нужно достаточно STX для покрытия стоимости бронирования плюс небольшая комиссия за транзакцию (~0,1 STX). Вы можете купить больше STX на биржах, таких как Coinbase, Binance или Kraken."
         },
         "q4": {
-            "question": "Host isn't responding",
-            "answer": "Hosts have 24 hours to respond. If there is no response, you can cancel for a full refund (if more than 7 days before check-in)."
+            "question": "Хозяин не отвечает",
+            "answer": "Хозяева имеют 24 часа для ответа. Если ответа нет, вы можете отменить бронирование с полным возвратом (если более 7 дней до заселения)."
         },
         "q5": {
-            "question": "Property doesn't match listing",
-            "answer": "Take photos and raise a dispute immediately through the platform. An admin will review your case and determine a fair refund percentage based on the evidence."
+            "question": "Недвижимость не соответствует объявлению",
+            "answer": "Сделайте фотографии и немедленно подайте жалобу через платформу. Администратор рассмотрит ваше дело и определит справедливый процент возврата средств на основе доказательств."
         }
     },
     "testimonials": {
-        "title": "What Our Users Say",
-        "subtitle": "Real experiences from our community"
+        "title": "Что Говорят Наши Пользователи",
+        "subtitle": "Реальный опыт нашего сообщества"
     },
     "footer": {
-        "tagline": "Decentralized Living",
-        "description": "Decentralized vacation rentals on the Stacks blockchain. Book unique stays with complete transparency.",
-        "platform": "Platform",
-        "browseProperties": "Browse Properties",
-        "aboutUs": "About Us",
-        "howItWorks": "How It Works",
-        "faq": "FAQ",
-        "support": "Support",
-        "helpCenter": "Help Center",
-        "contactUs": "Contact Us",
-        "privacy": "Privacy Policy",
-        "terms": "Terms of Service",
-        "connect": "Connect",
-        "copyright": "© 2025 StackNStay. All rights reserved.",
-        "builtOn": "Built on",
-        "blockchain": "Stacks Blockchain"
+        "tagline": "Децентрализованная Жизнь",
+        "description": "Децентрализованная аренда на отпуск в блокчейне Stacks. Забронируйте уникальные места с полной прозрачностью.",
+        "platform": "Платформа",
+        "browseProperties": "Обзор Недвижимости",
+        "aboutUs": "О Нас",
+        "howItWorks": "Как Это Работает",
+        "faq": "Часто Задаваемые Вопросы",
+        "support": "Поддержка",
+        "helpCenter": "Центр Помощи",
+        "contactUs": "Свяжитесь с Нами",
+        "privacy": "Политика Конфиденциальности",
+        "terms": "Условия Обслуживания",
+        "connect": "Подключение",
+        "copyright": "© 2025 StackNStay. Все права защищены.",
+        "builtOn": "Построено на",
+        "blockchain": "Блокчейн Stacks"
     },
     "ai": {
-        "tooltip": "Ask AI Assistant",
-        "subtitle": "Get instant help"
+        "tooltip": "Спросить у ИИ Помощника",
+        "subtitle": "Получить Мгновенную Помощь"
     },
     "common": {
-        "scrollToTop": "Scroll to top",
-        "loading": "Loading...",
-        "error": "Error",
-        "tryAgain": "Try Again",
-        "property": "Property",
-        "properties_one": "Property",
-        "properties_other": "Properties"
+        "scrollToTop": "Прокрутить вверх",
+        "loading": "Загрузка...",
+        "error": "Ошибка",
+        "tryAgain": "Повторить",
+        "property": "Свойство",
+        "properties_one": "Свойство",
+        "properties_other": "Свойства"
     },
     "pages": {
+        "index": {
+            "ctaTitle": "Готовы начать?",
+            "ctaSubtitle": "Присоединяйтесь к тысячам пользователей, которые уже испытывают будущее аренды недвижимости",
+            "ctaButton": "Просмотреть все объекты"
+        },
         "properties": {
-            "title": "Explore Properties",
-            "subtitle": "Discover verified rental spaces from around the world",
-            "errorLoading": "Error loading properties",
-            "showingResults": "Showing {{count}} of {{total}} properties",
-            "available": "Available",
-            "filteredFrom": "Filtered from {{total}} verified listings",
-            "verifiedListings": "Verified listings on the blockchain",
-            "loadMore": "Load More Properties"
+            "title": "Обзор Недвижимости",
+            "subtitle": "Откройте для себя проверенные арендные помещения со всего мира",
+            "errorLoading": "Ошибка при загрузке недвижимости",
+            "showingResults": "Показано {{count}} из {{total}} свойств",
+            "available": "Доступно",
+            "filteredFrom": "Отфильтровано из {{total}} проверенных объявлений",
+            "verifiedListings": "Проверенные объявления на блокчейне",
+            "loadMore": "Загрузить Еще Свойства"
         },
         "profile": {
-            "title": "User Account",
+            "title": "Учетная Запись Пользователя",
             "stats": {
-                "trips": "Trips Taken",
-                "listings": "Properties Listed",
-                "joined": "Joined",
-                "verified": "Verified"
+                "trips": "Совершенные Поездки",
+                "listings": "Размещенная Недвижимость",
+                "joined": "Присоединился",
+                "verified": "Проверено"
             },
-            "achievements": "Achievements",
-            "reviews": "Reviews",
-            "noReviews": "No reviews yet",
-            "avgRating": "Average Rating",
-            "totalReviews": "Total Reviews"
+            "achievements": "Достижения",
+            "reviews": "Отзывы",
+            "noReviews": "Пока нет отзывов",
+            "avgRating": "Средняя Оценка",
+            "totalReviews": "Всего Отзывов"
         },
         "history": {
-            "title": "Booking History",
-            "subtitle": "View and manage your bookings",
-            "noBookings": "No bookings yet",
+            "title": "История Бронирования",
+            "subtitle": "Просмотрите и управляйте своими бронированиями",
+            "noBookings": "Пока нет бронирований",
             "status": {
-                "confirmed": "Confirmed",
-                "completed": "Completed",
-                "cancelled": "Cancelled",
-                "pending": "Pending"
+                "confirmed": "Подтверждено",
+                "completed": "Завершено",
+                "cancelled": "Отменено",
+                "pending": "Ожидание"
             }
         },
         "propertyDetail": {
-            "bookNow": "Book Now",
-            "checkIn": "Check-in",
-            "checkOut": "Check-out",
-            "guests": "Guests",
-            "amenities": "Amenities",
-            "location": "Location",
-            "reviews": "Reviews",
-            "host": "Host",
-            "pricePerNight": "per night"
+            "bookNow": "Забронировать Сейчас",
+            "checkIn": "Заселение",
+            "checkOut": "Выселение",
+            "guests": "Гости",
+            "amenities": "Удобства",
+            "location": "Расположение",
+            "reviews": "Отзывы",
+            "host": "Хозяин",
+            "pricePerNight": "за ночь"
         },
         "notFound": {
-            "title": "Page Not Found",
-            "message": "The page you're looking for doesn't exist.",
-            "backHome": "Back to Home"
+            "title": "Страница Не Найдена",
+            "message": "Страница, которую вы ищете, не существует.",
+            "backHome": "Вернуться на Главную"
         },
         "host": {
             "dashboard": {
-                "title": "Host Dashboard",
-                "earnings": "Total Earnings",
-                "bookings": "Active Bookings",
-                "properties": "Properties",
-                "rating": "Rating"
+                "title": "Панель Управления Хозяина",
+                "earnings": "Общий Доход",
+                "bookings": "Активные Бронирования",
+                "properties": "Свойства",
+                "rating": "Рейтинг"
             },
             "createListing": {
-                "title": "Create New Listing",
-                "basicInfo": "Basic Information",
-                "propertyDetails": "Property Details",
-                "amenities": "Amenities",
-                "photos": "Photos",
-                "pricing": "Pricing",
-                "submit": "Create Listing",
+                "title": "Создать Новое Объявление",
+                "basicInfo": "Основная Информация",
+                "propertyDetails": "Детали Свойства",
+                "amenities": "Удобства",
+                "photos": "Фотографии",
+                "pricing": "Ценообразование",
+                "submit": "Создать Объявление",
                 "fields": {
-                    "title": "Property Title",
-                    "description": "Description",
-                    "location": "Location",
-                    "price": "Price per Night",
-                    "guests": "Max Guests",
-                    "bedrooms": "Bedrooms",
-                    "bathrooms": "Bathrooms"
+                    "title": "Название Свойства",
+                    "description": "Описание",
+                    "location": "Расположение",
+                    "price": "Цена за Ночь",
+                    "guests": "Максимум Гостей",
+                    "bedrooms": "Спальни",
+                    "bathrooms": "Ванные Комнаты"
                 }
             }
         }
+    },
+    "baseContent": {
+        "title": "Переосмысление Аренды",
+        "titleHighlight": "в Цифровую Эпоху",
+        "subtitle": "Мы избавились от шума, чтобы сосредоточиться на том, что имеет значение: прямые, безопасные связи между хозяевами и гостями. Испытайте свободу децентрализованной жизни.",
+        "fee1Title": "Без Посреднических Сборов",
+        "fee1Description": "Сохраняйте больше из того, что вы зарабатываете.",
+        "fee2Title": "100% Прозрачность",
+        "fee2Description": "Неизменяемые записи в сети блокчейна.",
+        "startHosting": "Начать Принимать Гостей"
+    },
+    "kindWords": {
+        "title": "Доверено Нашим Сообществом",
+        "subtitle": "Реальные опыты от реальных пользователей в нашей децентрализованной экосистеме аренды"
+    },
+    "wallet": {
+        "connected": "Подключен",
+        "copyAddress": "Копировать Адрес",
+        "copied": "Скопировано!"
+    },
+    "userMenu": {
+        "myProfile": "Мой Профиль",
+        "disconnectWallet": "Отключить Кошелек"
+    },
+    "testimonials": {
+        "sarah": "Бронирование с STX было невероятно гладким. Никаких комиссий за конвертацию валют, и условный депозит смарт-контракта дали мне полное спокойствие.",
+        "kwame": "Наконец-то платформа, которая уважает конфиденциальность. Мне нравится, что я могу зарезервировать дом для отпуска прямо со своего кошелька без лишних процедур.",
+        "wei": "Прозрачность не имеет себе равных. Возможность увидеть историю свойства в цепочке перед бронированием сделала меня намного более уверенным.",
+        "elena": "Как хозяин, получить платеж сразу же при регистрации без ожидания недель транспортных переводов - это смена игры. StackNStay - это будущее.",
+        "david": "Безупречный опыт от начала до конца. Децентрализованная система отзывов кажется гораздо более аутентичной, чем другие платформы.",
+        "priya": "Сначала я был скептичен к арендам криптовалют, но пользовательский интерфейс так интуитивен. Это было похоже на обычное приложение бронирования, но лучше."
     }
 }
