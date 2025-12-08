@@ -1,0 +1,51 @@
+# Railway Environment Variables Template
+# Copy these into Railway dashboard Variables section
+
+# ========== REQUIRED ==========
+
+# AI/LLM Services (get from Groq console)
+GROQ_API_KEY=gsk_your_groq_api_key_here
+
+# Cohere API (get from Cohere dashboard)
+COHERE_API_KEY=your_cohere_api_key_here
+
+# Blockchain Configuration
+STACKS_API_URL=https://testnet-api.stacks.co
+STACKS_NETWORK=testnet
+
+# Frontend CORS Origins (update with your frontend domain)
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://yourdomain.com
+
+# Admin API Key (generate with: openssl rand -hex 32)
+API_KEY_ADMIN=your_secure_random_key_here
+
+# ========== OPTIONAL BUT RECOMMENDED ==========
+
+# Application Environment
+ENVIRONMENT=production
+DEBUG=False
+LOG_LEVEL=info
+
+# Database (AUTO-CREATED by Railway when you add PostgreSQL)
+# DO NOT SET THIS MANUALLY - Railway creates DATABASE_URL automatically
+# DATABASE_URL=postgresql://user:password@host:port/railway
+
+# Vector Store Path
+VECTOR_STORE_PATH=/tmp/vector_store
+
+# Email Configuration (if needed)
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+
+# ========== INSTRUCTIONS ==========
+# 
+# 1. Copy each variable (except DATABASE_URL) into Railway dashboard
+# 2. Get GROQ_API_KEY from: https://console.groq.com/keys
+# 3. Get COHERE_API_KEY from: https://dashboard.cohere.com/api-keys
+# 4. Generate API_KEY_ADMIN with: openssl rand -hex 32
+# 5. Update ALLOWED_ORIGINS with your frontend domain
+# 6. Railway auto-creates DATABASE_URL when you add PostgreSQL database
+# 7. Leave DEBUG=False in production
+#

@@ -1,0 +1,48 @@
+# Production requirements for StackNStay Backend
+# Base FastAPI stack
+fastapi==0.123.0
+uvicorn[standard]==0.38.0
+gunicorn==23.0.0
+python-dotenv==1.2.1
+pydantic==2.12.5
+pydantic-settings==2.12.0
+
+# Async & concurrency
+asyncpg==0.31.0
+aiohttp==3.13.2
+
+# Database
+sqlalchemy==2.0.44
+
+# Blockchain
+stacks-py==0.0.6  # or your current stacks library
+
+# AI/LLM
+langchain==0.1.17
+langchain-groq==0.1.1
+langchain-community==0.0.36
+groq==0.37.0
+cohere==5.11.4
+
+# Vector Store & Search
+faiss-cpu==1.7.4
+numpy==1.26.4
+
+# Security & Auth
+python-jose==3.5.0
+cryptography==46.0.3
+email-validator==2.3.0
+python-multipart==0.0.20
+
+# Monitoring & Logging
+sentry-sdk==2.46.0
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.22.0
+httpx==0.28.1
+
+# Utilities
+requests==2.32.5
+rich==14.2.0
+tenacity==8.5.0
