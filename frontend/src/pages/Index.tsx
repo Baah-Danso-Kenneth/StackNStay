@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -17,6 +18,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 
 const Index = () => {
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2000);
@@ -53,13 +55,13 @@ const Index = () => {
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-6">Ready to Get Started?</h2>
+            <h2 className="text-4xl font-bold mb-6">{t('pages.index.ctaTitle')}</h2>
             <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Join thousands of users already experiencing the future of property rental
+              {t('pages.index.ctaSubtitle')}
             </p>
             <Link to="/properties">
               <Button size="lg" className="gradient-hero text-primary-foreground shadow-elegant hover:shadow-glow transition-smooth font-semibold text-lg px-12 h-14 rounded-xl">
-                View All Properties
+                {t('pages.index.ctaButton')}
               </Button>
             </Link>
           </div>
@@ -70,10 +72,6 @@ const Index = () => {
 
       {/* Footer */}
       <Footer />
-
-      {/* Floating Action Buttons */}
-      <AIChatButton />
-      <ScrollToTop />
 
     </div>
   );

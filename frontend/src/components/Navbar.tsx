@@ -96,7 +96,7 @@ const Navbar = () => {
                   variant="ghost"
                   className="hidden md:flex text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted/50"
                 >
-                  Switch to Hosting
+                  {t('nav.switchToHosting')}
                 </Button>
               </Link>
             )}

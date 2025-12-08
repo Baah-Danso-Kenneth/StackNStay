@@ -17,8 +17,6 @@ interface PropertyChatCardProps {
 
 export function PropertyChatCard({ property, onClose }: PropertyChatCardProps) {
     const navigate = useNavigate();
-
-    console.log('🏠 Property Card Data:', property);
     
     const imageUrl = property.images && property.images.length > 0
         ? getIPFSImageUrl(property.images[0])

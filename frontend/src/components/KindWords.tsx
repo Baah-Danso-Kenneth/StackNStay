@@ -1,9 +1,11 @@
 
 import { kindwordsData } from '@/lib/data'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import RecommendCard from './RecommendCard'
 
 function KindWords() {
+    const { t } = useTranslation()
     return (
         <section className='py-16 md:py-20 lg:py-24 bg-muted/30'>
             <div className='container mx-auto px-4 sm:px-6'>
@@ -12,10 +14,10 @@ function KindWords() {
 
                 <div className='text-center mb-12 md:mb-16'>
                     <h2 className='text-3xl sm:text-4xl md:text-5xl uppercase  font-bold text-foreground mb-4'>
-                        Trusted by Our Community
+                        {t('kindWords.title')}
                     </h2>
                     <p className='text-lg text-muted-foreground max-w-2xl mx-auto'>
-                        Real experiences from real users in our decentralized rental ecosystem
+                        {t('kindWords.subtitle')}
                     </p>
                 </div>
 

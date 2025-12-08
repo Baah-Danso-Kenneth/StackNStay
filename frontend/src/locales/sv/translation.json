@@ -3,8 +3,9 @@
         "home": "Hem",
         "properties": "Fastigheter",
         "myBookings": "Mina Bokningar",
-        "history": "Historia",
-        "connectWallet": "Anslut Plånbok"
+        "history": "Historik",
+        "connectWallet": "Anslut Plånbok",
+        "switchToHosting": "Växla till Värdskap"
     },
     "hero": {
         "badge": "Decentraliserad Uthyrningsplattform",
@@ -41,19 +42,29 @@
         }
     },
     "howItWorks": {
-        "title": "Hur Det Fungerar",
-        "subtitle": "Kom igång i tre enkla steg",
+        "badge": "Sömlös Upplevelse",
+        "title": "Hur Det",
+        "titleHighlight": "Fungerar",
+        "subtitle": "Upplev framtidens bokning av boenden i fyra enkla steg.",
         "step1": {
-            "title": "Anslut Din Plånbok",
-            "description": "Länka din Stacks-plånbok för att komma igång"
+            "title": "Anslut Plånbok",
+            "description": "Koppla din Stacks-plånbok för att få åtkomst till plattformen. Ingen e-post krävs.",
+            "badge": "Säker Inloggning"
         },
         "step2": {
-            "title": "Utforska Fastigheter",
-            "description": "Hitta din perfekta semesterboning"
+            "title": "Bläddra & Boka",
+            "description": "Hitta ditt perfekta boende och boka direkt med minimala avgifter.",
+            "badge": "Omgående Sök"
         },
         "step3": {
-            "title": "Boka Säkert",
-            "description": "Slutför din bokning med ett smart kontrakt"
+            "title": "Smart Depå",
+            "description": "Medel hålls säkert i ett smart kontrakt tills du checkar in.",
+            "badge": "Skyddad"
+        },
+        "step4": {
+            "title": "Njut & Recensera",
+            "description": "Betalning släpps automatiskt. Lämna en verifierad on-chain-recension.",
+            "badge": "Tjäna Belöningar"
         }
     },
     "faq": {
@@ -116,6 +127,11 @@
         "properties_other": "Fastigheter"
     },
     "pages": {
+        "index": {
+            "ctaTitle": "Redo att komma igång?",
+            "ctaSubtitle": "Gå med i tusentals användare som redan upplever framtidens fastighetsuthyrning",
+            "ctaButton": "Visa Alla Fastigheter"
+        },
         "properties": {
             "title": "Utforska Fastigheter",
             "subtitle": "Upptäck verifierade uthyrningsutrymmen från hela världen",
@@ -194,5 +210,19 @@
                 }
             }
         }
+    },
+    "baseContent": {
+        "title": "Omdefiniera Uthyrningar",
+        "titleHighlight": "i den Digitala Ålder",
+        "subtitle": "Vi har tagit bort bullret för att fokusera på det som spelar roll: direkta, tillitsbaserade förbindelser mellan värdar och gäster. Upplev friheten i decentraliserad boendet.",
+        "fee1Title": "Ingen Mellanhändsgebyr",
+        "fee1Description": "Behåll mer av det du tjänar.",
+        "fee2Title": "100% Transparens",
+        "fee2Description": "Oföränderliga on-chain-register.",
+        "startHosting": "Börja Vara Värd"
+    },
+    "kindWords": {
+        "title": "Betrott av Vår Gemenskap",
+        "subtitle": "Verkliga erfarenheter från verkliga användare i vårt decentraliserade uthyrningstecosystem"
     }
 }

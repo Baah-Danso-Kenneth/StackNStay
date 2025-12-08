@@ -92,7 +92,6 @@ class ClarityParser:
             return result if result else None
             
         except Exception as e:
-            print(f"Error parsing tuple: {e}")
             return None
     
     @staticmethod
@@ -136,7 +135,6 @@ class ClarityParser:
             return result if result else None
             
         except Exception as e:
-            print(f"Error extracting ASCII string: {e}")
             return None
     
     @staticmethod
@@ -150,7 +148,6 @@ class ClarityParser:
                 return "ST..."  # Placeholder - proper extraction requires more work
             return None
         except Exception as e:
-            print(f"Error extracting principal: {e}")
             return None
 
 
@@ -196,11 +193,9 @@ class BlockchainService:
                             return count
                     return 0
                 else:
-                    print(f"Error fetching property count: {response.status_code}")
                     return 0
                     
         except Exception as e:
-            print(f"Error in get_property_count: {e}")
             return 0
     
     async def get_property(self, property_id: int) -> Optional[Dict[str, Any]]:
@@ -227,10 +222,6 @@ class BlockchainService:
                 if response.status_code == 200:
                     data = response.json()
                     
-                    # DEBUG: Print raw response
-                    print(f"🔍 RAW RESPONSE for property {property_id}:")
-                    print(f"   Result: {data.get('result', 'NO RESULT')[:200]}...")  # First 200 chars
-                    
                     if data.get("okay") and "result" in data:
                         result = data["result"]
                         
@@ -249,11 +240,9 @@ class BlockchainService:
                             return None
                     return None
                 else:
-                    print(f"Error fetching property {property_id}: {response.status_code}")
                     return None
                     
         except Exception as e:
-            print(f"Error in get_property: {e}")
             return None
     
     async def fetch_ipfs_metadata(self, ipfs_uri: str) -> Optional[Dict[str, Any]]:
@@ -272,21 +261,16 @@ class BlockchainService:
             
             url = f"{self.ipfs_gateway}/{ipfs_hash}"
             
-            print(f"📥 Fetching IPFS metadata from: {url}")
-            
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, timeout=15.0)
                 
                 if response.status_code == 200:
                     metadata = response.json()
-                    print(f"✅ Successfully fetched metadata: {metadata.get('title', 'Unknown')}")
                     return metadata
                 else:
-                    print(f"❌ Error fetching IPFS metadata: {response.status_code}")
                     return None
                     
         except Exception as e:
-            print(f"❌ Error in fetch_ipfs_metadata: {e}")
             return None
 
     async def fetch_from_pinata(self) -> List[Dict[str, Any]]:
@@ -295,10 +279,8 @@ class BlockchainService:
         Used as fallback when blockchain index is empty
         """
         if not PINATA_JWT:
-            print("⚠️ PINATA_JWT not found. Cannot fetch from Pinata.")
             return []
             
-        print("🔍 Fetching pins directly from Pinata...")
         properties = []
         
         try:
@@ -311,7 +293,6 @@ class BlockchainService:
                 if response.status_code == 200:
                     data = response.json()
                     rows = data.get("rows", [])
-                    print(f"📄 Found {len(rows)} total pins on Pinata")
                     
                     for pin in rows:
                         meta = pin.get("metadata", {})
@@ -320,7 +301,6 @@ class BlockchainService:
                         
                         # Filter by name convention "property-" or "stackstay-"
                         if (name.startswith("property-") or name.startswith("stackstay-")) and ipfs_hash:
-                            print(f"  📥 Fetching metadata for {name} ({ipfs_hash})...")
                             prop_data = await self.fetch_ipfs_metadata(ipfs_hash)
                             
                             if prop_data:
@@ -341,14 +321,12 @@ class BlockchainService:
                                     prop_data["location_city"] = prop_data.get("location", "Unknown")
                                 
                                 properties.append(prop_data)
-                                print(f"  ✅ Added property: {prop_data.get('title', 'Unknown')}")
                 else:
-                    print(f"❌ Error listing pins: {response.status_code}")
+                    pass
                     
         except Exception as e:
-            print(f"❌ Error fetching from Pinata: {e}")
+            pass
             
-        print(f"✅ Loaded {len(properties)} properties from Pinata")
         return properties
     
     async def get_user_badges(self, user_address: str) -> List[str]:
@@ -455,11 +433,9 @@ class BlockchainService:
         
         # STEP 1: Try to get count from blockchain
         count = await self.get_property_count()
-        print(f"📊 Blockchain reports {count} properties")
         
         # STEP 2: If blockchain has properties, fetch them
         if count > 0:
-            print(f"🔗 Fetching {count} properties from blockchain...")
             
             for property_id in range(count):
                 try:
@@ -478,23 +454,18 @@ class BlockchainService:
                             
                             enriched = await self.enrich_property_data(full_property)
                             properties.append(enriched)
-                            
-                            print(f"✅ Loaded property {property_id}: {metadata.get('title', 'Unknown')}")
                         else:
-                            print(f"⚠️ Could not fetch IPFS metadata for property {property_id}")
+                            pass
                     else:
-                        print(f"⚠️ Property {property_id} not found or has no metadata URI")
+                        pass
                         
                 except Exception as e:
-                    print(f"❌ Error loading property {property_id}: {e}")
                     continue
         
         # STEP 3: If no properties from blockchain, use Pinata fallback
         if not properties:
-            print("\n⚠️ No properties loaded from blockchain. Using Pinata fallback...")
             properties = await self.fetch_from_pinata()
         
-        print(f"\n✅ Total properties loaded: {len(properties)}")
         return properties
 
 

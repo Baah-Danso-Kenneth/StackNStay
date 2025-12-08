@@ -4,7 +4,8 @@
         "properties": "Propiedades",
         "myBookings": "Mis Reservas",
         "history": "Historial",
-        "connectWallet": "Conectar Billetera"
+        "connectWallet": "Conectar Billetera",
+        "switchToHosting": "Cambiar a Anfitrión"
     },
     "hero": {
         "badge": "Plataforma de Alquiler Descentralizada",
@@ -41,19 +42,29 @@
         }
     },
     "howItWorks": {
-        "title": "Cómo Funciona",
-        "subtitle": "Comienza en tres pasos simples",
+        "badge": "Experiencia fluida",
+        "title": "Cómo",
+        "titleHighlight": "Funciona",
+        "subtitle": "Experimenta el futuro de las reservas de propiedades en cuatro sencillos pasos.",
         "step1": {
-            "title": "Conecta tu Billetera",
-            "description": "Vincula tu billetera Stacks para comenzar"
+            "title": "Conectar Cartera",
+            "description": "Vincula tu cartera Stacks para acceder a la plataforma. No se requiere correo electrónico.",
+            "badge": "Inicio Seguro"
         },
         "step2": {
-            "title": "Explora Propiedades",
-            "description": "Encuentra tu alojamiento vacacional perfecto"
+            "title": "Buscar y Reservar",
+            "description": "Encuentra tu estancia perfecta y reserva al instante con tarifas mínimas.",
+            "badge": "Búsqueda Instantánea"
         },
         "step3": {
-            "title": "Reserva de Forma Segura",
-            "description": "Completa tu reserva con un contrato inteligente"
+            "title": "Depósito Inteligente",
+            "description": "Los fondos se mantienen de forma segura en un contrato inteligente hasta el check-in.",
+            "badge": "Protegido"
+        },
+        "step4": {
+            "title": "Disfruta y Valora",
+            "description": "El pago se libera automáticamente. Deja una reseña verificada en la cadena.",
+            "badge": "Gana Recompensas"
         }
     },
     "faq": {
@@ -116,6 +127,11 @@
         "properties_other": "Propiedades"
     },
     "pages": {
+        "index": {
+            "ctaTitle": "¿Listo para comenzar?",
+            "ctaSubtitle": "Únete a miles de usuarios que ya experimentan el futuro del alquiler de propiedades",
+            "ctaButton": "Ver Todas las Propiedades"
+        },
         "properties": {
             "title": "Explorar Propiedades",
             "subtitle": "Descubre espacios de alquiler verificados de todo el mundo",
@@ -194,5 +210,19 @@
                 }
             }
         }
+    },
+    "baseContent": {
+        "title": "Redefiniendo Alquileres",
+        "titleHighlight": "en la Era Digital",
+        "subtitle": "Hemos eliminado el ruido para enfocarnos en lo que importa: conexiones directas y sin confianza entre anfitriones e invitados. Experimenta la libertad de la vida descentralizada.",
+        "fee1Title": "Sin Comisiones de Intermediario",
+        "fee1Description": "Conserva más de lo que ganas.",
+        "fee2Title": "100% Transparencia",
+        "fee2Description": "Registros inmutables en la cadena.",
+        "startHosting": "Comenzar a Alojar"
+    },
+    "kindWords": {
+        "title": "Confiado por Nuestra Comunidad",
+        "subtitle": "Experiencias reales de usuarios reales en nuestro ecosistema de alquiler descentralizado"
     }
 }

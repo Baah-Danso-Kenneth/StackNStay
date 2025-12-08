@@ -1,8 +1,10 @@
 import React from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 
 function BaseContext() {
+  const { t } = useTranslation();
   return (
     <section className="relative py-24 bg-background overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,12 +14,11 @@ function BaseContext() {
           <div className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-4xl md:text-5xl font-heading font-bold tracking-tight text-foreground leading-tight">
-                Redefining Rentals <br />
-                <span className="text-muted-foreground">in the Digital Age.</span>
+                {t('baseContent.title')} <br />
+                <span className="text-muted-foreground">{t('baseContent.titleHighlight')}</span>
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
-                We've stripped away the noise to focus on what matters:
-                direct, trustless connections between hosts and guests. Experience the freedom of decentralized living.
+                {t('baseContent.subtitle')}
               </p>
             </div>
 
@@ -27,8 +28,8 @@ function BaseContext() {
                   <span className="text-xl font-bold text-primary">0%</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Middleman Fees</h3>
-                  <p className="text-sm text-muted-foreground">Keep more of what you earn.</p>
+                  <h3 className="font-semibold text-foreground">{t('baseContent.fee1Title')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('baseContent.fee1Description')}</p>
                 </div>
               </div>
 
@@ -37,15 +38,15 @@ function BaseContext() {
                   <CheckCircle2 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">100% Transparency</h3>
-                  <p className="text-sm text-muted-foreground">Immutable on-chain records.</p>
+                  <h3 className="font-semibold text-foreground">{t('baseContent.fee2Title')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('baseContent.fee2Description')}</p>
                 </div>
               </div>
             </div>
 
             <div className="pt-4">
               <Button size="lg" className="group px-8 rounded-full shadow-lg hover:shadow-primary/25 transition-all duration-300">
-                Start Hosting
+                {t('baseContent.startHosting')}
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
