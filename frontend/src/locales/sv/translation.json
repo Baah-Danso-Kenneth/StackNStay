@@ -14,6 +14,14 @@
         "subtitle": "Boka unika vistelser direkt med värdar med hjälp av smarta kontrakt på Stacks-blockkedjor. Inga mellanhänder, lägre avgifter och fullständig transparens.",
         "exploreButton": "Utforska Fastigheter",
         "learnButton": "Läs Mer",
+        "node1Title": "Anslut",
+        "node1Subtitle": "Säker Plånbok",
+        "node2Title": "Upptäck",
+        "node2Subtitle": "Hitta Hem",
+        "node3Title": "Säker",
+        "node3Subtitle": "Smarta Kontrakt",
+        "node4Title": "Global",
+        "node4Subtitle": "Överallt",
         "stats": {
             "properties": "Fastigheter",
             "countries": "Länder",
@@ -224,5 +232,22 @@
     "kindWords": {
         "title": "Betrott av Vår Gemenskap",
         "subtitle": "Verkliga erfarenheter från verkliga användare i vårt decentraliserade uthyrningstecosystem"
+    },
+    "wallet": {
+        "connected": "Ansluten",
+        "copyAddress": "Kopiera Adress",
+        "copied": "Kopierad!"
+    },
+    "userMenu": {
+        "myProfile": "Min Profil",
+        "disconnectWallet": "Koppla Från Plånbok"
+    },
+    "testimonials": {
+        "sarah": "Bokning med STX var otroligt smidig. Inga valutaomräkningsavgifter och depositionskontraktet gav mig total sinnesfrid.",
+        "kwame": "Äntligen en plattform som respekterar integriteten. Jag älskar att jag kan boka en semesterbostäder direkt från min plånbok utan att gå igenom krångliga processer.",
+        "wei": "Transparensen är oöverträffad. Att kunna se fastighetshistoriken på kedjan innan bokningen gjorde mig mycket säkrare.",
+        "elena": "Som värd att få betalt omedelbar vid incheckning utan att vänta veckor på banköverföringar är en game changer. StackNStay är framtiden.",
+        "david": "Sömlös upplevelse från början till slut. Det decentraliserade recensionssystemet känns mycket mer autentiskt än andra plattformar.",
+        "priya": "Jag var skeptisk till kryptobokningar till en början, men användargränssnittet är så intuitivt. Det kändes precis som en vanlig bokningsapp, men bättre."
     }
 }

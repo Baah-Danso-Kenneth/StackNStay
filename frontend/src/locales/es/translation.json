@@ -14,6 +14,14 @@
         "subtitle": "Reserva alojamientos únicos directamente con anfitriones usando contratos inteligentes en la cadena de bloques Stacks. Sin intermediarios, tarifas más bajas y transparencia completa.",
         "exploreButton": "Explorar Propiedades",
         "learnButton": "Más Información",
+        "node1Title": "Conectar",
+        "node1Subtitle": "Billetera Segura",
+        "node2Title": "Descubrir",
+        "node2Subtitle": "Encontrar Hogares",
+        "node3Title": "Asegurar",
+        "node3Subtitle": "Contratos Inteligentes",
+        "node4Title": "Global",
+        "node4Subtitle": "En Cualquier Lugar",
         "stats": {
             "properties": "Propiedades",
             "countries": "Países",
@@ -224,5 +232,22 @@
     "kindWords": {
         "title": "Confiado por Nuestra Comunidad",
         "subtitle": "Experiencias reales de usuarios reales en nuestro ecosistema de alquiler descentralizado"
+    },
+    "wallet": {
+        "connected": "Conectado",
+        "copyAddress": "Copiar Dirección",
+        "copied": "¡Copiado!"
+    },
+    "userMenu": {
+        "myProfile": "Mi Perfil",
+        "disconnectWallet": "Desconectar Billetera"
+    },
+    "testimonials": {
+        "sarah": "Reservar con STX fue increíblemente suave. Sin comisiones de conversión de moneda, y el depósito de contrato inteligente me dio total tranquilidad.",
+        "kwame": "Finalmente, una plataforma que respeta la privacidad. Me encanta poder reservar una casa de vacaciones directamente desde mi billetera sin saltar obstáculos.",
+        "wei": "La transparencia no tiene igual. Poder ver el historial de la propiedad en cadena antes de reservar me hizo sentir mucho más seguro.",
+        "elena": "Como anfitrión, recibir el pago instantáneamente después del check-in sin esperar semanas para transferencias bancarias es un cambio de juego. StackNStay es el futuro.",
+        "david": "Experiencia perfecta de principio a fin. El sistema de reseñas descentralizado se siente mucho más auténtico que otras plataformas.",
+        "priya": "Al principio, era escéptico sobre los alquileres de criptomonedas, pero la interfaz de usuario es tan intuitiva. Se sintió como una aplicación de reserva normal, pero mejor."
     }
 }

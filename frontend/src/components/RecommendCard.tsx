@@ -1,8 +1,10 @@
 import clsx from 'clsx';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Quote } from 'lucide-react';
 
-function RecommendCard({ name, testimony }: { name: string; testimony: string }) {
+function RecommendCard({ name, testimonyKey }: { name: string; testimonyKey: string }) {
+  const { t } = useTranslation();
   return (
     <div className="w-full max-w-[350px] h-auto relative flex flex-col group">
 
@@ -14,7 +16,7 @@ function RecommendCard({ name, testimony }: { name: string; testimony: string })
         </div>
 
         <p className="text-base text-card-foreground leading-relaxed italic">
-          "{testimony}"
+          "{t(testimonyKey)}"
         </p>
 
         {/* Speech Bubble Tail */}
@@ -28,7 +30,7 @@ function RecommendCard({ name, testimony }: { name: string; testimony: string })
             {name}
           </p>
           <p className="text-xs text-muted-foreground">
-            Verified User
+            {t('common.verifiedUser')}
           </p>
         </div>
         <div className="ml-3 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-primary font-bold text-sm">

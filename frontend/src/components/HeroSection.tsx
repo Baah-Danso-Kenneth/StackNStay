@@ -98,8 +98,8 @@ const HeroSection = () => {
                                     <Wallet className="w-5 h-5 text-emerald-400" />
                                 </div>
                                 <div>
-                                    <div className="text-foreground font-semibold text-sm">Connect</div>
-                                    <div className="text-xs text-muted-foreground">Secure Wallet</div>
+                                    <div className="text-foreground font-semibold text-sm">{t('hero.node1Title')}</div>
+                                    <div className="text-xs text-muted-foreground">{t('hero.node1Subtitle')}</div>
                                 </div>
                             </div>
                         </div>
@@ -111,8 +111,8 @@ const HeroSection = () => {
                                     <Search className="w-5 h-5 text-blue-400" />
                                 </div>
                                 <div>
-                                    <div className="text-foreground font-semibold text-sm">Discover</div>
-                                    <div className="text-xs text-muted-foreground">Find Homes</div>
+                                    <div className="text-foreground font-semibold text-sm">{t('hero.node2Title')}</div>
+                                    <div className="text-xs text-muted-foreground">{t('hero.node2Subtitle')}</div>
                                 </div>
                             </div>
                         </div>
@@ -124,8 +124,8 @@ const HeroSection = () => {
                                     <Shield className="w-5 h-5 text-purple-400" />
                                 </div>
                                 <div>
-                                    <div className="text-foreground font-semibold text-sm">Secure</div>
-                                    <div className="text-xs text-muted-foreground">Smart Contracts</div>
+                                    <div className="text-foreground font-semibold text-sm">{t('hero.node3Title')}</div>
+                                    <div className="text-xs text-muted-foreground">{t('hero.node3Subtitle')}</div>
                                 </div>
                             </div>
                         </div>
@@ -137,8 +137,8 @@ const HeroSection = () => {
                                     <Globe className="w-5 h-5 text-pink-400" />
                                 </div>
                                 <div>
-                                    <div className="text-foreground font-semibold text-sm">Global</div>
-                                    <div className="text-xs text-muted-foreground">Anywhere</div>
+                                    <div className="text-foreground font-semibold text-sm">{t('hero.node4Title')}</div>
+                                    <div className="text-xs text-muted-foreground">{t('hero.node4Subtitle')}</div>
                                 </div>
                             </div>
                         </div>

@@ -14,6 +14,14 @@
         "subtitle": "Buchen Sie einzigartige Unterkünfte direkt bei Gastgebern mit Smart Contracts auf der Stacks Blockchain. Keine Vermittler, niedrigere Gebühren und vollständige Transparenz.",
         "exploreButton": "Immobilien Erkunden",
         "learnButton": "Mehr Erfahren",
+        "node1Title": "Verbinden",
+        "node1Subtitle": "Sichere Brieftasche",
+        "node2Title": "Entdecken",
+        "node2Subtitle": "Häuser Finden",
+        "node3Title": "Sichern",
+        "node3Subtitle": "Intelligente Verträge",
+        "node4Title": "Global",
+        "node4Subtitle": "Überall",
         "stats": {
             "properties": "Immobilien",
             "countries": "Länder",
@@ -161,5 +169,22 @@
     "kindWords": {
         "title": "Von unserer Community vertraut",
         "subtitle": "Echte Erfahrungen von echten Benutzern in unserem dezentralen Mietkosystem"
+    },
+    "wallet": {
+        "connected": "Verbunden",
+        "copyAddress": "Adresse Kopieren",
+        "copied": "Kopiert!"
+    },
+    "userMenu": {
+        "myProfile": "Mein Profil",
+        "disconnectWallet": "Wallet Trennen"
+    },
+    "testimonials": {
+        "sarah": "Buchen mit STX war unglaublich reibungslos. Keine Währungsumrechnungsgebühren und das Smart-Contract-Treuhandkonto gaben mir totale Sicherheit.",
+        "kwame": "Endlich eine Plattform, die die Privatsphäre respektiert. Ich liebe es, dass ich ein Ferienhaus direkt von meiner Brieftasche aus buchen kann, ohne umständliche Prozesse.",
+        "wei": "Die Transparenz ist unvergleichlich. Die Möglichkeit, die Immobilienverlauf in der Blockchain vor der Buchung zu sehen, machte mich viel sicherer.",
+        "elena": "Als Host werden sofort nach dem Check-in bezahlt zu werden, ohne wochenlang auf Bankübertragungen zu warten, ist ein Spielwechsel. StackNStay ist die Zukunft.",
+        "david": "Nahtlose Erfahrung von Anfang bis Ende. Das dezentralisierte Bewertungssystem fühlt sich viel authentischer an als andere Plattformen.",
+        "priya": "Anfangs war ich skeptisch gegenüber Kryptowährung-Vermietungen, aber die Benutzeroberfläche ist so intuitiv. Es war wie eine normale Buchungs-App, aber besser."
     }
 }

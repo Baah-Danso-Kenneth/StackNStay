@@ -14,6 +14,14 @@
         "subtitle": "Book unique stays directly with hosts using smart contracts on the Stacks blockchain. No intermediaries, lower fees, and complete transparency.",
         "exploreButton": "Explore Properties",
         "learnButton": "Learn More",
+        "node1Title": "Connect",
+        "node1Subtitle": "Secure Wallet",
+        "node2Title": "Discover",
+        "node2Subtitle": "Find Homes",
+        "node3Title": "Secure",
+        "node3Subtitle": "Smart Contracts",
+        "node4Title": "Global",
+        "node4Subtitle": "Anywhere",
         "stats": {
             "properties": "Properties",
             "countries": "Countries",
@@ -123,6 +131,7 @@
         "error": "Error",
         "tryAgain": "Try Again",
         "property": "Property",
+        "verifiedUser": "Verified User",
         "properties_one": "Property",
         "properties_other": "Properties"
     },
@@ -224,5 +233,22 @@
     "kindWords": {
         "title": "Trusted by Our Community",
         "subtitle": "Real experiences from real users in our decentralized rental ecosystem"
+    },
+    "wallet": {
+        "connected": "Connected",
+        "copyAddress": "Copy Address",
+        "copied": "Copied!"
+    },
+    "userMenu": {
+        "myProfile": "My Profile",
+        "disconnectWallet": "Disconnect Wallet"
+    },
+    "testimonials": {
+        "sarah": "Booking with STX was incredibly smooth. No currency conversion fees, and the smart contract escrow gave me total peace of mind.",
+        "kwame": "Finally, a platform that respects privacy. I love that I can book a vacation rental directly from my wallet without jumping through hoops.",
+        "wei": "The transparency is unmatched. Being able to see the property history on-chain before booking made me feel so much more secure.",
+        "elena": "As a host, getting paid instantly upon check-in without waiting weeks for bank transfers is a game changer. StackNStay is the future.",
+        "david": "Seamless experience from start to finish. The decentralized review system feels much more authentic than other platforms.",
+        "priya": "I was skeptical about crypto rentals at first, but the user interface is so intuitive. It felt just like a regular booking app, but better."
     }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface WalletAddressProps {
 }
 
 export const WalletAddress = ({ address, className }: WalletAddressProps) => {
+    const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
     const [avatarUrl, setAvatarUrl] = useState("");
 
@@ -54,7 +56,7 @@ export const WalletAddress = ({ address, className }: WalletAddressProps) => {
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     </span>
                     <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                        Connected
+                        {t('wallet.connected')}
                     </span>
                 </div>
 
@@ -73,7 +75,7 @@ export const WalletAddress = ({ address, className }: WalletAddressProps) => {
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>{copied ? "Copied!" : "Copy Address"}</p>
+                                <p>{copied ? t('wallet.copied') : t('wallet.copyAddress')}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>

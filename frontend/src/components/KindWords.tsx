@@ -31,7 +31,7 @@ function KindWords() {
                             >
                                 <RecommendCard
                                     name={item.name}
-                                    testimony={item.testimony}
+                                    testimonyKey={item.testimonyKey}
                                 />
                             </div>
                         ))}
