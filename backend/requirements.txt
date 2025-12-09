@@ -38,10 +38,7 @@ langchain-community==0.0.36
 langchain-core==0.1.53
 langchain-groq==0.1.1
 langchain-text-splitters==0.0.2
-langgraph==0.0.55
-langgraph-checkpoint==1.0.2
-langgraph-prebuilt==0.1.0   
-langgraph-sdk==0.1.30
+langgraph==0.0.26
 langsmith==0.1.147
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
