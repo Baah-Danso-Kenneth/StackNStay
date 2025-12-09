@@ -52,14 +52,19 @@ app = FastAPI(
     title="StackNStay API",
     description="Decentralized property rental platform with AI-powered search",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False  # Disable automatic trailing slash redirects
 )
 
-# Configure CORS
+# Configure CORS - Allow all origins for Vercel preview deployments
+# Note: Using "*" is safe here because:
+# 1. The API doesn't use authentication cookies
+# 2. All property data is public blockchain data
+# 3. Vercel creates many preview URLs that are hard to whitelist
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://stack-nstay.vercel.app"], 
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,  # Must be False when using "*"
     allow_methods=["*"],
     allow_headers=["*"],
 )

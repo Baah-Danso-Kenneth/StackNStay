@@ -403,6 +403,14 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Also handle requests without trailing slash explicitly
+@router.post("", response_model=ChatResponse)
+async def chat_no_slash(request: ChatRequest):
+    """Smart chat endpoint (no trailing slash)"""
+    return await chat(request)
+
+
+
 @router.get("/health")
 async def health_check():
     """Health check endpoint"""
