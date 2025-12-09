@@ -9,7 +9,7 @@ import asyncio
 import asyncpg
 from pathlib import Path
 
-SQL_PATH = Path(__file__).resolve().parents[1] / "pgvector_schema.sql"
+SQL_PATH = Path(__file__).resolve().parents[2] / "pgvector_schema.sql"
 
 async def run_pgvector_migrations(database_url: str | None):
     if not database_url:
