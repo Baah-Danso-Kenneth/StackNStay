@@ -20,9 +20,13 @@ async def run_pgvector_migrations(database_url: str | None):
         return False
 
     sql = SQL_PATH.read_text()
+    
+    # Convert SQLAlchemy-style URL to asyncpg-compatible URL
+    # postgresql+asyncpg:// -> postgresql://
+    asyncpg_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
 
     try:
-        conn = await asyncpg.connect(database_url)
+        conn = await asyncpg.connect(asyncpg_url)
         try:
             # Create simple migrations table if not exists
             await conn.execute(
