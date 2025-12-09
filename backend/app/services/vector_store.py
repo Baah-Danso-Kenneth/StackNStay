@@ -6,6 +6,8 @@ import os
 import json
 import faiss
 import numpy as np
+import asyncpg
+import asyncio
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 import cohere
@@ -15,9 +17,68 @@ load_dotenv()
 
 # Configuration
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
+DATABASE_URL = os.getenv("DATABASE_URL")
+VECTOR_BACKEND = os.getenv("VECTOR_BACKEND", "auto")
 VECTOR_STORE_PATH = Path("data/vector_store")
 FAISS_INDEX_FILE = VECTOR_STORE_PATH / "faiss_index.bin"
 METADATA_FILE = VECTOR_STORE_PATH / "property_metadata.json"
+
+
+def create_property_text(property_data: Dict[str, Any]) -> str:
+    """Create searchable text from property data (shared helper)."""
+    parts: List[str] = []
+
+    # Title
+    if property_data.get("title"):
+        parts.append(f"Property: {property_data['title']}")
+
+    # Location
+    if property_data.get("location_city"):
+        parts.append(f"Location: {property_data['location_city']}")
+    if property_data.get("location_country"):
+        parts.append(f"Country: {property_data['location_country']}")
+
+    # Price
+    if property_data.get("price_per_night"):
+        parts.append(f"Price: {property_data['price_per_night']} STX per night")
+
+    # Amenities
+    if property_data.get("amenities"):
+        amenities = property_data["amenities"]
+        if isinstance(amenities, list):
+            parts.append(f"Amenities: {', '.join(amenities)}")
+        else:
+            parts.append(f"Amenities: {amenities}")
+
+    # Capacity
+    if property_data.get("max_guests"):
+        parts.append(f"Sleeps {property_data['max_guests']} guests")
+    if property_data.get("bedrooms"):
+        parts.append(f"{property_data['bedrooms']} bedrooms")
+    if property_data.get("bathrooms"):
+        parts.append(f"{property_data['bathrooms']} bathrooms")
+
+    # Description
+    if property_data.get("description"):
+        parts.append(f"Description: {property_data['description']}")
+
+    # Host reputation and badges (NEW - from enriched data)
+    if property_data.get("is_superhost"):
+        parts.append("Superhost verified property")
+
+    if property_data.get("host_badges"):
+        badges = property_data["host_badges"]
+        badge_text = ", ".join(badges)
+        parts.append(f"Host achievements: {badge_text}")
+
+    if property_data.get("host_reputation"):
+        reputation = property_data["host_reputation"]
+        avg_rating = reputation.get("average_rating", 0)
+        total_reviews = reputation.get("total_reviews", 0)
+        if avg_rating > 0:
+            parts.append(f"Host rating: {avg_rating:.1f} stars from {total_reviews} reviews")
+
+    return ". ".join(parts)
 
 
 class VectorStore:
@@ -36,59 +97,7 @@ class VectorStore:
         """
         Create searchable text from property data
         """
-        parts = []
-        
-        # Title
-        if property_data.get("title"):
-            parts.append(f"Property: {property_data['title']}")
-        
-        # Location
-        if property_data.get("location_city"):
-            parts.append(f"Location: {property_data['location_city']}")
-        if property_data.get("location_country"):
-            parts.append(f"Country: {property_data['location_country']}")
-        
-        # Price
-        if property_data.get("price_per_night"):
-            parts.append(f"Price: {property_data['price_per_night']} STX per night")
-        
-        # Amenities
-        if property_data.get("amenities"):
-            amenities = property_data["amenities"]
-            if isinstance(amenities, list):
-                parts.append(f"Amenities: {', '.join(amenities)}")
-            else:
-                parts.append(f"Amenities: {amenities}")
-        
-        # Capacity
-        if property_data.get("max_guests"):
-            parts.append(f"Sleeps {property_data['max_guests']} guests")
-        if property_data.get("bedrooms"):
-            parts.append(f"{property_data['bedrooms']} bedrooms")
-        if property_data.get("bathrooms"):
-            parts.append(f"{property_data['bathrooms']} bathrooms")
-        
-        # Description
-        if property_data.get("description"):
-            parts.append(f"Description: {property_data['description']}")
-        
-        # Host reputation and badges (NEW - from enriched data)
-        if property_data.get("is_superhost"):
-            parts.append("Superhost verified property")
-        
-        if property_data.get("host_badges"):
-            badges = property_data["host_badges"]
-            badge_text = ", ".join(badges)
-            parts.append(f"Host achievements: {badge_text}")
-        
-        if property_data.get("host_reputation"):
-            reputation = property_data["host_reputation"]
-            avg_rating = reputation.get("average_rating", 0)
-            total_reviews = reputation.get("total_reviews", 0)
-            if avg_rating > 0:
-                parts.append(f"Host rating: {avg_rating:.1f} stars from {total_reviews} reviews")
-        
-        return ". ".join(parts)
+        return create_property_text(property_data)
     
     async def embed_texts(self, texts: List[str]) -> np.ndarray:
         """
@@ -329,5 +338,143 @@ class VectorStore:
             return False
 
 
-# Singleton instance
-vector_store = VectorStore()
+# --- PGVector adapter ---
+class PGVectorStore:
+    """Postgres + pgvector adapter using asyncpg"""
+
+    def __init__(self):
+        self.cohere_client = cohere.Client(COHERE_API_KEY) if COHERE_API_KEY else None
+        self.pool: Optional[asyncpg.pool.Pool] = None
+        self.property_metadata = []
+        self.index = None
+        self.dimension = 1024
+
+    async def _ensure_pool(self):
+        if not self.pool:
+            if not DATABASE_URL:
+                raise ValueError("DATABASE_URL is not configured for pgvector backend")
+            self.pool = await asyncpg.create_pool(DATABASE_URL)
+
+    def _embedding_to_pgvector(self, emb: np.ndarray) -> str:
+        # Convert numpy array to pgvector literal string: [0.1,0.2,...]
+        return "[" + ",".join(f"{float(x):.6f}" for x in emb.tolist()) + "]"
+
+    async def embed_texts(self, texts: List[str]) -> np.ndarray:
+        if not self.cohere_client:
+            raise ValueError("Cohere API key not configured")
+        response = self.cohere_client.embed(
+            texts=texts,
+            model="embed-english-v3.0",
+            input_type="search_document"
+        )
+        embeddings = np.array(response.embeddings, dtype=np.float32)
+        return embeddings
+
+    async def embed_query(self, query: str) -> np.ndarray:
+        if not self.cohere_client:
+            raise ValueError("Cohere API key not configured")
+        response = self.cohere_client.embed(
+            texts=[query],
+            model="embed-english-v3.0",
+            input_type="search_query"
+        )
+        embedding = np.array(response.embeddings[0], dtype=np.float32)
+        return embedding
+
+    async def index_properties(self, properties: List[Dict[str, Any]]) -> int:
+        if not properties:
+            return 0
+        texts = [self._create_property_text(prop) for prop in properties]
+        embeddings = await self.embed_texts(texts)
+
+        await self._ensure_pool()
+
+        async with self.pool.acquire() as conn:
+            async with conn.transaction():
+                for prop, emb in zip(properties, embeddings):
+                    emb_str = self._embedding_to_pgvector(emb)
+                    metadata = json.dumps(prop)
+                    await conn.execute(
+                        "INSERT INTO property_embeddings(property_id, title, embedding, metadata) VALUES($1, $2, $3::vector, $4::jsonb)",
+                        prop.get("property_id"), prop.get("title"), emb_str, metadata
+                    )
+
+        self.property_metadata = properties
+        print(f"✅ Indexed {len(properties)} properties into Postgres")
+        return len(properties)
+
+    async def search(self, query: str, k: int = 5, filters: Optional[Dict[str, Any]] = None, min_score: float = 0.0) -> List[Dict[str, Any]]:
+        # Quick check whether table has rows
+        await self._ensure_pool()
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT 1 FROM property_embeddings LIMIT 1")
+            if not row:
+                print("⚠️ No properties indexed in Postgres")
+                return []
+
+        query_emb = await self.embed_query(query)
+        emb_str = self._embedding_to_pgvector(query_emb)
+
+        results = []
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT property_id, title, metadata, embedding <-> $1::vector AS distance FROM property_embeddings ORDER BY embedding <-> $1::vector LIMIT $2",
+                emb_str, k
+            )
+            for r in rows:
+                meta = r.get("metadata")
+                if isinstance(meta, str):
+                    try:
+                        meta = json.loads(meta)
+                    except:
+                        meta = {}
+                results.append({**(meta or {}), "match_score": float(r.get("distance"))})
+
+        return results
+
+    async def _has_rows(self) -> bool:
+        await self._ensure_pool()
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT 1 FROM property_embeddings LIMIT 1")
+            return bool(row)
+
+    def save(self):
+        # No-op for Postgres backend (data is persisted in DB)
+        pass
+
+    async def load(self) -> bool:
+        """Load metadata from Postgres into memory and set index flag.
+
+        This method is async. Callers may `await` it. The code that uses
+        `vector_store.load()` in the app will detect coroutine results and
+        await when necessary.
+        """
+        try:
+            await self._ensure_pool()
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch("SELECT metadata FROM property_embeddings")
+                metas = []
+                for r in rows:
+                    meta = r.get("metadata")
+                    if isinstance(meta, str):
+                        try:
+                            meta = json.loads(meta)
+                        except Exception:
+                            meta = {}
+                    metas.append(meta or {})
+
+                self.property_metadata = metas
+                self.index = bool(self.property_metadata)
+                print(f"✅ Loaded {len(self.property_metadata)} properties from Postgres")
+                return True
+        except Exception as e:
+            print(f"⚠️ Error loading properties from Postgres: {e}")
+            return False
+
+
+# Singleton instance selection
+if DATABASE_URL and (VECTOR_BACKEND == "pgvector" or VECTOR_BACKEND == "auto"):
+    # Use Postgres pgvector backend when DATABASE_URL is provided
+    vector_store = PGVectorStore()
+else:
+    vector_store = VectorStore()

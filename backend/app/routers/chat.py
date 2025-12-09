@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import os
+import asyncio
 from dotenv import load_dotenv
 
 from langgraph.graph import StateGraph, END
@@ -326,12 +327,18 @@ async def chat(request: ChatRequest):
     Smart chat endpoint - handles both property search and knowledge questions
     """
     try:
-        # Ensure stores are loaded
+        # Ensure stores are loaded (support async or sync load())
         if not vector_store.index:
-            vector_store.load()
-        
+            maybe = vector_store.load()
+            if asyncio.iscoroutine(maybe):
+                loaded = await maybe
+            else:
+                loaded = maybe
+
         if not knowledge_store.index:
-            knowledge_store.load()
+            maybe_k = knowledge_store.load()
+            if asyncio.iscoroutine(maybe_k):
+                await maybe_k
         
         # Create conversation ID if not provided
         conversation_id = request.conversation_id or f"conv_{os.urandom(8).hex()}"

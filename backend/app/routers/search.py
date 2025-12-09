@@ -5,6 +5,7 @@ Handles semantic search and property recommendations
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
+import asyncio
 
 from app.services.vector_store import vector_store
 from app.services.blockchain import blockchain_service
@@ -44,9 +45,14 @@ async def semantic_search(request: SearchRequest):
     Semantic search for properties
     """
     try:
-        # Ensure vector store is loaded
+        # Ensure vector store is loaded (sync or async)
         if not vector_store.index:
-            if not vector_store.load():
+            maybe = vector_store.load()
+            if asyncio.iscoroutine(maybe):
+                loaded = await maybe
+            else:
+                loaded = maybe
+            if not loaded:
                 raise HTTPException(
                     status_code=503,
                     detail="Vector store not initialized. Please run /api/index first."
@@ -76,9 +82,14 @@ async def get_recommendations(request: RecommendationsRequest):
     Get similar property recommendations
     """
     try:
-        # Ensure vector store is loaded
+        # Ensure vector store is loaded (sync or async)
         if not vector_store.index:
-            if not vector_store.load():
+            maybe = vector_store.load()
+            if asyncio.iscoroutine(maybe):
+                loaded = await maybe
+            else:
+                loaded = maybe
+            if not loaded:
                 raise HTTPException(
                     status_code=503,
                     detail="Vector store not initialized. Please run /api/index first."
