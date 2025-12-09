@@ -88,6 +88,13 @@
     
     ;; Increment the property counter for next listing
     (var-set property-id-nonce (+ property-id u1))
+
+    ;; Try to mint First Listing badge (type u2)
+    ;; We ignore errors (e.g. if already minted) so we don't block the listing
+    (match (contract-call? .stackstay-badge mint-badge tx-sender u2 "ipfs://QmFirstListing...")
+      success true
+      error false
+    )
     
     ;; Return success with the property ID
     (ok property-id)

@@ -138,14 +138,27 @@
         active: true
       }
     )
+    ;; Authorize escrow contract to mint badges
+    (map-set authorized-minters .stackstay-escrow true)
   )
 )
+
+;; Authorized minters (e.g. other contracts)
+(define-map authorized-minters principal bool)
 
 ;; ============================================
 ;; PUBLIC FUNCTIONS
 ;; ============================================
 
-;; Mint achievement badge (only contract owner can call)
+;; Authorize a minter (only owner)
+(define-public (set-authorized-minter (minter principal) (status bool))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (ok (map-set authorized-minters minter status))
+  )
+)
+
+;; Mint achievement badge (contract owner or authorized minter)
 (define-public (mint-badge
     (recipient principal)
     (badge-type uint)
@@ -154,10 +167,11 @@
   (let
     (
       (badge-id (var-get badge-id-nonce))
+      (is-authorized (default-to false (map-get? authorized-minters tx-sender)))
     )
     
     ;; Only contract owner or authorized minter can mint
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (or (is-eq tx-sender CONTRACT-OWNER) is-authorized) ERR-NOT-AUTHORIZED)
     
     ;; Check if user already has this badge type
     (asserts! (is-none (map-get? user-badges { user: recipient, badge-type: badge-type })) 
