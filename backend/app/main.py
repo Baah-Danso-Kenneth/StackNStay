@@ -63,7 +63,7 @@ app = FastAPI(
 # 3. Vercel creates many preview URLs that are hard to whitelist
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["*"],  
     allow_credentials=False,  # Must be False when using "*"
     allow_methods=["*"],
     allow_headers=["*"],
