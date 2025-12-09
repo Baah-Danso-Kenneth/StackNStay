@@ -65,7 +65,7 @@ export const blockchainDebug = {
         console.log('🗄️  Backend API Properties Debug');
         console.log('='.repeat(70));
 
-        const apiUrl = 'http://localhost:8000/api/properties/';
+        const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'}/api/properties/`;
         console.log(`API URL: ${apiUrl}\n`);
 
         try {

@@ -353,7 +353,9 @@ class PGVectorStore:
         if not self.pool:
             if not DATABASE_URL:
                 raise ValueError("DATABASE_URL is not configured for pgvector backend")
-            self.pool = await asyncpg.create_pool(DATABASE_URL)
+            # Strip +asyncpg suffix if present (SQLAlchemy format)
+            db_url = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+            self.pool = await asyncpg.create_pool(db_url)
 
     def _embedding_to_pgvector(self, emb: np.ndarray) -> str:
         # Convert numpy array to pgvector literal string: [0.1,0.2,...]
@@ -384,7 +386,7 @@ class PGVectorStore:
     async def index_properties(self, properties: List[Dict[str, Any]]) -> int:
         if not properties:
             return 0
-        texts = [self._create_property_text(prop) for prop in properties]
+        texts = [create_property_text(prop) for prop in properties]
         embeddings = await self.embed_texts(texts)
 
         await self._ensure_pool()
