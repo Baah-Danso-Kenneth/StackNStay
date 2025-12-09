@@ -9,6 +9,8 @@ from contextlib import asynccontextmanager
 from app.routers import chat, search, admin
 from app.services.vector_store import vector_store
 from app.services.blockchain import blockchain_service
+from app.db.init_pgvector import run_pgvector_migrations
+import os
 
 
 @asynccontextmanager
@@ -21,6 +23,12 @@ async def lifespan(app: FastAPI):
     
     print("🔗 Fetching fresh data from blockchain and IPFS...")
     try:
+        # If a DATABASE_URL is configured, ensure pgvector schema exists.
+        database_url = os.getenv("DATABASE_URL")
+        if database_url:
+            print("🔧 DATABASE_URL detected — running pgvector migrations (if needed)")
+            await run_pgvector_migrations(database_url)
+
         properties = await blockchain_service.get_all_properties()
         
         if properties:

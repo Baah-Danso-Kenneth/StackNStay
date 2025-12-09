@@ -8,11 +8,16 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from app.services.vector_store import vector_store
+import asyncio
 
 async def main():
     print("📂 Loading vector store...")
-    loaded = vector_store.load()
-    
+    maybe = vector_store.load()
+    if asyncio.iscoroutine(maybe):
+        loaded = await maybe
+    else:
+        loaded = maybe
+
     if not loaded:
         print("❌ Failed to load vector store. Is the backend running/initialized?")
         return
