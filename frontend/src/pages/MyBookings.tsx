@@ -10,14 +10,21 @@ import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
 import { BookingCardHorizontal } from "@/components/BookingCardHorizontal";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
+import NoProperties from "@/components/NoProperties";
+
+import { getCurrentBlockHeight } from "@/lib/stacks-api";
 
 const MyBookings = () => {
     const { t } = useTranslation();
     const { userData } = useAuth();
     const [filter, setFilter] = useState<"all" | "confirmed" | "completed" | "cancelled">("all");
 
-    // Fetch current block height (approximate)
-    const currentBlockHeight = 100000; // TODO: Fetch from API
+    // Fetch current block height
+    const { data: currentBlockHeight = 0 } = useQuery({
+        queryKey: ['block-height'],
+        queryFn: getCurrentBlockHeight,
+        refetchInterval: 60000,
+    });
 
     const {
         data: bookings = [],
@@ -153,16 +160,7 @@ const MyBookings = () => {
                         </div>
                     </>
                 ) : (
-                    <div className="text-center py-16">
-                        <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-                        <h3 className="text-xl font-semibold mb-2">No Bookings Yet</h3>
-                        <p className="text-muted-foreground mb-6">
-                            You haven't made any bookings yet. Start exploring properties!
-                        </p>
-                        <Button asChild>
-                            <a href="/properties">Browse Properties</a>
-                        </Button>
-                    </div>
+                    <NoProperties variant="bookings" />
                 )}
             </div>
         </div>

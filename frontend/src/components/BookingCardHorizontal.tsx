@@ -138,7 +138,7 @@ export function BookingCardHorizontal({
                             asChild
                         >
                             <a
-                                href={`https://explorer.hiro.so/txid/${booking.id}?chain=testnet`}
+                                href={`https://explorer.hiro.so/address/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stackstay-escrow?chain=testnet`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >

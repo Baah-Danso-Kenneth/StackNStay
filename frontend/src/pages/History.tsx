@@ -11,14 +11,21 @@ import { BookingCardHorizontal } from "@/components/BookingCardHorizontal";
 import NoHistory from "@/components/NoHistory";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
+import NoProperties from "@/components/NoProperties";
+
+import { getCurrentBlockHeight } from "@/lib/stacks-api";
 
 const History = () => {
     const { t } = useTranslation();
     const { userData } = useAuth();
     const [filter, setFilter] = useState<"all" | "guest" | "host" | "confirmed" | "completed" | "cancelled">("all");
 
-    // Fetch current block height (approximate)
-    const currentBlockHeight = 100000; // TODO: Fetch from API
+    // Fetch current block height
+    const { data: currentBlockHeight = 0 } = useQuery({
+        queryKey: ['block-height'],
+        queryFn: getCurrentBlockHeight,
+        refetchInterval: 60000,
+    });
 
     const {
         data: bookings = [],
@@ -174,7 +181,7 @@ const History = () => {
                         </div>
                     </>
                 ) : (
-                    <NoHistory />
+                    <NoProperties variant="history" />
                 )}
             </div>
         </div>

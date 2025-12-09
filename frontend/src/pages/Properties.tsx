@@ -353,8 +353,6 @@ const Properties = () => {
                         location={`${property.location_city || ""}, ${property.location_country || ""}`}
                         // Pass raw microSTX value and let PropertyCard handle formatting
                         price={property.price_per_night}
-                        rating={4.8} // Mock rating
-                        reviews={12} // Mock reviews
                         guests={property.max_guests || 2}
                         imageUrl={property.cover_image || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"}
                         featured={index === 0}

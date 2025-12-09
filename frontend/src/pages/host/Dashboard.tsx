@@ -13,10 +13,20 @@ import NoProperties from "@/components/NoProperties";
 import PropertyCard from "@/components/PropertyCard";
 import Loader from "@/components/Loader";
 import { BadgeCollection } from "@/components/BadgeCollection";
+import { getCurrentBlockHeight } from "@/lib/stacks-api";
+
+
 
 const Dashboard = () => {
     const { t } = useTranslation();
     const { userData } = useAuth();
+
+    // Fetch current block height
+    const { data: currentBlockHeight = 0 } = useQuery({
+        queryKey: ['block-height'],
+        queryFn: getCurrentBlockHeight,
+        refetchInterval: 60000, // Refresh every minute
+    });
 
     // Fetch user's properties from blockchain
     const { data: userProperties = [], isLoading: isLoadingProperties } = useQuery({
@@ -131,7 +141,6 @@ const Dashboard = () => {
 
     const isLoading = isLoadingProperties || isLoadingBookings;
     const hasListings = userProperties.length > 0;
-    const currentBlockHeight = 100000; // TODO: Fetch from API
 
     // Calculate revenue from completed bookings
     const totalRevenue = hostBookings
@@ -229,8 +238,6 @@ const Dashboard = () => {
                                         title={property.title || "Untitled Property"}
                                         location={`${property.location_city || ""}, ${property.location_country || ""}`}
                                         price={property.price_per_night}
-                                        rating={4.8}
-                                        reviews={0}
                                         guests={property.max_guests || 2}
                                         imageUrl={property.cover_image || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"}
                                         featured={false}

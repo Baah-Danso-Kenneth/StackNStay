@@ -52,11 +52,20 @@
 (define-data-var property-id-nonce uint u0)
 (define-data-var booking-id-nonce uint u0)
 (define-data-var contract-owner principal tx-sender)
-
+(define-data-var dispute-contract principal tx-sender) ;; Initially owner, updated later
 
 ;; ============================================
 ;; PUBLIC FUNCTIONS (Anyone can call these)
 ;; ============================================
+
+;; Set the dispute contract address (Admin only)
+(define-public (set-dispute-contract (address principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
+    (var-set dispute-contract address)
+    (ok true)
+  )
+)
 
 ;; List a new property
 (define-public (list-property
@@ -228,6 +237,72 @@
     )
     
     ;; Return success
+    (ok true)
+  )
+)
+
+;; Flag a booking as disputed (Callable only by dispute contract)
+(define-public (flag-dispute (booking-id uint))
+  (let
+    (
+      (booking (unwrap! (map-get? bookings { booking-id: booking-id }) ERR-BOOKING-NOT-FOUND))
+    )
+    ;; Only authorized dispute contract can call this
+    (asserts! (is-eq tx-sender (var-get dispute-contract)) ERR-NOT-AUTHORIZED)
+    
+    ;; Update status to "disputed"
+    (map-set bookings
+      { booking-id: booking-id }
+      (merge booking { status: "disputed" })
+    )
+    (ok true)
+  )
+)
+
+;; Resolve a dispute and transfer funds (Callable only by dispute contract)
+(define-public (resolve-dispute-transfer (booking-id uint) (guest-refund uint) (host-amount uint))
+  (let
+    (
+      (booking (unwrap! (map-get? bookings { booking-id: booking-id }) ERR-BOOKING-NOT-FOUND))
+      (guest (get guest booking))
+      (host (get host booking))
+      (escrowed-amount (get escrowed-amount booking))
+      (platform-fee (get platform-fee booking))
+    )
+    ;; Only authorized dispute contract can call this
+    (asserts! (is-eq tx-sender (var-get dispute-contract)) ERR-NOT-AUTHORIZED)
+    
+    ;; Ensure we have enough funds
+    (asserts! (<= (+ guest-refund host-amount) escrowed-amount) ERR-INVALID-AMOUNT)
+    
+    ;; Transfer refunds/payouts
+    (if (> guest-refund u0)
+      (try! (as-contract (stx-transfer? guest-refund tx-sender guest)))
+      true
+    )
+    
+    (if (> host-amount u0)
+      (try! (as-contract (stx-transfer? host-amount tx-sender host)))
+      true
+    )
+    
+    ;; Platform fee is kept by the contract (or could be refunded/split, but keeping simple for now)
+    ;; If host gets paid, platform usually keeps fee. If full refund, maybe platform refunds fee?
+    ;; For now, let's assume platform fee stays in contract if not explicitly handled, 
+    ;; or we can send it to owner. Let's send to owner to be safe/clean.
+    (if (> platform-fee u0)
+        (try! (as-contract (stx-transfer? platform-fee tx-sender (var-get contract-owner))))
+        true
+    )
+
+    ;; Update status to "resolved"
+    (map-set bookings
+      { booking-id: booking-id }
+      (merge booking { 
+        status: "resolved",
+        escrowed-amount: u0 
+      })
+    )
     (ok true)
   )
 )

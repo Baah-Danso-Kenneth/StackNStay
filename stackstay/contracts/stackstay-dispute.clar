@@ -108,6 +108,9 @@
       { dispute-id: dispute-id, exists: true }
     )
     
+    ;; Call Escrow contract to flag the booking
+    (try! (contract-call? .stackstay-escrow flag-dispute booking-id))
+    
     ;; Increment dispute counter
     (var-set dispute-id-nonce (+ dispute-id u1))
     
@@ -152,6 +155,20 @@
         refund-percentage: refund-percentage,
         resolved-at: stacks-block-height
       })
+    )
+    
+    ;; Calculate amounts for transfer
+    ;; We need to fetch booking details again to get the total amount
+    (let
+      (
+        (booking-response (unwrap! (contract-call? .stackstay-escrow get-booking booking-id) ERR-BOOKING-NOT-FOUND))
+        (booking (unwrap! booking-response ERR-BOOKING-NOT-FOUND))
+        (escrowed-amount (get escrowed-amount booking))
+        (guest-refund (/ (* escrowed-amount refund-percentage) u100))
+        (host-amount (- escrowed-amount guest-refund))
+      )
+      ;; Call Escrow contract to transfer funds
+      (try! (contract-call? .stackstay-escrow resolve-dispute-transfer booking-id guest-refund host-amount))
     )
     
     ;; Return success

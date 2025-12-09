@@ -1,9 +1,9 @@
 import EmptyState from "./EmptyState";
-import { Home, Search, PlusCircle } from "lucide-react";
+import { Home, Search, PlusCircle, ShoppingBag, History as HistoryIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface NoPropertiesProps {
-    variant?: "search" | "general" | "host";
+    variant?: "search" | "general" | "host" | "bookings" | "history";
 }
 
 const NoProperties = ({ variant = "general" }: NoPropertiesProps) => {
@@ -32,6 +32,24 @@ const NoProperties = ({ variant = "general" }: NoPropertiesProps) => {
             action: {
                 label: "Create Your First Listing",
                 onClick: () => navigate("/host/create-listing"),
+            },
+        },
+        bookings: {
+            icon: ShoppingBag,
+            title: "No Bookings Yet",
+            description: "You haven't made any bookings yet. Start exploring our unique properties and book your next stay!",
+            action: {
+                label: "Browse Properties",
+                onClick: () => navigate("/properties"),
+            },
+        },
+        history: {
+            icon: HistoryIcon,
+            title: "No Activity History",
+            description: "You don't have any past bookings or hosting history yet. Your activity will appear here once you start using the platform.",
+            action: {
+                label: "Start Exploring",
+                onClick: () => navigate("/properties"),
             },
         },
     };

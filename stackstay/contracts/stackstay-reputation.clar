@@ -112,6 +112,28 @@
     
     ;; 3. Can't review same booking twice
     (asserts! (is-none (map-get? booking-reviewed { booking-id: booking-id, reviewer: tx-sender })) ERR-ALREADY-REVIEWED)
+
+    ;; 4. Verify Booking with Escrow Contract
+    (let
+      (
+        (booking-response (unwrap! (contract-call? .stackstay-escrow get-booking booking-id) ERR-BOOKING-NOT-FOUND))
+        (booking (unwrap! booking-response ERR-BOOKING-NOT-FOUND))
+        (guest (get guest booking))
+        (host (get host booking))
+        (status (get status booking))
+      )
+      ;; Must be completed
+      (asserts! (is-eq status "completed") ERR-BOOKING-NOT-COMPLETED)
+      
+      ;; Sender must be guest or host
+      (asserts! (or (is-eq tx-sender guest) (is-eq tx-sender host)) ERR-NOT-AUTHORIZED)
+      
+      ;; Reviewee must be the OTHER party
+      (if (is-eq tx-sender guest)
+          (asserts! (is-eq reviewee host) ERR-NOT-AUTHORIZED)
+          (asserts! (is-eq reviewee guest) ERR-NOT-AUTHORIZED)
+      )
+    )
     
     ;; STORE THE REVIEW
     (map-set reviews
