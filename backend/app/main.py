@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from app.routers import chat, search, admin
 from app.services.vector_store import vector_store
+from app.services.knowledge_store import knowledge_store
 from app.services.blockchain import blockchain_service
 from app.db.init_pgvector import run_pgvector_migrations
 import os
