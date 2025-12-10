@@ -431,8 +431,12 @@ class BlockchainService:
         """
         properties = []
         
+        print(f"🔗 Connecting to Stacks node: {self.api_url}")
+        print(f"📜 Contract: {self.contract_address}.{self.contract_escrow}")
+        
         # STEP 1: Try to get count from blockchain
         count = await self.get_property_count()
+        print(f"🔢 Found {count} properties on blockchain")
         
         # STEP 2: If blockchain has properties, fetch them
         if count > 0:
@@ -455,16 +459,19 @@ class BlockchainService:
                             enriched = await self.enrich_property_data(full_property)
                             properties.append(enriched)
                         else:
-                            pass
+                            print(f"⚠️ Failed to fetch IPFS metadata for property #{property_id}")
                     else:
-                        pass
+                        print(f"⚠️ Property #{property_id} has no metadata URI")
                         
                 except Exception as e:
+                    print(f"❌ Error processing property #{property_id}: {e}")
                     continue
         
         # STEP 3: If no properties from blockchain, use Pinata fallback
         if not properties:
+            print("⚠️ No properties found on blockchain, falling back to Pinata...")
             properties = await self.fetch_from_pinata()
+            print(f"📌 Fetched {len(properties)} properties from Pinata")
         
         return properties
 

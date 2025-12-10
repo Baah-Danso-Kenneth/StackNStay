@@ -29,6 +29,11 @@ async def lifespan(app: FastAPI):
             print("🔧 DATABASE_URL detected — running pgvector migrations (if needed)")
             await run_pgvector_migrations(database_url)
 
+        # Index Knowledge Base
+        print("📚 Indexing knowledge base...")
+        await knowledge_store.index_knowledge_base()
+
+        # Index Properties
         properties = await blockchain_service.get_all_properties()
         
         if properties:
@@ -39,7 +44,7 @@ async def lifespan(app: FastAPI):
             print("⚠️ No properties found")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Error during startup: {e}")
     
     yield
     
@@ -91,13 +96,41 @@ async def root():
     }
 
 
+@app.post("/api/index")
+async def trigger_indexing():
+    """Trigger re-indexing of properties and knowledge base"""
+    try:
+        print("🔄 Manual re-indexing triggered...")
+        
+        # Index Knowledge Base
+        kb_count = await knowledge_store.index_knowledge_base()
+        
+        # Index Properties
+        properties = await blockchain_service.get_all_properties()
+        prop_count = 0
+        if properties:
+            prop_count = await vector_store.index_properties(properties)
+            vector_store.save()
+            
+        return {
+            "status": "success",
+            "message": "Re-indexing completed",
+            "properties_indexed": prop_count,
+            "knowledge_chunks_indexed": kb_count
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
         "vector_store_loaded": vector_store.index is not None,
-        "properties_indexed": len(vector_store.property_metadata)
+        "knowledge_store_loaded": knowledge_store.index is not None,
+        "properties_indexed": len(vector_store.property_metadata),
+        "knowledge_chunks": len(knowledge_store.knowledge_chunks)
     }
 
 

@@ -68,12 +68,6 @@ const Navbar = () => {
                 >
                   {t('nav.myBookings')}
                 </Link>
-                <Link
-                  to="/history"
-                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-smooth relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-primary after:transition-smooth"
-                >
-                  {t('nav.history')}
-                </Link>
               </>
             )}
           </div>
@@ -100,7 +94,7 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
-            
+
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -157,9 +151,6 @@ const Navbar = () => {
                 <>
                   <Link to="/my-bookings" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-foreground/90">
                     {t('nav.myBookings')}
-                  </Link>
-                  <Link to="/history" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-foreground/90">
-                    {t('nav.history')}
                   </Link>
                 </>
               )}

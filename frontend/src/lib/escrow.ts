@@ -444,7 +444,7 @@ export async function getAllBookings(maxBookings: number = 100): Promise<(Bookin
     try {
         const bookings: (Booking & { id: number })[] = [];
         let consecutiveNulls = 0;
-        const maxConsecutiveNulls = 10; // Stop after 10 consecutive nulls
+        const maxConsecutiveNulls = 20; // Increased to 20 to be safer against gaps
 
         // Try to fetch bookings up to maxBookings
         // START AT 0 because Clarity booking IDs ARE 0-based
@@ -460,7 +460,7 @@ export async function getAllBookings(maxBookings: number = 100): Promise<(Bookin
                 });
                 consecutiveNulls = 0; // Reset counter
             } else {
-                console.log(`⚠️ Booking #${i} not found`);
+                // console.log(`⚠️ Booking #${i} not found`); // Reduce noise
                 consecutiveNulls++;
                 // Stop if we hit many consecutive nulls
                 if (consecutiveNulls >= maxConsecutiveNulls) {
