@@ -156,6 +156,23 @@
     
     ;; Update stats
     (update-user-stats reviewee rating)
+
+    ;; Check and mint Superhost badge (type u3)
+    ;; Criteria: 10+ reviews and >= 4.5 average rating (450)
+    (let
+      (
+        (stats (default-to { total-reviews: u0, total-rating-sum: u0, average-rating: u0 } (map-get? user-stats { user: reviewee })))
+        (total-reviews (get total-reviews stats))
+        (avg-rating (get average-rating stats))
+      )
+      (if (and (>= total-reviews u10) (>= avg-rating u450))
+        (match (as-contract (contract-call? .stackstay-badge mint-badge reviewee u3 "ipfs://QmSuperhost..."))
+          success true
+          error false
+        )
+        false
+      )
+    )
     
     ;; Increment counter
     (var-set review-id-nonce (+ review-id u1))

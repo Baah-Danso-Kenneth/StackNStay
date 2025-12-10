@@ -140,6 +140,8 @@
     )
     ;; Authorize escrow contract to mint badges
     (map-set authorized-minters .stackstay-escrow true)
+    ;; Authorize reputation contract to mint badges
+    (map-set authorized-minters .stackstay-reputation true)
   )
 )
 

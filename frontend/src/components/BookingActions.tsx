@@ -56,7 +56,7 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
     const isGuest = userAddress === booking.guest;
     const blocksUntilCheckIn = Math.max(0, booking.checkIn - currentBlockHeight);
     const daysUntilCheckIn = blocksToDays(blocksUntilCheckIn);
-    const canRelease = isHost && booking.status === "confirmed" && currentBlockHeight >= booking.checkIn && booking.escrowedAmount > 0;
+    const canRelease = (isHost || isGuest) && booking.status === "confirmed" && currentBlockHeight >= booking.checkIn && booking.escrowedAmount > 0;
     const canCancel = (isHost || isGuest) && booking.status === "confirmed" && currentBlockHeight < booking.checkIn && booking.escrowedAmount > 0;
     const refundPercentage = calculateRefundPercentage(blocksUntilCheckIn);
     const refundAmount = (booking.totalAmount / 1_000_000) * (refundPercentage / 100);
@@ -170,7 +170,7 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
 
             {/* Action Buttons */}
             <div className="flex gap-2 mt-2">
-                {/* Release Payment Button (Host only, after check-in) */}
+                {/* Release Payment Button (Host or Guest, after check-in) */}
                 {canRelease && (
                     <AlertDialog>
                         <AlertDialogTrigger asChild>

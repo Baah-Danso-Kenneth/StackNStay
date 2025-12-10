@@ -214,3 +214,7 @@
 
 
 
+;; Get contract owner
+(define-read-only (get-contract-owner)
+  (ok (var-get contract-owner))
+)

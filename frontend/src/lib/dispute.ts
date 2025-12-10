@@ -276,3 +276,27 @@ export async function getAllDisputes(): Promise<(Dispute & { id: number })[]> {
         return [];
     }
 }
+/**
+ * Get contract owner
+ */
+export async function getContractOwner(): Promise<string | null> {
+    try {
+        const result = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACTS.DISPUTE,
+            functionName: "get-contract-owner",
+            functionArgs: [],
+            senderAddress: CONTRACT_ADDRESS,
+            network: NETWORK,
+        });
+
+        if (result.type !== ClarityType.ResponseOk) {
+            return null;
+        }
+
+        return cvToValue(result.value);
+    } catch (error) {
+        console.error("Error fetching contract owner:", error);
+        return null;
+    }
+}

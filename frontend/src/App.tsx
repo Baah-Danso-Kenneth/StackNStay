@@ -14,6 +14,7 @@ import LearnMore from "./pages/LearnMore";
 import HostLayout from "./layouts/HostLayout";
 import Dashboard from "./pages/host/Dashboard";
 import CreateListing from "./pages/host/CreateListing";
+import AdminDisputes from "./pages/admin/AdminDisputes";
 import { Navigate } from "react-router-dom";
 import AIChatButton from "./components/AIChatButton";
 import ScrollToTop from "./components/ScrollToTop";
@@ -41,6 +42,9 @@ const App = () => (
             <Route path="create-listing" element={<CreateListing />} />
             <Route index element={<Navigate to="/host/dashboard" replace />} />
           </Route>
+
+          {/* Admin Routes */}
+          <Route path="/admin/disputes" element={<AdminDisputes />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

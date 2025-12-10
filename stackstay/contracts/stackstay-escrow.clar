@@ -100,7 +100,8 @@
 
     ;; Try to mint First Listing badge (type u2)
     ;; We ignore errors (e.g. if already minted) so we don't block the listing
-    (match (contract-call? .stackstay-badge mint-badge tx-sender u2 "ipfs://QmFirstListing...")
+    ;; Use as-contract to authorize the minting (contract is an authorized minter)
+    (match (as-contract (contract-call? .stackstay-badge mint-badge tx-sender u2 "ipfs://QmFirstListing..."))
       success true
       error false
     )
@@ -234,6 +235,13 @@
         status: "completed",
         escrowed-amount: u0
       })
+    )
+
+    ;; Try to mint First Booking badge (type u1) for the GUEST
+    ;; We ignore errors (e.g. if already minted) so we don't block the payment release
+    (match (as-contract (contract-call? .stackstay-badge mint-badge guest u1 "ipfs://QmFirstBooking..."))
+      success true
+      error false
     )
     
     ;; Return success
