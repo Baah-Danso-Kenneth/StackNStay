@@ -64,18 +64,28 @@ class ClarityParser:
         """
         try:
             # For our property tuple, we'll use a hybrid approach:
-            # 1. Try to extract metadata-uri string
+            # 1. Try to extract metadata-uri string (both ipfs:// and bare hashes)
             # 2. Try to extract uint values
             # 3. Return a best-effort parsed result
             
             result = {}
             
-            # Extract metadata-uri (look for IPFS URI pattern)
-            # "ipfs://" in ASCII = 697066733a2f2f
+            # Extract metadata-uri
+            # Try format 1: Full URI with "ipfs://" prefix (ASCII: 697066733a2f2f)
             if "697066733a2f2f" in hex_str:
                 metadata_uri = ClarityParser._extract_ascii_string(hex_str, "697066733a2f2f")
                 if metadata_uri:
                     result["metadata_uri"] = metadata_uri
+                    print(f"📝 Extracted ipfs:// URI: {metadata_uri}")
+            
+            # Try format 2: Bare IPFS hash starting with "Qm" (ASCII: 516d)
+            # This handles cases where contract stores just "QmXXXX..." without ipfs:// prefix
+            if "metadata_uri" not in result and "516d" in hex_str:
+                bare_hash = ClarityParser._extract_ascii_string(hex_str, "516d")
+                if bare_hash and bare_hash.startswith("Qm") and len(bare_hash) == 46:
+                    # Valid IPFS v0 CID (always 46 chars, starts with Qm)
+                    result["metadata_uri"] = f"ipfs://{bare_hash}"
+                    print(f"📝 Extracted bare IPFS hash: {bare_hash} -> ipfs://{bare_hash}")
             
             # Extract owner (principal) - look for principal type (0x05 or 0x06)
             # Principals start with version byte, we'll extract the address representation
@@ -92,6 +102,7 @@ class ClarityParser:
             return result if result else None
             
         except Exception as e:
+            print(f"❌ Error parsing tuple: {e}")
             return None
     
     @staticmethod
@@ -172,6 +183,9 @@ class BlockchainService:
         try:
             url = f"{self.api_url}/v2/contracts/call-read/{self.contract_address}/{self.contract_escrow}/property-id-nonce"
             
+            print(f"\n🔍 Calling property-id-nonce API:")
+            print(f"   URL: {url}")
+            
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     url,
@@ -182,8 +196,12 @@ class BlockchainService:
                     timeout=10.0
                 )
                 
+                print(f"   Status: {response.status_code}")
+                
                 if response.status_code == 200:
                     data = response.json()
+                    print(f"   Response: {data}")
+                    
                     if data.get("okay") and "result" in data:
                         result = data["result"]
                         # Parse uint: 0x0100000000000000000000000000000005 = uint 5
@@ -219,30 +237,56 @@ class BlockchainService:
                     timeout=10.0
                 )
                 
+                print(f"\n📞 API Response for property #{property_id}:")
+                print(f"   Status: {response.status_code}")
+                
                 if response.status_code == 200:
                     data = response.json()
+                    print(f"   Full response: {data}")
                     
                     if data.get("okay") and "result" in data:
                         result = data["result"]
+                        print(f"   Result hex: {result[:200]}...")  # First 200 chars
                         
-                        # Parse the optional
-                        if result.startswith("0x09"):  # Some
+                        parsed = None
+                        
+                        # Handle different response formats:
+                        # Format 1: Optional(Some(tuple)) - starts with 0x09
+                        if result.startswith("0x09"):
+                            print(f"   Parsing as Optional(Some)...")
                             parsed = self.parser.parse_optional(result)
-                            
-                            if parsed and "metadata_uri" in parsed:
-                                return {
-                                    "property_id": property_id,
-                                    "owner": parsed.get("owner", "ST..."),
-                                    "metadata_uri": parsed["metadata_uri"],
-                                    "active": parsed.get("active", True)
-                                }
-                        elif result.startswith("0x0a"):  # None
+                        
+                        # Format 2: Direct tuple - starts with 0x0c or 0x0a0c
+                        elif result.startswith("0x0c") or result.startswith("0x0a0c"):
+                            print(f"   Parsing as direct tuple...")
+                            # Skip the 0x0a prefix if present (response wrapper)
+                            tuple_hex = result[4:] if result.startswith("0x0a0c") else result[2:]
+                            parsed = self.parser.parse_tuple(tuple_hex)
+                        
+                        # Format 3: Optional(None) - starts with 0x0a (but not 0x0a0c)
+                        elif result.startswith("0x0a") and not result.startswith("0x0a0c"):
+                            print(f"   Result is Optional(None)")
                             return None
+                        
+                        print(f"   Parsed result: {parsed}")
+                        
+                        if parsed and "metadata_uri" in parsed:
+                            return {
+                                "property_id": property_id,
+                                "owner": parsed.get("owner", "ST..."),
+                                "metadata_uri": parsed["metadata_uri"],
+                                "active": parsed.get("active", True)
+                            }
+                        else:
+                            print(f"   ⚠️ No metadata_uri in parsed result")
+                    
                     return None
                 else:
+                    print(f"   ❌ HTTP Error: {response.status_code}")
                     return None
                     
         except Exception as e:
+            print(f"   ❌ Exception: {e}")
             return None
     
     async def fetch_ipfs_metadata(self, ipfs_uri: str) -> Optional[Dict[str, Any]]:
@@ -373,48 +417,53 @@ class BlockchainService:
     
     async def get_all_properties(self) -> List[Dict[str, Any]]:
         """
-        Fetch all properties with their IPFS metadata
-        PRIMARY METHOD: Try blockchain first, fallback to Pinata
+        Fetch all properties from blockchain + IPFS
+        Since property-id-nonce might not exist, we try sequential IDs until we get None
         """
-        properties = []
-        
         print(f"🔗 Connecting to Stacks node: {self.api_url}")
         print(f"📜 Contract: {self.contract_address}.{self.contract_escrow}")
         
-        # STEP 1: Try to get count from blockchain
-        count = await self.get_property_count()
-        print(f"🔢 Found {count} properties on blockchain")
+        properties = []
+        property_id = 0
+        max_attempts = 100  # Safety limit
+        consecutive_failures = 0
         
-        # STEP 2: If blockchain has properties, fetch them
-        if count > 0:
-            
-            for property_id in range(count):
-                try:
-                    property_data = await self.get_property(property_id)
+        # Try fetching properties sequentially
+        while property_id < max_attempts and consecutive_failures < 3:
+            try:
+                print(f"🔍 Trying to fetch property #{property_id}...")
+                property_data = await self.get_property(property_id)
+                
+                if property_data and property_data.get("metadata_uri"):
+                    print(f"✅ Found property #{property_id}")
+                    metadata = await self.fetch_ipfs_metadata(property_data["metadata_uri"])
                     
-                    if property_data and property_data.get("metadata_uri"):
-                        metadata = await self.fetch_ipfs_metadata(property_data["metadata_uri"])
+                    if metadata:
+                        full_property = {
+                            **metadata,
+                            "property_id": property_id,
+                            "owner": property_data.get("owner", "ST..."),
+                            "active": property_data.get("active", True)
+                        }
                         
-                        if metadata:
-                            full_property = {
-                                **metadata,
-                                "property_id": property_id,
-                                "owner": property_data.get("owner", "ST..."),
-                                "active": property_data.get("active", True)
-                            }
-                            
-                            enriched = await self.enrich_property_data(full_property)
-                            properties.append(enriched)
-                        else:
-                            print(f"⚠️ Failed to fetch IPFS metadata for property #{property_id}")
+                        enriched = await self.enrich_property_data(full_property)
+                        properties.append(enriched)
+                        consecutive_failures = 0  # Reset on success
                     else:
-                        print(f"⚠️ Property #{property_id} has no metadata URI")
-                        
-                except Exception as e:
-                    print(f"❌ Error processing property #{property_id}: {e}")
-                    continue
+                        print(f"⚠️ Failed to fetch IPFS metadata for property #{property_id}")
+                        consecutive_failures += 1
+                else:
+                    print(f"⚠️ Property #{property_id} not found or no metadata URI")
+                    consecutive_failures += 1
+                    
+            except Exception as e:
+                print(f"❌ Error processing property #{property_id}: {e}")
+                consecutive_failures += 1
+            
+            property_id += 1
         
-        # STEP 3: Return properties (no fallback to Pinata)
+        print(f"🔢 Found {len(properties)} properties on blockchain")
+        
         if not properties:
             print("⚠️ No properties found on blockchain.")
         
