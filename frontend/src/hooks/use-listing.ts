@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "./use-auth";
+import { useBadges } from "./use-badge";
 import { listProperty } from "@/lib/escrow";
 import { useToast } from "./use-toast";
 import { openContractCall } from "@stacks/connect";
@@ -27,6 +28,7 @@ export interface ListingFormData {
 export function useListing() {
     const { userData } = useAuth();
     const { toast } = useToast();
+    const { refetchBadges } = useBadges();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -258,6 +260,10 @@ export function useListing() {
                             title: "Success!",
                             description: `Property #${propertyId} has been listed successfully! You may have earned a 'First Listing' badge.`,
                         });
+
+                        // Refresh badges to show newly earned First Listing badge
+                        console.log('🎖️ Refreshing badges after successful listing...');
+                        await refetchBadges();
 
                     } catch (confirmError) {
                         console.error('Error during confirmation:', confirmError);

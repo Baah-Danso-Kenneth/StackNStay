@@ -165,7 +165,7 @@ export async function getUserBadge(
             earned: data.earned,
         };
     } catch (error) {
-        console.error("Error fetching user badge:", error);
+        // console.error("Error fetching user badge:", error);
         return null;
     }
 }
@@ -201,7 +201,7 @@ export async function getBadgeTypeInfo(badgeType: number): Promise<BadgeTypeInfo
             active: data.active,
         };
     } catch (error) {
-        console.error("Error fetching badge type info:", error);
+        // console.error("Error fetching badge type info:", error);
         return null;
     }
 }
