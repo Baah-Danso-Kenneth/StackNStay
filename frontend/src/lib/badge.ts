@@ -21,6 +21,8 @@ export const BADGE_TYPES = {
     TOP_EARNER: 8,
 } as const;
 
+export type BadgeType = typeof BADGE_TYPES[keyof typeof BADGE_TYPES];
+
 // Types
 export interface BadgeMetadata {
     badgeType: number;
@@ -297,27 +299,26 @@ export async function getTotalBadges(): Promise<number> {
 /**
  * Get all badges for a specific user
  */
+
 export async function getAllUserBadges(user: string): Promise<(BadgeMetadata & { id: number })[]> {
     try {
-        const badges: (BadgeMetadata & { id: number })[] = [];
-
-        // Check all badge types
-        for (const badgeType of Object.values(BADGE_TYPES)) {
+        // Check all badge types in parallel
+        const badgePromises = Object.values(BADGE_TYPES).map(async (badgeType) => {
             const userBadge = await getUserBadge(user, badgeType);
-
             if (userBadge && userBadge.earned) {
                 const metadata = await getBadgeMetadata(userBadge.badgeId);
-
                 if (metadata) {
-                    badges.push({
+                    return {
                         id: userBadge.badgeId,
                         ...metadata,
-                    });
+                    };
                 }
             }
-        }
+            return null;
+        });
 
-        return badges;
+        const results = await Promise.all(badgePromises);
+        return results.filter((b): b is (BadgeMetadata & { id: number }) => b !== null);
     } catch (error) {
         console.error("Error fetching all user badges:", error);
         return [];
@@ -327,22 +328,21 @@ export async function getAllUserBadges(user: string): Promise<(BadgeMetadata & {
 /**
  * Get all badge type information
  */
-export async function getAllBadgeTypes(): Promise<(BadgeTypeInfo & { type: number })[]> {
+export async function getAllBadgeTypes(): Promise<(BadgeTypeInfo & { type: BadgeType })[]> {
     try {
-        const badgeTypes: (BadgeTypeInfo & { type: number })[] = [];
-
-        for (const [name, type] of Object.entries(BADGE_TYPES)) {
+        const typePromises = Object.values(BADGE_TYPES).map(async (type) => {
             const info = await getBadgeTypeInfo(type);
-
             if (info) {
-                badgeTypes.push({
-                    type,
+                return {
+                    type: type as BadgeType,
                     ...info,
-                });
+                };
             }
-        }
+            return null;
+        });
 
-        return badgeTypes;
+        const results = await Promise.all(typePromises);
+        return results.filter((t): t is (BadgeTypeInfo & { type: BadgeType }) => t !== null);
     } catch (error) {
         console.error("Error fetching all badge types:", error);
         return [];

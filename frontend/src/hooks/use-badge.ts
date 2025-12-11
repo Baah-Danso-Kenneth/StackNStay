@@ -84,11 +84,13 @@ export function useBadges(userAddress?: string) {
     /**
      * Fetch all badges for the current user
      */
-    const fetchUserBadges = useCallback(async () => {
+    const fetchUserBadges = useCallback(async (currentBadgeTypes?: (BadgeTypeInfo & { type: number })[]) => {
         if (!targetAddress) {
             console.log("⚠️ No user address available");
             return [];
         }
+
+        const typesToUse = currentBadgeTypes || allBadgeTypes;
 
         try {
             console.log(`🎖️ Fetching badges for ${targetAddress}...`);
@@ -98,7 +100,7 @@ export function useBadges(userAddress?: string) {
             // Enhance badges with UI properties
             const enhancedBadges: BadgeWithUI[] = await Promise.all(
                 userBadges.map(async (badge) => {
-                    const typeInfo = allBadgeTypes.find(t => t.type === badge.badgeType);
+                    const typeInfo = typesToUse.find(t => t.type === badge.badgeType);
 
                     return {
                         ...badge,
@@ -142,8 +144,8 @@ export function useBadges(userAddress?: string) {
         setError(null);
 
         try {
-            await fetchBadgeTypes();
-            await fetchUserBadges();
+            const types = await fetchBadgeTypes();
+            await fetchUserBadges(types);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch badges";
             setError(errorMessage);
@@ -170,10 +172,10 @@ export function useBadges(userAddress?: string) {
 
             try {
                 // First fetch badge types, then user badges
-                await fetchBadgeTypes();
+                const types = await fetchBadgeTypes();
 
                 if (isMounted) {
-                    await fetchUserBadges();
+                    await fetchUserBadges(types);
                 }
             } catch (err) {
                 if (isMounted) {
