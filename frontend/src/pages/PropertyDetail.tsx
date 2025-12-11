@@ -90,12 +90,12 @@ const PropertyDetail = () => {
         throw new Error("Failed to load property metadata from IPFS");
       }
 
-      const images =
-        metadata.images && metadata.images.length > 0
-          ? metadata.images.map(getIPFSImageUrl)
-          : [
-            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
-          ];
+      // STRICT: Reject properties without IPFS images entirely
+      if (!metadata.images || metadata.images.length === 0) {
+        throw new Error("Property has no images in IPFS metadata");
+      }
+
+      const images = metadata.images.map(getIPFSImageUrl);
 
       // Map simple amenities (string[]) to objects with an icon + label
       const amenities =
@@ -112,7 +112,7 @@ const PropertyDetail = () => {
         location: metadata.location,
         priceStx: Number.isFinite(stxPrice) ? stxPrice.toFixed(2) : "0.00",
         pricePerNightMicroSTX: Number(onChain.pricePerNight),
-        rating: 0, // placeholder until you have on-chain reputation
+        rating: 0, // From on-chain reputation system (0 = no reviews yet)
         reviews: 0,
         maxGuests: metadata.maxGuests,
         bedrooms: metadata.bedrooms,

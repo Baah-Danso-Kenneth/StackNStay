@@ -68,9 +68,9 @@ const MyBookings = () => {
 
                         // Get cover image
                         const coverImage =
-                            metadata.images && metadata.images.length > 0
+                            metadata?.images?.[0]
                                 ? getIPFSImageUrl(metadata.images[0])
-                                : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+                                : undefined;
 
                         return {
                             ...booking,

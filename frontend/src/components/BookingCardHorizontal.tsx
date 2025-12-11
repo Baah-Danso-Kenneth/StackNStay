@@ -33,9 +33,9 @@ export function BookingCardHorizontal({
                 {/* Image Section */}
                 <div className="w-full md:w-64 h-40 md:h-auto relative overflow-hidden flex-shrink-0">
                     <img
-                        src={booking.propertyImage || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"}
-                        alt={booking.propertyTitle || "Property"}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        src={booking.propertyImage}
+                        alt={booking.propertyTitle}
+                        className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
 
@@ -92,8 +92,8 @@ export function BookingCardHorizontal({
                                 {/* Step 2: Check-in */}
                                 <div className="flex flex-col items-center gap-1">
                                     <div className={`w-3 h-3 rounded-full ${(booking.status === 'confirmed' && currentBlockHeight >= booking.checkIn) || booking.status === 'completed'
-                                            ? 'bg-primary ring-4 ring-primary/20'
-                                            : 'bg-muted'
+                                        ? 'bg-primary ring-4 ring-primary/20'
+                                        : 'bg-muted'
                                         } transition-all`} />
                                     <span className="text-[10px] font-medium text-muted-foreground">Wait for Check-in</span>
                                     <span className="text-[9px] text-muted-foreground/70">(Automatic)</span>

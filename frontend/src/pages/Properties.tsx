@@ -62,14 +62,14 @@ const Properties = () => {
           console.log(`💰 Property #${prop.id} - pricePerNight: ${pricePerNight} microSTX (${pricePerNight / 1_000_000} STX)`);
 
           // Get the first image URL - convert IPFS URI to HTTP gateway URL
-          let coverImage: string;
-          if (metadata.images && metadata.images.length > 0) {
-            coverImage = getIPFSImageUrl(metadata.images[0]);
-            console.log(`🖼️ Property #${prop.id} - Cover image URL:`, coverImage);
-          } else {
-            coverImage = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
-            console.warn(`⚠️ Property #${prop.id} - No images in metadata`);
+          // STRICT: Properties without images are excluded entirely (no fallback)
+          if (!metadata.images || metadata.images.length === 0) {
+            console.warn(`⚠️ Property #${prop.id} - No images in metadata, excluding from results`);
+            return null;
           }
+
+          const coverImage = getIPFSImageUrl(metadata.images[0]);
+          console.log(`🖼️ Property #${prop.id} - Cover image URL:`, coverImage);
 
           // Convert all image IPFS URIs to HTTP URLs
           const imageUrls = metadata.images
@@ -354,7 +354,7 @@ const Properties = () => {
                         // Pass raw microSTX value and let PropertyCard handle formatting
                         price={property.price_per_night}
                         guests={property.max_guests || 2}
-                        imageUrl={property.cover_image || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"}
+                        imageUrl={property.cover_image}
                         featured={index === 0}
                       />
                     </div>

@@ -17,10 +17,11 @@ interface PropertyChatCardProps {
 
 export function PropertyChatCard({ property, onClose }: PropertyChatCardProps) {
     const navigate = useNavigate();
-    
-    const imageUrl = property.images && property.images.length > 0
+
+    // STRICT: Only use IPFS images, no fallbacks
+    const imageUrl = property.images?.[0]
         ? getIPFSImageUrl(property.images[0])
-        : '/placeholder-property.jpg';
+        : undefined;
 
     const matchScore = property.match_score ? Math.round(property.match_score * 100) : null;
 
@@ -28,14 +29,17 @@ export function PropertyChatCard({ property, onClose }: PropertyChatCardProps) {
         <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group flex flex-row h-28">
             {/* Image Section (Left) */}
             <div className="relative w-28 h-full flex-shrink-0">
-                <img
-                    src={imageUrl}
-                    alt={property.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                        e.currentTarget.src = '/placeholder-property.jpg';
-                    }}
-                />
+                {imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt={property.title || 'Property'}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                        No image
+                    </div>
+                )}
                 {matchScore && (
                     <Badge className="absolute top-1 left-1 bg-primary/90 backdrop-blur-sm text-[10px] px-1.5 py-0.5">
                         {matchScore}%
@@ -67,7 +71,9 @@ export function PropertyChatCard({ property, onClose }: PropertyChatCardProps) {
                 <div className="flex items-end justify-between mt-1">
                     <div>
                         <span className="text-base font-bold text-primary">
-                            {property.price_per_night} STX
+                            {typeof property.price_per_night === 'number'
+                                ? (property.price_per_night / 1_000_000).toFixed(2)
+                                : property.price_per_night} STX
                         </span>
                         <span className="text-xs text-muted-foreground">/night</span>
                     </div>

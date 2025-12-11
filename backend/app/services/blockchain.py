@@ -273,61 +273,8 @@ class BlockchainService:
         except Exception as e:
             return None
 
-    async def fetch_from_pinata(self) -> List[Dict[str, Any]]:
-        """
-        Directly fetch pinned properties from Pinata
-        Used as fallback when blockchain index is empty
-        """
-        if not PINATA_JWT:
-            return []
-            
-        properties = []
-        
-        try:
-            url = "https://api.pinata.cloud/data/pinList?status=pinned&pageLimit=100"
-            headers = {"Authorization": f"Bearer {PINATA_JWT}"}
-            
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, headers=headers, timeout=10.0)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    rows = data.get("rows", [])
-                    
-                    for pin in rows:
-                        meta = pin.get("metadata", {})
-                        name = meta.get("name", "")
-                        ipfs_hash = pin.get("ipfs_pin_hash")
-                        
-                        # Filter by name convention "property-" or "stackstay-"
-                        if (name.startswith("property-") or name.startswith("stackstay-")) and ipfs_hash:
-                            prop_data = await self.fetch_ipfs_metadata(ipfs_hash)
-                            
-                            if prop_data:
-                                # Keep original property_id from IPFS if it exists
-                                if "property_id" not in prop_data:
-                                    prop_data["property_id"] = len(properties)
-                                
-                                # Use price from IPFS, fallback to price_per_night
-                                if "price" in prop_data and "price_per_night" not in prop_data:
-                                    prop_data["price_per_night"] = prop_data["price"]
-                                elif "price_per_night" not in prop_data:
-                                    # Only set default if BOTH are missing
-                                    bedrooms = prop_data.get("bedrooms", 1)
-                                    prop_data["price_per_night"] = bedrooms * 45 + 10
-                                
-                                # Ensure location field
-                                if "location_city" not in prop_data:
-                                    prop_data["location_city"] = prop_data.get("location", "Unknown")
-                                
-                                properties.append(prop_data)
-                else:
-                    pass
-                    
-        except Exception as e:
-            pass
-            
-        return properties
+    # Pinata fallback removed to prevent dummy data
+
     
     async def get_user_badges(self, user_address: str) -> List[str]:
         """Get all badges earned by a user"""
@@ -467,11 +414,9 @@ class BlockchainService:
                     print(f"❌ Error processing property #{property_id}: {e}")
                     continue
         
-        # STEP 3: If no properties from blockchain, use Pinata fallback
+        # STEP 3: Return properties (no fallback to Pinata)
         if not properties:
-            print("⚠️ No properties found on blockchain, falling back to Pinata...")
-            properties = await self.fetch_from_pinata()
-            print(f"📌 Fetched {len(properties)} properties from Pinata")
+            print("⚠️ No properties found on blockchain.")
         
         return properties
 

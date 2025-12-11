@@ -59,9 +59,9 @@ const Dashboard = () => {
                     }
 
                     // Get the first image URL
-                    const coverImage = metadata.images && metadata.images.length > 0
+                    const imageUrl = metadata?.images?.[0]
                         ? getIPFSImageUrl(metadata.images[0])
-                        : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+                        : undefined;
 
                     enrichedProperties.push({
                         id: prop.id,
@@ -75,7 +75,7 @@ const Dashboard = () => {
                         bedrooms: metadata.bedrooms,
                         bathrooms: metadata.bathrooms,
                         amenities: metadata.amenities,
-                        cover_image: coverImage,
+                        cover_image: imageUrl,
                         images: metadata.images.map(getIPFSImageUrl),
                         active: prop.active,
                         owner: prop.owner,
@@ -239,7 +239,7 @@ const Dashboard = () => {
                                         location={`${property.location_city || ""}, ${property.location_country || ""}`}
                                         price={property.price_per_night}
                                         guests={property.max_guests || 2}
-                                        imageUrl={property.cover_image || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"}
+                                        imageUrl={property.cover_image}
                                         featured={false}
                                     />
                                 ))}

@@ -68,10 +68,6 @@ const PropertyCard = ({
             src={imageUrl}
             alt={title}
             className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-700"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
-            }}
           />
 
           {/* Badges */}
