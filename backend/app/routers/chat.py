@@ -160,15 +160,38 @@ async def search_properties_node(state: AgentState) -> Dict[str, Any]:
     """
     if state["query_type"] in ["property_search", "mixed"]:
         try:
+            print(f"\n{'='*60}")
+            print(f"🔍 PROPERTY SEARCH DEBUG")
+            print(f"{'='*60}")
+            print(f"Query: {state['user_query']}")
+            print(f"Filters: {state['filters']}")
+            print(f"Vector store loaded: {vector_store.index is not None}")
+            print(f"Indexed properties count: {len(vector_store.property_metadata)}")
+            
             results = await vector_store.search(
                 query=state["user_query"],
                 k=5,
                 filters=state["filters"]
             )
-            print(f"🏠 Found {len(results)} properties")
+            
+            print(f"\n🏠 SEARCH RESULTS: Found {len(results)} properties")
+            for i, prop in enumerate(results):
+                print(f"\n--- Property {i+1} ---")
+                print(f"  ID: {prop.get('property_id', 'MISSING')}")
+                print(f"  Title: {prop.get('title', 'MISSING')}")
+                print(f"  Location: {prop.get('location_city', 'N/A')}, {prop.get('location_country', 'N/A')}")
+                print(f"  Price: {prop.get('price_per_night', 'MISSING')}")
+                print(f"  Images: {len(prop.get('images', []))} images")
+                if prop.get('images'):
+                    print(f"    First image: {prop['images'][0][:100]}...")
+                print(f"  Match score: {prop.get('match_score', 'N/A')}")
+            print(f"{'='*60}\n")
+            
             return {"property_results": results}
         except Exception as e:
-            print(f"Error in property search: {e}")
+            print(f"❌ Error in property search: {e}")
+            import traceback
+            traceback.print_exc()
             return {"property_results": []}
     
     return {}
@@ -331,13 +354,25 @@ async def chat(request: ChatRequest):
     Smart chat endpoint - handles both property search and knowledge questions
     """
     try:
+        print(f"\n{'*'*60}")
+        print(f"📨 NEW CHAT REQUEST")
+        print(f"{'*'*60}")
+        print(f"Message: {request.message}")
+        print(f"Filters: {request.filters}")
+        
         # Ensure stores are loaded (support async or sync load())
+        print(f"\nVector store status: {vector_store.index is not None}")
+        print(f"Property metadata count: {len(vector_store.property_metadata)}")
+        
         if not vector_store.index:
+            print("⚠️ Vector store not loaded, attempting to load...")
             maybe = vector_store.load()
             if asyncio.iscoroutine(maybe):
                 loaded = await maybe
             else:
                 loaded = maybe
+            print(f"Load result: {loaded}")
+            print(f"After load - metadata count: {len(vector_store.property_metadata)}")
 
         if not knowledge_store.index:
             maybe_k = knowledge_store.load()
