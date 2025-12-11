@@ -12,11 +12,17 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { openContractCall } from "@stacks/connect";
 import { releasePayment, cancelBooking, type Booking } from "@/lib/escrow";
-import { CheckCircle, XCircle, Clock, DollarSign, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, Clock, DollarSign, AlertTriangle, HelpCircle } from "lucide-react";
 
 interface BookingActionsProps {
     booking: Booking & { id: number };
@@ -169,83 +175,103 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-2 mt-2">
-                {/* Release Payment Button (Host or Guest, after check-in) */}
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <div title={!canRelease ? (
-                            booking.status !== "confirmed" ? "Booking is not confirmed" :
-                                currentBlockHeight < booking.checkIn ? `Available after check-in (Block ${booking.checkIn})` :
-                                    booking.escrowedAmount <= 0 ? "No funds in escrow" :
-                                        "Release Payment"
-                        ) : undefined}>
-                            <Button
-                                size="sm"
-                                className="gradient-hero"
-                                disabled={isProcessing || !canRelease}
-                            >
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Release Payment
-                            </Button>
-                        </div>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Release Payment to Host?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will release {(booking.hostPayout / 1_000_000).toFixed(2)} STX to the host and{" "}
-                                {(booking.platformFee / 1_000_000).toFixed(2)} STX as platform fee. The booking will be marked as completed.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleReleasePayment} disabled={isProcessing}>
-                                {isProcessing ? "Processing..." : "Confirm Release"}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+            <div className="flex flex-col gap-2 mt-2">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Actions</span>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <HelpCircle className="w-3 h-3 text-muted-foreground/70" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                                <div className="space-y-2 text-xs">
+                                    <p><strong>1. Booking:</strong> Funds are locked in escrow.</p>
+                                    <p><strong>2. Check-in (Automatic):</strong> Wait for the check-in block to pass. No action needed.</p>
+                                    <p><strong>3. Release (Manual):</strong> After check-in, click "Release Payment" to transfer funds to the host.</p>
+                                </div>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
 
-                {/* Cancel Booking Button (Guest or Host, before check-in) */}
-                {canCancel && (
+                <div className="flex gap-2">
+                    {/* Release Payment Button (Host or Guest, after check-in) */}
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive" disabled={isProcessing}>
-                                <XCircle className="w-3 h-3 mr-1" />
-                                Cancel Booking
-                            </Button>
+                            <div title={!canRelease ? (
+                                booking.status !== "confirmed" ? "Booking is not confirmed" :
+                                    currentBlockHeight < booking.checkIn ? `Available after check-in (Block ${booking.checkIn})` :
+                                        booking.escrowedAmount <= 0 ? "No funds in escrow" :
+                                            "Release Payment"
+                            ) : undefined}>
+                                <Button
+                                    size="sm"
+                                    className="gradient-hero"
+                                    disabled={isProcessing || !canRelease}
+                                >
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Release Payment
+                                </Button>
+                            </div>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Cancel This Booking?</AlertDialogTitle>
-                                <AlertDialogDescription className="space-y-2">
-                                    <p>
-                                        Based on the cancellation policy, you will receive a <strong>{refundPercentage}% refund</strong> (
-                                        {refundAmount.toFixed(2)} STX).
-                                    </p>
-                                    {refundPercentage < 100 && (
-                                        <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                                            <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5" />
-                                            <div className="text-sm">
-                                                <p className="font-semibold text-amber-500">Cancellation Fee Applied</p>
-                                                <p className="text-muted-foreground">
-                                                    Cancelling {daysUntilCheckIn} {daysUntilCheckIn === 1 ? "day" : "days"} before check-in results in a{" "}
-                                                    {100 - refundPercentage}% fee.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
+                                <AlertDialogTitle>Release Payment to Host?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will release {(booking.hostPayout / 1_000_000).toFixed(2)} STX to the host and{" "}
+                                    {(booking.platformFee / 1_000_000).toFixed(2)} STX as platform fee. The booking will be marked as completed.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Keep Booking</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleCancelBooking} disabled={isProcessing} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                    {isProcessing ? "Processing..." : "Confirm Cancellation"}
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleReleasePayment} disabled={isProcessing}>
+                                    {isProcessing ? "Processing..." : "Confirm Release"}
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
-                )}
+
+                    {/* Cancel Booking Button (Guest or Host, before check-in) */}
+                    {canCancel && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive" disabled={isProcessing}>
+                                    <XCircle className="w-3 h-3 mr-1" />
+                                    Cancel Booking
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Cancel This Booking?</AlertDialogTitle>
+                                    <AlertDialogDescription className="space-y-2">
+                                        <p>
+                                            Based on the cancellation policy, you will receive a <strong>{refundPercentage}% refund</strong> (
+                                            {refundAmount.toFixed(2)} STX).
+                                        </p>
+                                        {refundPercentage < 100 && (
+                                            <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                                <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5" />
+                                                <div className="text-sm">
+                                                    <p className="font-semibold text-amber-500">Cancellation Fee Applied</p>
+                                                    <p className="text-muted-foreground">
+                                                        Cancelling {daysUntilCheckIn} {daysUntilCheckIn === 1 ? "day" : "days"} before check-in results in a{" "}
+                                                        {100 - refundPercentage}% fee.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleCancelBooking} disabled={isProcessing} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        {isProcessing ? "Processing..." : "Confirm Cancellation"}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                </div>
             </div>
         </div>
     );

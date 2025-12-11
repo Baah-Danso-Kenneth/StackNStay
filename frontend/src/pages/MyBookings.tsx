@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import { BookingCardHorizontal } from "@/components/BookingCardHorizontal";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 import NoProperties from "@/components/NoProperties";
+import { usePendingBookings } from "@/hooks/use-pending-tx";
 
 import { getCurrentBlockHeight } from "@/lib/stacks-api";
 
@@ -18,6 +19,7 @@ const MyBookings = () => {
     const { t } = useTranslation();
     const { userData } = useAuth();
     const [filter, setFilter] = useState<"all" | "confirmed" | "completed" | "cancelled">("all");
+    const { pendingBookings, removePendingBooking } = usePendingBookings();
 
     // Fetch current block height
     const { data: currentBlockHeight = 0 } = useQuery({
@@ -87,14 +89,66 @@ const MyBookings = () => {
         },
     });
 
+    // Process pending bookings
+    const [enrichedPendingBookings, setEnrichedPendingBookings] = useState<any[]>([]);
+
+    useEffect(() => {
+        const enrichPending = async () => {
+            if (!userData) return;
+            const userAddress = userData.profile.stxAddress.testnet;
+
+            // Filter pending bookings for current user
+            const myPending = pendingBookings.filter(b => b.guestAddress === userAddress);
+
+            const enriched = await Promise.all(myPending.map(async (pb) => {
+                try {
+                    // Check if this booking is already in the confirmed list (deduplication)
+                    // Note: We can't match by ID because pending bookings don't have an ID yet
+                    // But we can check if there's a confirmed booking with same property and check-in
+                    // Or we can just rely on the user removing it manually or a timeout
+                    // For now, let's just show it.
+
+                    const property = await getProperty(pb.propertyId);
+                    if (!property) return null;
+
+                    const metadata = await fetchIPFSMetadata(property.metadataUri);
+                    const coverImage = metadata?.images?.[0] ? getIPFSImageUrl(metadata.images[0]) : undefined;
+
+                    return {
+                        id: -1, // Temporary ID
+                        ...pb,
+                        host: property.owner,
+                        guest: userAddress,
+                        platformFee: 0, // Unknown
+                        hostPayout: 0, // Unknown
+                        escrowedAmount: pb.totalAmount,
+                        status: 'pending', // Special status
+                        propertyTitle: metadata?.title || "Loading...",
+                        propertyLocation: metadata?.location || "Loading...",
+                        propertyImage: coverImage,
+                        isPending: true
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }));
+
+            setEnrichedPendingBookings(enriched.filter(b => b !== null));
+        };
+
+        enrichPending();
+    }, [pendingBookings, userData]);
+
+
     // Filter bookings
-    const filteredBookings = bookings.filter((booking) => {
+    const filteredBookings = [...enrichedPendingBookings, ...bookings].filter((booking) => {
         if (filter === "all") return true;
+        if (booking.isPending && filter === "confirmed") return true; // Show pending in confirmed tab too? Or maybe separate?
         return booking.status === filter;
     });
 
     // Count by status
-    const confirmedCount = bookings.filter((b) => b.status === "confirmed").length;
+    const confirmedCount = bookings.filter((b) => b.status === "confirmed").length + enrichedPendingBookings.length;
     const completedCount = bookings.filter((b) => b.status === "completed").length;
     const cancelledCount = bookings.filter((b) => b.status === "cancelled").length;
 
@@ -128,12 +182,12 @@ const MyBookings = () => {
                     </div>
                 </div>
 
-                {bookings.length > 0 ? (
+                {bookings.length > 0 || enrichedPendingBookings.length > 0 ? (
                     <>
                         {/* Filter Tabs */}
                         <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)} className="mb-6">
                             <TabsList>
-                                <TabsTrigger value="all">All ({bookings.length})</TabsTrigger>
+                                <TabsTrigger value="all">All ({bookings.length + enrichedPendingBookings.length})</TabsTrigger>
                                 <TabsTrigger value="confirmed">Confirmed ({confirmedCount})</TabsTrigger>
                                 <TabsTrigger value="completed">Completed ({completedCount})</TabsTrigger>
                                 <TabsTrigger value="cancelled">Cancelled ({cancelledCount})</TabsTrigger>
@@ -143,13 +197,18 @@ const MyBookings = () => {
                         {/* Bookings List */}
                         <div className="space-y-4">
                             {filteredBookings.length > 0 ? (
-                                filteredBookings.map((booking) => (
+                                filteredBookings.map((booking, idx) => (
                                     <BookingCardHorizontal
-                                        key={booking.id}
+                                        key={booking.id === -1 ? `pending-${idx}` : booking.id}
                                         booking={booking}
                                         userRole="guest"
                                         currentBlockHeight={currentBlockHeight}
-                                        onSuccess={() => refetch()}
+                                        onSuccess={() => {
+                                            if (booking.isPending) {
+                                                removePendingBooking(booking.txId);
+                                            }
+                                            refetch();
+                                        }}
                                     />
                                 ))
                             ) : (

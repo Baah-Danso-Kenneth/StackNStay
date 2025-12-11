@@ -1,10 +1,16 @@
-import { Trophy, Lock, RefreshCw } from "lucide-react";
+import { Trophy, Lock, RefreshCw, HelpCircle } from "lucide-react";
 import { BADGE_TYPES } from "@/lib/badge";
 import { BadgeCard } from "@/components/BadgeCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBadges } from "@/hooks/use-badge";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface BadgeCollectionProps {
     userAddress: string;
@@ -43,10 +49,22 @@ export function BadgeCollection({ userAddress, title = "Achievements", showLocke
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <Trophy className="w-6 h-6 text-primary" />
-                    {title}
-                </h2>
+                <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                        <Trophy className="w-6 h-6 text-primary" />
+                        {title}
+                    </h2>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <HelpCircle className="w-4 h-4 text-muted-foreground/70" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                                <p>Earn badges by listing properties, completing bookings, and maintaining a high reputation. Badges are minted automatically to your wallet.</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
                 <div className="flex items-center gap-4">
                     <div className="text-sm text-muted-foreground hidden sm:block">
                         {earnedBadges.length} of {allBadgeTypes.length} earned

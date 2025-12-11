@@ -67,6 +67,46 @@ export function BookingCardHorizontal({
                             </span>
                         </div>
 
+                        {/* Booking Progress Tracker */}
+                        <div className="mb-6">
+                            <div className="flex items-center justify-between relative">
+                                {/* Progress Bar Background */}
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted rounded-full -z-10" />
+
+                                {/* Progress Bar Fill */}
+                                <div
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full -z-10 transition-all duration-500"
+                                    style={{
+                                        width: booking.status === 'completed' ? '100%' :
+                                            booking.status === 'confirmed' && currentBlockHeight >= booking.checkIn ? '66%' :
+                                                booking.status === 'confirmed' ? '33%' : '0%'
+                                    }}
+                                />
+
+                                {/* Step 1: Booked */}
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className={`w-3 h-3 rounded-full ${booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-primary ring-4 ring-primary/20' : 'bg-muted'} transition-all`} />
+                                    <span className="text-[10px] font-medium text-muted-foreground">Booked</span>
+                                </div>
+
+                                {/* Step 2: Check-in */}
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className={`w-3 h-3 rounded-full ${(booking.status === 'confirmed' && currentBlockHeight >= booking.checkIn) || booking.status === 'completed'
+                                            ? 'bg-primary ring-4 ring-primary/20'
+                                            : 'bg-muted'
+                                        } transition-all`} />
+                                    <span className="text-[10px] font-medium text-muted-foreground">Wait for Check-in</span>
+                                    <span className="text-[9px] text-muted-foreground/70">(Automatic)</span>
+                                </div>
+
+                                {/* Step 3: Release Funds */}
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className={`w-3 h-3 rounded-full ${booking.status === 'completed' ? 'bg-primary ring-4 ring-primary/20' : 'bg-muted'} transition-all`} />
+                                    <span className="text-[10px] font-medium text-muted-foreground">Release Funds</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                             <div>
                                 <span className="text-muted-foreground">Total Amount:</span>

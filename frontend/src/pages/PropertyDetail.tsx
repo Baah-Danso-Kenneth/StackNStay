@@ -15,6 +15,7 @@ import { getProperty, bookProperty, PLATFORM_FEE_BPS, BPS_DENOMINATOR } from "@/
 import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { usePendingBookings } from "@/hooks/use-pending-tx";
 import { PostConditionMode } from "@stacks/transactions";
 import {
   MapPin,
@@ -61,6 +62,7 @@ const PropertyDetail = () => {
   const { userData } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { addPendingBooking } = usePendingBookings();
 
   // Booking state
   const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
@@ -230,6 +232,25 @@ const PropertyDetail = () => {
         postConditionMode: PostConditionMode.Allow,
         onFinish: async (data) => {
           console.log('✅ Booking transaction submitted:', data);
+
+          // Add to pending bookings immediately
+          if (userData && checkIn && checkOut) {
+            const numNights = calculateNights(checkIn, checkOut);
+            const baseCost = property.pricePerNightMicroSTX * numNights;
+            const platformFee = Math.floor((baseCost * PLATFORM_FEE_BPS) / BPS_DENOMINATOR);
+            const totalAmount = baseCost + platformFee;
+
+            addPendingBooking({
+              txId: data.txId,
+              propertyId: propertyId,
+              checkIn: dateToBlockHeight(checkIn, 100000), // Approximate
+              checkOut: dateToBlockHeight(checkOut, 100000), // Approximate
+              guestAddress: userData.profile.stxAddress.testnet,
+              totalAmount: totalAmount,
+              createdAt: Date.now(),
+              status: 'pending'
+            });
+          }
 
           try {
             toast({
