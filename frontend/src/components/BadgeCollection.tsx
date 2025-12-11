@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { Trophy, Lock } from "lucide-react";
-import { getAllUserBadges, BADGE_TYPES } from "@/lib/badge";
+import { Trophy, Lock, RefreshCw } from "lucide-react";
+import { BADGE_TYPES } from "@/lib/badge";
 import { BadgeCard } from "@/components/BadgeCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useBadges } from "@/hooks/use-badge";
 
 interface BadgeCollectionProps {
     userAddress: string;
@@ -12,10 +13,7 @@ interface BadgeCollectionProps {
 }
 
 export function BadgeCollection({ userAddress, title = "Achievements", showLocked = true }: BadgeCollectionProps) {
-    const { data: earnedBadges = [], isLoading } = useQuery({
-        queryKey: ["user-badges", userAddress],
-        queryFn: () => getAllUserBadges(userAddress),
-    });
+    const { badges: earnedBadges, isLoading, refetchBadges } = useBadges(userAddress);
 
     // Create a set of earned badge types for quick lookup
     const earnedBadgeTypes = new Set(earnedBadges.map(b => b.badgeType));
@@ -26,10 +24,12 @@ export function BadgeCollection({ userAddress, title = "Achievements", showLocke
     if (isLoading) {
         return (
             <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <Trophy className="w-6 h-6 text-primary" />
-                    {title}
-                </h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                        <Trophy className="w-6 h-6 text-primary" />
+                        {title}
+                    </h2>
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {[...Array(8)].map((_, i) => (
                         <Skeleton key={i} className="h-32 w-full" />
@@ -47,8 +47,13 @@ export function BadgeCollection({ userAddress, title = "Achievements", showLocke
                     <Trophy className="w-6 h-6 text-primary" />
                     {title}
                 </h2>
-                <div className="text-sm text-muted-foreground">
-                    {earnedBadges.length} of {allBadgeTypes.length} earned
+                <div className="flex items-center gap-4">
+                    <div className="text-sm text-muted-foreground hidden sm:block">
+                        {earnedBadges.length} of {allBadgeTypes.length} earned
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => refetchBadges()} title="Refresh Badges">
+                        <RefreshCw className="w-4 h-4" />
+                    </Button>
                 </div>
             </div>
 
@@ -100,9 +105,13 @@ export function BadgeCollection({ userAddress, title = "Achievements", showLocke
                 <div className="text-center py-12 border border-dashed border-border/50 rounded-lg bg-muted/20">
                     <Trophy className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
                     <h3 className="text-xl font-semibold mb-2">No Badges Yet</h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground mb-4">
                         Complete bookings and listings to earn achievement badges!
                     </p>
+                    <Button variant="outline" onClick={() => refetchBadges()}>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Check Again
+                    </Button>
                 </div>
             )}
         </div>

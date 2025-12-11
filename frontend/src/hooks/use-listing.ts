@@ -97,10 +97,10 @@ export function useListing() {
 
             // Step 3: Create metadata object WITH property_id and price
             setUploadProgress(55);
-            
+
             // Convert price to microSTX for consistency
             const priceInMicroSTX = Math.floor(parseFloat(formData.pricePerNight) * 1_000_000);
-            
+
             const metadata: PropertyMetadata & { property_id: number; price: number; price_per_night: number } = {
                 property_id: nextPropertyId, // ✅ CRITICAL: Include blockchain ID
                 title: formData.title,
@@ -256,7 +256,7 @@ export function useListing() {
 
                         toast({
                             title: "Success!",
-                            description: `Property #${propertyId} has been listed successfully!`,
+                            description: `Property #${propertyId} has been listed successfully! You may have earned a 'First Listing' badge.`,
                         });
 
                     } catch (confirmError) {

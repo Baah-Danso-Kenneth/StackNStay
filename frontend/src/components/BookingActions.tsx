@@ -171,31 +171,40 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
             {/* Action Buttons */}
             <div className="flex gap-2 mt-2">
                 {/* Release Payment Button (Host or Guest, after check-in) */}
-                {canRelease && (
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button size="sm" className="gradient-hero" disabled={isProcessing}>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <div title={!canRelease ? (
+                            booking.status !== "confirmed" ? "Booking is not confirmed" :
+                                currentBlockHeight < booking.checkIn ? `Available after check-in (Block ${booking.checkIn})` :
+                                    booking.escrowedAmount <= 0 ? "No funds in escrow" :
+                                        "Release Payment"
+                        ) : undefined}>
+                            <Button
+                                size="sm"
+                                className="gradient-hero"
+                                disabled={isProcessing || !canRelease}
+                            >
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 Release Payment
                             </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Release Payment to Host?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This will release {(booking.hostPayout / 1_000_000).toFixed(2)} STX to the host and{" "}
-                                    {(booking.platformFee / 1_000_000).toFixed(2)} STX as platform fee. The booking will be marked as completed.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleReleasePayment} disabled={isProcessing}>
-                                    {isProcessing ? "Processing..." : "Confirm Release"}
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                )}
+                        </div>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Release Payment to Host?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will release {(booking.hostPayout / 1_000_000).toFixed(2)} STX to the host and{" "}
+                                {(booking.platformFee / 1_000_000).toFixed(2)} STX as platform fee. The booking will be marked as completed.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleReleasePayment} disabled={isProcessing}>
+                                {isProcessing ? "Processing..." : "Confirm Release"}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
                 {/* Cancel Booking Button (Guest or Host, before check-in) */}
                 {canCancel && (
