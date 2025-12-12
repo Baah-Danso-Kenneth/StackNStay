@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBadges } from "@/hooks/use-badge";
 import { openContractCall } from "@stacks/connect";
 import { releasePayment, cancelBooking, type Booking } from "@/lib/escrow";
-import { CheckCircle, XCircle, Clock, DollarSign, AlertTriangle, Loader2, MessageSquare, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, Clock, DollarSign, AlertTriangle, Loader2, MessageSquare, ArrowRight, ExternalLink } from "lucide-react";
 import { ReviewForm } from "@/components/ReviewForm";
 
 interface BookingActionsProps {
@@ -50,6 +50,7 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
     const { toast } = useToast();
     const { refetchBadges } = useBadges();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [txId, setTxId] = useState<string | null>(null);
 
     if (!userData) return null;
 
@@ -67,6 +68,39 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
     const refundPercentage = calculateRefundPercentage(blocksUntilCheckIn);
     const refundAmount = (booking.totalAmount / 1_000_000) * (refundPercentage / 100);
 
+    // Poll for transaction status
+    useEffect(() => {
+        if (!txId) return;
+
+        const pollInterval = setInterval(async () => {
+            const status = await getTransactionStatus(txId);
+            console.log(`🔄 Polling tx ${txId}: ${status}`);
+
+            if (status === "success") {
+                clearInterval(pollInterval);
+                setTxId(null);
+                toast({
+                    title: "Transaction Confirmed! 🎉",
+                    description: "Your payment has been released and booking completed.",
+                });
+                
+                // Refresh data
+                await refetchBadges();
+                onSuccess?.();
+            } else if (status === "abort" || status === "failed") {
+                clearInterval(pollInterval);
+                setTxId(null);
+                toast({
+                    title: "Transaction Failed",
+                    description: "The transaction was aborted or failed.",
+                    variant: "destructive",
+                });
+            }
+        }, 5000); // Check every 5 seconds
+
+        return () => clearInterval(pollInterval);
+    }, [txId, toast, refetchBadges, onSuccess]);
+
     // DEBUG: Log button state
     console.log('✅ Release Button:', canRelease ? 'ENABLED (GREEN)' : 'DISABLED (GRAY)', {
         bookingId: booking.id,
@@ -82,9 +116,10 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
             await openContractCall({
                 ...contractCallOptions,
                 onFinish: async (data) => {
+                    setTxId(data.txId);
                     toast({
-                        title: "Payment Released! 🎉",
-                        description: `Funds transferred to host. You may have earned a new badge!`,
+                        title: "Transaction Broadcasted",
+                        description: "Payment release is processing on the blockchain. This may take a few minutes.",
                     });
 
                     // Refresh badges to show newly earned First Booking badge
@@ -92,6 +127,7 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
                     await refetchBadges();
 
                     onSuccess?.();
+                    setIsProcessing(false);
                 },
                 onCancel: () => {
                     toast({
@@ -212,10 +248,15 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
                     <AlertDialogTrigger asChild>
                         <Button
                             size="lg"
-                            className={`w-full ${canRelease ? 'gradient-hero' : 'bg-slate-200 dark:bg-muted hover:bg-slate-300 dark:hover:bg-muted text-slate-700 dark:text-muted-foreground cursor-not-allowed border border-slate-300 dark:border-border'}`}
-                            disabled={!canRelease || isProcessing}
+                            className={`w-full ${canRelease && !txId ? 'gradient-hero' : 'bg-slate-200 dark:bg-muted hover:bg-slate-300 dark:hover:bg-muted text-slate-700 dark:text-muted-foreground cursor-not-allowed border border-slate-300 dark:border-border'}`}
+                            disabled={!canRelease || isProcessing || !!txId}
                         >
-                            {isProcessing ? (
+                            {txId ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
+                                    Transaction Pending...
+                                </>
+                            ) : isProcessing ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     Processing...
@@ -255,6 +296,25 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                {/* Pending Transaction Link */}
+                {txId && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs text-muted-foreground"
+                        asChild
+                    >
+                        <a
+                            href={`https://explorer.hiro.so/tx/${txId}?chain=testnet`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <ExternalLink className="w-3 h-3 mr-2" />
+                            View Transaction
+                        </a>
+                    </Button>
+                )}
 
                 {/* Completed State */}
                 {bookingStatus === "completed" && (

@@ -19,7 +19,7 @@ interface BadgeCollectionProps {
 }
 
 export function BadgeCollection({ userAddress, title = "Achievements", showLocked = true }: BadgeCollectionProps) {
-    const { badges: earnedBadges, isLoading, refetchBadges } = useBadges(userAddress);
+    const { badges: earnedBadges, isLoading, error, refetchBadges } = useBadges(userAddress);
 
     // Create a set of earned badge types for quick lookup
     const earnedBadgeTypes = new Set(earnedBadges.map(b => b.badgeType));
@@ -40,6 +40,26 @@ export function BadgeCollection({ userAddress, title = "Achievements", showLocke
                     {[...Array(8)].map((_, i) => (
                         <Skeleton key={i} className="h-32 w-full" />
                     ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                        <Trophy className="w-6 h-6 text-primary" />
+                        {title}
+                    </h2>
+                </div>
+                <div className="p-6 border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900/50 rounded-lg text-center">
+                    <p className="text-red-600 dark:text-red-400 mb-4">Failed to load badges: {error}</p>
+                    <Button variant="outline" onClick={() => refetchBadges()}>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Try Again
+                    </Button>
                 </div>
             </div>
         );

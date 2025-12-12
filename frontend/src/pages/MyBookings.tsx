@@ -140,11 +140,20 @@ const MyBookings = () => {
     }, [pendingBookings, userData]);
 
 
-    // Filter bookings
-    const filteredBookings = [...enrichedPendingBookings, ...bookings].filter((booking) => {
+    // Filter bookings - DEDUPLICATE pending bookings
+    const deduplicatedPending = enrichedPendingBookings.filter(pending => {
+        // Remove pending if a confirmed booking exists for same property and similar check-in
+        const hasConfirmed = bookings.some(confirmed =>
+            confirmed.propertyId === pending.propertyId &&
+            Math.abs(confirmed.checkIn - pending.checkIn) < 10 // Within 10 blocks
+        );
+        return !hasConfirmed;
+    });
+
+    const filteredBookings = [...deduplicatedPending, ...bookings].filter((booking) => {
         if (filter === "all") return true;
-        if (booking.isPending && filter === "confirmed") return true; // Show pending in confirmed tab too? Or maybe separate?
-        return booking.status === filter;
+        if (booking.isPending && filter === "confirmed") return true;
+        return booking.status === filter || booking.status?.value === filter;
     });
 
     // Count by status

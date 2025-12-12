@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, ExternalLink, User } from "lucide-react";
+import { Calendar, MapPin, User, Clock } from "lucide-react";
 import { BookingActions } from "@/components/BookingActions";
 import { DisputeModal } from "@/components/DisputeModal";
 import { ReviewDialog } from "@/components/ReviewDialog";
@@ -27,165 +26,141 @@ export function BookingCardHorizontal({
     currentBlockHeight,
     onSuccess,
 }: BookingCardHorizontalProps) {
-    return (
-        <Card className="overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 group">
-            <div className="flex flex-col md:flex-row">
-                {/* Image Section */}
-                <div className="w-full md:w-64 h-40 md:h-auto relative overflow-hidden flex-shrink-0">
-                    <img
-                        src={booking.propertyImage}
-                        alt={booking.propertyTitle}
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
+    // Calculate progress
+    const isConfirmed = booking.status === 'confirmed';
+    const isCompleted = booking.status === 'completed';
+    const isCancelled = booking.status === 'cancelled';
+    
+    const hasPassedCheckIn = currentBlockHeight >= booking.checkIn;
+    
+    let progress = 0;
+    if (isCompleted) progress = 100;
+    else if (isConfirmed) {
+        if (hasPassedCheckIn) progress = 66;
+        else progress = 33;
+    }
 
-                    {/* Role Badge */}
-                    <Badge className="absolute top-3 left-3 bg-primary/90 text-primary-foreground backdrop-blur-sm">
-                        <User className="w-3 h-3 mr-1" />
+    return (
+        <Card className="group overflow-hidden border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:shadow-md transition-all duration-300">
+            <div className="flex flex-col sm:flex-row">
+                {/* Image Section */}
+                <div className="w-full sm:w-48 h-48 sm:h-auto relative shrink-0">
+                    <img
+                        src={booking.propertyImage || "/placeholder-property.jpg"}
+                        alt={booking.propertyTitle}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:hidden" />
+                    
+                    <Badge 
+                        variant="secondary" 
+                        className="absolute top-3 left-3 bg-background/90 backdrop-blur-md shadow-sm border-white/10"
+                    >
+                        <User className="w-3 h-3 mr-1.5 text-primary" />
                         {userRole === "guest" ? "Guest" : "Host"}
                     </Badge>
                 </div>
 
                 {/* Content Section */}
-                <div className="flex-1 p-6 flex flex-col md:flex-row justify-between gap-4">
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-xl font-bold mb-2 truncate">
-                            {booking.propertyTitle || `Property #${booking.propertyId}`}
-                        </h3>
-
-                        <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-x-4 gap-y-2 mb-3">
+                <div className="flex-1 p-5 flex flex-col justify-between gap-4">
+                    <div className="flex flex-col md:flex-row justify-between gap-4">
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between md:justify-start gap-2">
+                                <Badge variant="outline" className="text-xs font-normal text-muted-foreground border-border/50">
+                                    #{booking.id}
+                                </Badge>
+                                {isCompleted && <Badge className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 border-emerald-500/20">Completed</Badge>}
+                                {isCancelled && <Badge variant="destructive" className="bg-red-500/15 text-red-600 hover:bg-red-500/25 border-red-500/20">Cancelled</Badge>}
+                                {isConfirmed && <Badge variant="secondary" className="bg-blue-500/15 text-blue-600 hover:bg-blue-500/25 border-blue-500/20">Confirmed</Badge>}
+                            </div>
+                            
+                            <h3 className="text-lg font-semibold tracking-tight line-clamp-1">
+                                {booking.propertyTitle || `Property #${booking.propertyId}`}
+                            </h3>
+                            
                             {booking.propertyLocation && (
-                                <span className="flex items-center gap-1">
-                                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                                    <span className="truncate">{booking.propertyLocation}</span>
-                                </span>
+                                <div className="flex items-center text-sm text-muted-foreground">
+                                    <MapPin className="w-3.5 h-3.5 mr-1.5 text-primary/70" />
+                                    {booking.propertyLocation}
+                                </div>
                             )}
-                            <span className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                                Booking #{booking.id}
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1 text-right">
+                            <span className="text-2xl font-bold tracking-tight">
+                                {(booking.totalAmount / 1_000_000).toLocaleString()} <span className="text-sm font-medium text-muted-foreground">STX</span>
                             </span>
-                        </div>
-
-                        {/* Booking Progress Tracker */}
-                        <div className="mb-6">
-                            <div className="flex items-center justify-between relative">
-                                {/* Progress Bar Background */}
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted rounded-full -z-10" />
-
-                                {/* Progress Bar Fill */}
-                                <div
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full -z-10 transition-all duration-500"
-                                    style={{
-                                        width: booking.status === 'completed' ? '100%' :
-                                            booking.status === 'confirmed' && currentBlockHeight >= booking.checkIn ? '66%' :
-                                                booking.status === 'confirmed' ? '33%' : '0%'
-                                    }}
-                                />
-
-                                {/* Step 1: Booked */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className={`w-3 h-3 rounded-full ${booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-primary ring-4 ring-primary/20' : 'bg-muted'} transition-all`} />
-                                    <span className="text-[10px] font-medium text-muted-foreground">Booked</span>
-                                </div>
-
-                                {/* Step 2: Check-in */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className={`w-3 h-3 rounded-full ${(booking.status === 'confirmed' && currentBlockHeight >= booking.checkIn) || booking.status === 'completed'
-                                        ? 'bg-primary ring-4 ring-primary/20'
-                                        : 'bg-muted'
-                                        } transition-all`} />
-                                    <span className="text-[10px] font-medium text-muted-foreground">Wait for Check-in</span>
-                                    <span className="text-[9px] text-muted-foreground/70">(Automatic)</span>
-                                </div>
-
-                                {/* Step 3: Release Funds */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className={`w-3 h-3 rounded-full ${booking.status === 'completed' ? 'bg-primary ring-4 ring-primary/20' : 'bg-muted'} transition-all`} />
-                                    <span className="text-[10px] font-medium text-muted-foreground">Release Funds</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <span className="text-muted-foreground">Total Amount:</span>
-                                <span className="ml-2 font-semibold">
-                                    {(booking.totalAmount / 1_000_000).toFixed(2)} STX
-                                </span>
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">Check-in Block:</span>
-                                <span className="ml-2 font-medium">{booking.checkIn}</span>
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">Check-out Block:</span>
-                                <span className="ml-2 font-medium">{booking.checkOut}</span>
-                            </div>
                             {userRole === "host" && (
-                                <div>
-                                    <span className="text-muted-foreground">Your Payout:</span>
-                                    <span className="ml-2 font-semibold text-emerald-500">
-                                        {(booking.hostPayout / 1_000_000).toFixed(2)} STX
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Guest/Host Address (for reference) */}
-                        <div className="mt-3 text-xs text-muted-foreground">
-                            {userRole === "guest" ? (
-                                <span>Host: {booking.host.slice(0, 8)}...{booking.host.slice(-6)}</span>
-                            ) : (
-                                <span>Guest: {booking.guest.slice(0, 8)}...{booking.guest.slice(-6)}</span>
+                                <span className="text-xs text-emerald-600 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                    Payout: {(booking.hostPayout / 1_000_000).toLocaleString()} STX
+                                </span>
                             )}
                         </div>
                     </div>
 
-                    {/* Actions Section */}
-                    <div className="flex flex-col items-start md:items-end gap-3 md:min-w-[220px]">
-                        {/* Booking Actions (Release/Cancel) */}
-                        <BookingActions
-                            booking={booking}
-                            currentBlockHeight={currentBlockHeight}
-                            onSuccess={onSuccess}
-                        />
+                    {/* Progress & Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                        <div className="space-y-4">
+                            {/* Mini Progress Bar */}
+                            {!isCancelled && (
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[10px] uppercase tracking-wider font-medium text-muted-foreground">
+                                        <span className={progress >= 33 ? "text-primary" : ""}>Booked</span>
+                                        <span className={progress >= 66 ? "text-primary" : ""}>Check-in</span>
+                                        <span className={progress >= 100 ? "text-primary" : ""}>Complete</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-primary transition-all duration-500 ease-out"
+                                            style={{ width: `${progress}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <div className="flex items-center gap-6 text-sm">
+                                <div className="space-y-0.5">
+                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Check In</span>
+                                    <div className="font-medium flex items-center gap-1.5">
+                                        <Clock className="w-3.5 h-3.5 text-primary/70" />
+                                        Block {booking.checkIn}
+                                    </div>
+                                </div>
+                                <div className="space-y-0.5">
+                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Check Out</span>
+                                    <div className="font-medium flex items-center gap-1.5">
+                                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                                        Block {booking.checkOut}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                        {/* Dispute Modal */}
-                        {(booking.status === "confirmed" || booking.status === "completed") && (
-                            <DisputeModal
-                                bookingId={booking.id}
+                        {/* Actions */}
+                        <div className="flex flex-wrap justify-end gap-2">
+                             <BookingActions
+                                booking={booking}
+                                currentBlockHeight={currentBlockHeight}
                                 onSuccess={onSuccess}
                             />
-                        )}
+                            
+                            {(isConfirmed || isCompleted) && (
+                                <DisputeModal
+                                    bookingId={booking.id}
+                                    onSuccess={onSuccess}
+                                />
+                            )}
 
-                        {/* Review Dialog - Only for completed bookings */}
-                        {booking.status === "completed" && (
-                            <ReviewDialog
-                                bookingId={booking.id}
-                                reviewee={userRole === "guest" ? booking.host : booking.guest}
-                                revieweeName={userRole === "guest" ? "Host" : "Guest"}
-                                propertyTitle={booking.propertyTitle}
-                                onSuccess={onSuccess}
-                            />
-                        )}
-
-                        {/* View on Explorer */}
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2 w-full md:w-auto"
-                            asChild
-                        >
-                            <a
-                                href={`https://explorer.hiro.so/address/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stackstay-escrow?chain=testnet`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <ExternalLink className="w-3 h-3" />
-                                View on Explorer
-                            </a>
-                        </Button>
+                            {isCompleted && (
+                                <ReviewDialog
+                                    bookingId={booking.id}
+                                    reviewee={userRole === "guest" ? booking.host : booking.guest}
+                                    revieweeName={userRole === "guest" ? "Host" : "Guest"}
+                                    propertyTitle={booking.propertyTitle}
+                                    onSuccess={onSuccess}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

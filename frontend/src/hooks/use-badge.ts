@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, createElement } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./use-auth";
 import {
     getAllUserBadges,
@@ -57,67 +58,50 @@ const BADGE_COLORS: Record<number, string> = {
  */
 export function useBadges(userAddress?: string) {
     const { userData } = useAuth();
-    const [badges, setBadges] = useState<BadgeWithUI[]>([]);
-    const [allBadgeTypes, setAllBadgeTypes] = useState<(BadgeTypeInfo & { type: number })[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    // Use provided address or fall back to authenticated user's address
     const targetAddress = userAddress || userData?.profile.stxAddress.testnet;
 
-    /**
-     * Fetch all badge types from the contract
-     */
-    const fetchBadgeTypes = useCallback(async () => {
-        try {
+    // Fetch badge types (rarely changes, cache for a long time)
+    const { data: allBadgeTypes = [] } = useQuery({
+        queryKey: ["badge-types"],
+        queryFn: async () => {
             console.log("📋 Fetching all badge types...");
-            const types = await getAllBadgeTypes();
-            setAllBadgeTypes(types);
-            console.log(`✅ Loaded ${types.length} badge types`);
-            return types;
-        } catch (err) {
-            console.error("Error fetching badge types:", err);
-            throw err;
-        }
-    }, []);
+            return getAllBadgeTypes();
+        },
+        staleTime: Infinity, // Cache forever during session
+        refetchOnWindowFocus: false,
+    });
 
-    /**
-     * Fetch all badges for the current user
-     */
-    const fetchUserBadges = useCallback(async (currentBadgeTypes?: (BadgeTypeInfo & { type: number })[]) => {
-        if (!targetAddress) {
-            console.log("⚠️ No user address available");
-            return [];
-        }
+    // Fetch user badges
+    const {
+        data: badges = [],
+        isLoading,
+        error,
+        refetch: refetchBadges
+    } = useQuery({
+        queryKey: ["user-badges", targetAddress],
+        enabled: !!targetAddress,
+        queryFn: async () => {
+            if (!targetAddress) return [];
 
-        const typesToUse = currentBadgeTypes || allBadgeTypes;
-
-        try {
             console.log(`🎖️ Fetching badges for ${targetAddress}...`);
             const userBadges = await getAllUserBadges(targetAddress);
             console.log(`✅ Found ${userBadges.length} badges for user`);
 
             // Enhance badges with UI properties
-            const enhancedBadges: BadgeWithUI[] = await Promise.all(
-                userBadges.map(async (badge) => {
-                    const typeInfo = typesToUse.find(t => t.type === badge.badgeType);
+            return userBadges.map((badge) => {
+                const typeInfo = allBadgeTypes.find(t => t.type === badge.badgeType);
 
-                    return {
-                        ...badge,
-                        typeInfo: typeInfo || null,
-                        icon: getBadgeIcon(badge.badgeType),
-                        color: BADGE_COLORS[badge.badgeType] || "#a855f7",
-                    };
-                })
-            );
-
-            setBadges(enhancedBadges);
-            return enhancedBadges;
-        } catch (err) {
-            console.error("Error fetching user badges:", err);
-            throw err;
-        }
-    }, [targetAddress, allBadgeTypes]);
+                return {
+                    ...badge,
+                    typeInfo: typeInfo || null,
+                    icon: getBadgeIcon(badge.badgeType),
+                    color: BADGE_COLORS[badge.badgeType] || "#a855f7",
+                };
+            });
+        },
+        staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+        retry: 2,
+    });
 
     /**
      * Check if user has a specific badge type
@@ -125,6 +109,9 @@ export function useBadges(userAddress?: string) {
     const hasBadge = useCallback(
         async (badgeType: number): Promise<boolean> => {
             if (!targetAddress) return false;
+            // Check cache first
+            const cachedBadge = badges.find(b => b.badgeType === badgeType);
+            if (cachedBadge) return true;
 
             try {
                 return await checkHasBadge(targetAddress, badgeType);
@@ -133,75 +120,14 @@ export function useBadges(userAddress?: string) {
                 return false;
             }
         },
-        [targetAddress]
+        [targetAddress, badges]
     );
-
-    /**
-     * Manually refresh badge data
-     */
-    const refetchBadges = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const types = await fetchBadgeTypes();
-            await fetchUserBadges(types);
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to fetch badges";
-            setError(errorMessage);
-            console.error("Error refetching badges:", err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [fetchBadgeTypes, fetchUserBadges]);
-
-    /**
-     * Initial data fetch on mount or when user changes
-     */
-    useEffect(() => {
-        let isMounted = true;
-
-        const loadBadgeData = async () => {
-            if (!targetAddress) {
-                setIsLoading(false);
-                return;
-            }
-
-            setIsLoading(true);
-            setError(null);
-
-            try {
-                // First fetch badge types, then user badges
-                const types = await fetchBadgeTypes();
-
-                if (isMounted) {
-                    await fetchUserBadges(types);
-                }
-            } catch (err) {
-                if (isMounted) {
-                    const errorMessage = err instanceof Error ? err.message : "Failed to load badges";
-                    setError(errorMessage);
-                    console.error("Error loading badge data:", err);
-                }
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        loadBadgeData();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [targetAddress, fetchBadgeTypes, fetchUserBadges]);
 
     return {
         badges,
         allBadgeTypes,
         isLoading,
-        error,
+        error: error instanceof Error ? error.message : error ? String(error) : null,
         hasBadge,
         refetchBadges,
         BADGE_TYPES,

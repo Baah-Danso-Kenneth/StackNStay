@@ -8,6 +8,7 @@ import {
 } from "@stacks/transactions";
 
 import { CONTRACT_ADDRESS, CONTRACTS, NETWORK } from './config';
+import { rateLimiter } from './rate-limiter';
 
 // Constants
 export const PLATFORM_FEE_BPS = 200; // 2% platform fee
@@ -133,14 +134,14 @@ export async function cancelBooking(bookingId: number) {
 export async function getProperty(propertyId: number, retries: number = 3): Promise<Property | null> {
     for (let attempt = 0; attempt < retries; attempt++) {
         try {
-            const result = await fetchCallReadOnlyFunction({
+            const result = await rateLimiter.add(() => fetchCallReadOnlyFunction({
                 contractAddress: CONTRACT_ADDRESS,
                 contractName: CONTRACTS.ESCROW,
                 functionName: "get-property",
                 functionArgs: [uintCV(propertyId)],
                 senderAddress: CONTRACT_ADDRESS,
                 network: NETWORK,
-            });
+            }));
 
             if (result.type === ClarityType.OptionalNone) {
                 return null;
@@ -256,10 +257,7 @@ export async function getProperty(propertyId: number, retries: number = 3): Prom
                 return null;
             }
 
-            // Exponential backoff: wait 500ms, 1000ms, 2000ms
-            const delay = 500 * Math.pow(2, attempt);
-            console.warn(`⚠️ Error fetching property #${propertyId} (attempt ${attempt + 1}/${retries}), retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
+            console.warn(`⚠️ Error fetching property #${propertyId} (attempt ${attempt + 1}/${retries}), retrying...`);
         }
     }
 
@@ -301,14 +299,14 @@ function parseClarityNumber(value: any): number {
  */
 export async function getBooking(bookingId: number): Promise<Booking | null> {
     try {
-        const result = await fetchCallReadOnlyFunction({
+        const result = await rateLimiter.add(() => fetchCallReadOnlyFunction({
             contractAddress: CONTRACT_ADDRESS,
             contractName: CONTRACTS.ESCROW,
             functionName: "get-booking",
             functionArgs: [uintCV(bookingId)],
             senderAddress: CONTRACT_ADDRESS,
             network: NETWORK,
-        });
+        }));
 
         // get-booking returns (response (optional {...}))
         if (result.type !== ClarityType.ResponseOk) {
@@ -353,7 +351,7 @@ export async function getBooking(bookingId: number): Promise<Booking | null> {
             totalAmount: parseClarityNumber(data["total-amount"]),
             platformFee: parseClarityNumber(data["platform-fee"]),
             hostPayout: parseClarityNumber(data["host-payout"]),
-            status: data.status,
+            status: typeof data.status === 'object' && 'value' in data.status ? data.status.value : data.status,
             createdAt: parseClarityNumber(data["created-at"]),
             escrowedAmount: parseClarityNumber(data["escrowed-amount"]),
         };
@@ -376,14 +374,14 @@ export async function getBooking(bookingId: number): Promise<Booking | null> {
  */
 export async function canReleasePayment(bookingId: number): Promise<boolean> {
     try {
-        const result = await fetchCallReadOnlyFunction({
+        const result = await rateLimiter.add(() => fetchCallReadOnlyFunction({
             contractAddress: CONTRACT_ADDRESS,
             contractName: CONTRACTS.ESCROW,
             functionName: "can-release-payment",
             functionArgs: [uintCV(bookingId)],
             senderAddress: CONTRACT_ADDRESS,
             network: NETWORK,
-        });
+        }));
 
         return result.type === ClarityType.BoolTrue;
     } catch (error) {
@@ -426,6 +424,7 @@ export async function getAllProperties(maxProperties: number = 200): Promise<(Pr
                     break;
                 }
             }
+            // Rate limiter handles delay
         }
 
         console.log('✨ Found', properties.length, 'properties');
@@ -453,7 +452,7 @@ export async function getAllBookings(maxBookings: number = 100): Promise<(Bookin
             const booking = await getBooking(i);
 
             if (booking) {
-                console.log(`✅ Found booking #${i}:`, booking);
+                console.log(`✅ Found booking #${i}:`, JSON.stringify(booking, null, 2));
                 bookings.push({
                     id: i,
                     ...booking,
@@ -468,6 +467,7 @@ export async function getAllBookings(maxBookings: number = 100): Promise<(Bookin
                     break;
                 }
             }
+            // Rate limiter handles delay
         }
 
         console.log('✨ Found', bookings.length, 'bookings');

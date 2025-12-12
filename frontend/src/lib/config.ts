@@ -11,4 +11,3 @@ export const CONTRACTS = {
     DISPUTE: "stackstay-dispute",
 } as const;
 
-

@@ -24,3 +24,17 @@ export async function getCurrentBlockHeight(): Promise<number> {
     }
 }
 
+
+export async function getTransactionStatus(txId: string): Promise<string> {
+    try {
+        const response = await fetch(`https://api.testnet.hiro.so/extended/v1/tx/${txId}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch tx info: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.tx_status; // "pending", "success", "abort", etc.
+    } catch (error) {
+        console.error("Error fetching tx status:", error);
+        return "pending"; // Assume pending on error to keep polling
+    }
+}
