@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { getUserProperties, getUserBookings, getProperty } from "@/lib/escrow";
 import { fetchIPFSMetadata, getIPFSImageUrl } from "@/lib/ipfs";
+import { useHostProperties } from "@/hooks/use-host-properties";
 import { BookingActions } from "@/components/BookingActions";
 import NoProperties from "@/components/NoProperties";
 import PropertyCard from "@/components/PropertyCard";
@@ -29,69 +30,7 @@ const Dashboard = () => {
     });
 
     // Fetch user's properties from blockchain
-    const { data: userProperties = [], isLoading: isLoadingProperties } = useQuery({
-        queryKey: ['user-properties', userData?.profile?.stxAddress?.testnet],
-        enabled: !!userData?.profile?.stxAddress?.testnet,
-        queryFn: async () => {
-            if (!userData?.profile?.stxAddress?.testnet) {
-                return [];
-            }
-
-            console.log('🔍 Fetching properties for user:', userData.profile.stxAddress.testnet);
-
-            // Fetch properties owned by this user
-            const blockchainProperties = await getUserProperties(
-                userData.profile.stxAddress.testnet,
-                50
-            );
-
-            console.log(`✅ Found ${blockchainProperties.length} properties for user`);
-
-            // Enrich each property with IPFS metadata
-            const enrichedProperties = [];
-            for (const prop of blockchainProperties) {
-                try {
-                    const metadata = await fetchIPFSMetadata(prop.metadataUri);
-
-                    if (!metadata) {
-                        console.warn(`⚠️ Could not fetch metadata for property #${prop.id}`);
-                        continue;
-                    }
-
-                    // Get the first image URL
-                    const imageUrl = metadata?.images?.[0]
-                        ? getIPFSImageUrl(metadata.images[0])
-                        : undefined;
-
-                    enrichedProperties.push({
-                        id: prop.id,
-                        blockchain_id: prop.id,
-                        title: metadata.title,
-                        description: metadata.description,
-                        location_city: metadata.location.split(',')[0]?.trim() || metadata.location,
-                        location_country: metadata.location.split(',')[1]?.trim() || '',
-                        price_per_night: Number(prop.pricePerNight),
-                        max_guests: metadata.maxGuests,
-                        bedrooms: metadata.bedrooms,
-                        bathrooms: metadata.bathrooms,
-                        amenities: metadata.amenities,
-                        cover_image: imageUrl,
-                        images: metadata.images.map(getIPFSImageUrl),
-                        active: prop.active,
-                        owner: prop.owner,
-                    });
-                } catch (error) {
-                    console.error(`Error enriching property #${prop.id}:`, error);
-                }
-            }
-
-            // Filter out null values (failed metadata fetches)
-            const validProperties = enrichedProperties.filter(prop => prop !== null);
-            console.log(`✅ Successfully enriched ${validProperties.length} properties with IPFS data`);
-
-            return validProperties;
-        }
-    });
+    const { data: userProperties = [], isLoading: isLoadingProperties } = useHostProperties();
 
     // Fetch user's bookings (as host)
     const { data: hostBookings = [], isLoading: isLoadingBookings, refetch: refetchBookings } = useQuery({
@@ -108,32 +47,29 @@ const Dashboard = () => {
             // Filter to only bookings where user is the host
             const hostOnlyBookings = allBookings.filter(booking => booking.host === userAddress);
 
-            // Enrich bookings with property details
-            const enrichedBookings = [];
-            for (const booking of hostOnlyBookings) {
+            // Enrich bookings with property details in parallel
+            const enrichedBookings = await Promise.all(hostOnlyBookings.map(async (booking) => {
                 try {
                     const property = await getProperty(booking.propertyId);
                     if (!property) {
-                        enrichedBookings.push(booking);
-                        continue;
+                        return booking;
                     }
 
                     const metadata = await fetchIPFSMetadata(property.metadataUri);
                     if (!metadata) {
-                        enrichedBookings.push(booking);
-                        continue;
+                        return booking;
                     }
 
-                    enrichedBookings.push({
+                    return {
                         ...booking,
                         propertyTitle: metadata.title,
                         propertyLocation: metadata.location,
-                    });
+                    };
                 } catch (error) {
                     console.error(`Error enriching booking #${booking.id}:`, error);
-                    enrichedBookings.push(booking);
+                    return booking;
                 }
-            }
+            }));
 
             return enrichedBookings;
         }
@@ -267,13 +203,13 @@ const Dashboard = () => {
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <p className="text-sm font-medium">Booking #{booking.id}</p>
                                                         {booking.status === 'confirmed' && (
-                                                            <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 text-xs">
-                                                                Confirmed
+                                                            <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 text-xs border-blue-200">
+                                                                Payout Pending
                                                             </Badge>
                                                         )}
                                                         {booking.status === 'completed' && (
-                                                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 text-xs">
-                                                                Completed
+                                                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 text-xs border-emerald-200">
+                                                                Paid Out
                                                             </Badge>
                                                         )}
                                                     </div>
@@ -309,7 +245,7 @@ const Dashboard = () => {
                                     <BadgeCollection
                                         userAddress={userData.profile.stxAddress.testnet}
                                         title="Your Achievements"
-                                        showLocked={false}
+                                        showLocked={true}
                                     />
                                 </CardContent>
                             </Card>

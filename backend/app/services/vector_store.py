@@ -393,6 +393,9 @@ class PGVectorStore:
 
         async with self.pool.acquire() as conn:
             async with conn.transaction():
+                # Clear existing data to prevent duplicates
+                await conn.execute("TRUNCATE TABLE property_embeddings")
+                
                 for prop, emb in zip(properties, embeddings):
                     emb_str = self._embedding_to_pgvector(emb)
                     metadata = json.dumps(prop)

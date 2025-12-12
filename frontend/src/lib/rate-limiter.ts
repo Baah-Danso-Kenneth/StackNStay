@@ -8,11 +8,11 @@ type RequestTask<T> = () => Promise<T>;
 
 class GlobalRateLimiter {
     private queue: { task: RequestTask<any>; resolve: (value: any) => void; reject: (reason: any) => void }[] = [];
-    private isProcessing = false;
+    private activeRequests = 0;
+    private maxConcurrent = 5; // Allow 5 concurrent requests
     private lastRequestTime = 0;
-    // 500ms delay between requests (conservative to be safe)
-    // If we still get 429s, we can increase this.
-    private minDelay = 1000;
+    // Reduced delay to 100ms (10 requests/sec max per "thread" effectively)
+    private minDelay = 100;
 
     /**
      * Add a request to the queue
@@ -25,20 +25,33 @@ class GlobalRateLimiter {
     }
 
     /**
-     * Process the queue one by one
+     * Process the queue
      */
     private async processQueue() {
-        if (this.isProcessing || this.queue.length === 0) {
+        // If we're at max concurrency or queue is empty, do nothing
+        if (this.activeRequests >= this.maxConcurrent || this.queue.length === 0) {
             return;
         }
 
-        this.isProcessing = true;
-
-        while (this.queue.length > 0) {
+        // Process as many as we can up to maxConcurrent
+        while (this.activeRequests < this.maxConcurrent && this.queue.length > 0) {
             const item = this.queue.shift();
             if (!item) break;
 
-            // Enforce delay since last request
+            this.activeRequests++;
+
+            // We don't await the execution here so we can start others
+            this.executeTask(item);
+        }
+    }
+
+    /**
+     * Execute a single task with rate limiting logic
+     */
+    private async executeTask(item: { task: RequestTask<any>; resolve: (value: any) => void; reject: (reason: any) => void }) {
+        try {
+            // Enforce global delay (simple token bucket-ish approach)
+            // We want to space out starts slightly even with concurrency
             const now = Date.now();
             const timeSinceLastRequest = now - this.lastRequestTime;
             const timeToWait = Math.max(0, this.minDelay - timeSinceLastRequest);
@@ -47,30 +60,30 @@ class GlobalRateLimiter {
                 await new Promise(resolve => setTimeout(resolve, timeToWait));
             }
 
-            try {
-                // Execute the task
-                const result = await item.task();
-                this.lastRequestTime = Date.now();
-                item.resolve(result);
-            } catch (error: any) {
-                // If we hit a 429, wait longer and retry once (optional robustness)
-                if (error?.message?.includes('429') || error?.toString().includes('429')) {
-                    console.warn("⚠️ Hit 429 in rate limiter, waiting 2s before retrying...");
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    try {
-                        const retryResult = await item.task();
-                        this.lastRequestTime = Date.now();
-                        item.resolve(retryResult);
-                    } catch (retryError) {
-                        item.reject(retryError);
-                    }
-                } else {
-                    item.reject(error);
-                }
-            }
-        }
+            this.lastRequestTime = Date.now();
 
-        this.isProcessing = false;
+            // Execute the task
+            const result = await item.task();
+            item.resolve(result);
+        } catch (error: any) {
+            // If we hit a 429, wait longer and retry once
+            if (error?.message?.includes('429') || error?.toString().includes('429')) {
+                console.warn("⚠️ Hit 429 in rate limiter, waiting 2s before retrying...");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                try {
+                    const retryResult = await item.task();
+                    item.resolve(retryResult);
+                } catch (retryError) {
+                    item.reject(retryError);
+                }
+            } else {
+                item.reject(error);
+            }
+        } finally {
+            this.activeRequests--;
+            // Trigger next item in queue
+            this.processQueue();
+        }
     }
 }
 

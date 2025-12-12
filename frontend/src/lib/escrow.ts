@@ -408,26 +408,42 @@ export async function getAllProperties(maxProperties: number = 200): Promise<(Pr
         // Try to fetch properties up to maxProperties
         // Continue through gaps to find all properties
         // START AT 0 because Clarity property IDs ARE 0-based
-        for (let i = 0; i < maxProperties; i++) {
-            const property = await getProperty(i);
+        // Fetch in batches to be efficient but not overwhelm the network
+        // Even with rate limiter, Promise.all is better than sequential await
+        const batchSize = 10;
 
-            if (property) {
-                properties.push({
-                    id: i,
-                    ...property,
-                });
-                consecutiveNulls = 0; // Reset counter when we find a property
-                console.log(`✅ Found property #${i}`);
-            } else {
-                consecutiveNulls++;
-                console.log(`⚠️ Property #${i} not found (consecutive nulls: ${consecutiveNulls})`);
-                // Only stop if we hit many consecutive nulls (likely reached the end)
-                if (consecutiveNulls >= maxConsecutiveNulls) {
-                    console.log(`⏹️ Stopped at property ID ${i} after ${maxConsecutiveNulls} consecutive nulls`);
-                    break;
+        for (let i = 0; i < maxProperties; i += batchSize) {
+            const batchPromises = [];
+            for (let j = 0; j < batchSize && (i + j) < maxProperties; j++) {
+                batchPromises.push(getProperty(i + j));
+            }
+
+            console.log(`🔍 Fetching property batch ${i} to ${Math.min(i + batchSize, maxProperties) - 1}...`);
+            const batchResults = await Promise.all(batchPromises);
+
+            // Process batch results
+            for (let j = 0; j < batchResults.length; j++) {
+                const property = batchResults[j];
+                const propertyId = i + j;
+
+                if (property) {
+                    properties.push({
+                        id: propertyId,
+                        ...property,
+                    });
+                    consecutiveNulls = 0;
+                    console.log(`✅ Found property #${propertyId}`);
+                } else {
+                    consecutiveNulls++;
+                    // console.log(`⚠️ Property #${propertyId} not found`);
                 }
             }
-            // Rate limiter handles delay
+
+            // Check for early exit condition
+            if (consecutiveNulls >= maxConsecutiveNulls) {
+                console.log(`⏹️ Stopped after ${maxConsecutiveNulls} consecutive nulls`);
+                break;
+            }
         }
 
         console.log('✨ Found', properties.length, 'properties');
@@ -451,26 +467,41 @@ export async function getAllBookings(maxBookings: number = 100): Promise<(Bookin
         // Try to fetch bookings up to maxBookings
         // START AT 0 because Clarity booking IDs ARE 0-based
         console.log(`🔍 Fetching bookings (max: ${maxBookings})...`);
-        for (let i = 0; i < maxBookings; i++) {
-            const booking = await getBooking(i);
+        // Fetch in batches
+        const batchSize = 10;
 
-            if (booking) {
-                console.log(`✅ Found booking #${i}:`, JSON.stringify(booking, null, 2));
-                bookings.push({
-                    id: i,
-                    ...booking,
-                });
-                consecutiveNulls = 0; // Reset counter
-            } else {
-                // console.log(`⚠️ Booking #${i} not found`); // Reduce noise
-                consecutiveNulls++;
-                // Stop if we hit many consecutive nulls
-                if (consecutiveNulls >= maxConsecutiveNulls) {
-                    console.log(`⏹️ Stopped at booking ID ${i} after ${maxConsecutiveNulls} consecutive nulls`);
-                    break;
+        console.log(`🔍 Fetching bookings (max: ${maxBookings})...`);
+        for (let i = 0; i < maxBookings; i += batchSize) {
+            const batchPromises = [];
+            for (let j = 0; j < batchSize && (i + j) < maxBookings; j++) {
+                batchPromises.push(getBooking(i + j));
+            }
+
+            console.log(`🔍 Fetching booking batch ${i} to ${Math.min(i + batchSize, maxBookings) - 1}...`);
+            const batchResults = await Promise.all(batchPromises);
+
+            // Process batch results
+            for (let j = 0; j < batchResults.length; j++) {
+                const booking = batchResults[j];
+                const bookingId = i + j;
+
+                if (booking) {
+                    // console.log(`✅ Found booking #${bookingId}`);
+                    bookings.push({
+                        id: bookingId,
+                        ...booking,
+                    });
+                    consecutiveNulls = 0;
+                } else {
+                    consecutiveNulls++;
                 }
             }
-            // Rate limiter handles delay
+
+            // Check for early exit condition
+            if (consecutiveNulls >= maxConsecutiveNulls) {
+                console.log(`⏹️ Stopped at booking ID ${i} after ${maxConsecutiveNulls} consecutive nulls`);
+                break;
+            }
         }
 
         console.log('✨ Found', bookings.length, 'bookings');

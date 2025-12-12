@@ -322,11 +322,17 @@ export async function getAllUserBadges(user: string): Promise<(BadgeMetadata & {
         const results: (BadgeMetadata & { id: number })[] = [];
         const badgeTypes = Object.values(BADGE_TYPES);
 
-        // Fetch sequentially to avoid rate limits (429)
-        for (const badgeType of badgeTypes) {
-            const userBadge = await getUserBadge(user, badgeType);
-            console.log(`🔍 Checking badge type ${badgeType} for user ${user}:`, userBadge);
+        // Fetch in parallel using Promise.all
+        const userBadges = await Promise.all(
+            badgeTypes.map(async (badgeType) => {
+                const userBadge = await getUserBadge(user, badgeType);
+                console.log(`🔍 Checking badge type ${badgeType} for user ${user}:`, userBadge);
+                return userBadge;
+            })
+        );
 
+        // Process results
+        for (const userBadge of userBadges) {
             if (userBadge && userBadge.earned) {
                 const metadata = await getBadgeMetadata(userBadge.badgeId);
                 if (metadata) {
@@ -336,7 +342,6 @@ export async function getAllUserBadges(user: string): Promise<(BadgeMetadata & {
                     });
                 }
             }
-            // Rate limiter handles delay
         }
 
         return results;

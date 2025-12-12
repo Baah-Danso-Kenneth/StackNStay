@@ -101,9 +101,12 @@
     ;; Try to mint First Listing badge (type u2)
     ;; We ignore errors (e.g. if already minted) so we don't block the listing
     ;; Use as-contract to authorize the minting (contract is an authorized minter)
-    (match (as-contract (contract-call? .stackstay-badge mint-badge tx-sender u2 "ipfs://QmFirstListing..."))
-      success true
-      error false
+    ;; IMPORTANT: Capture tx-sender (the host) before entering as-contract context
+    (let ((host tx-sender))
+      (match (as-contract (contract-call? .stackstay-badge mint-badge host u2 "ipfs://QmFirstListing..."))
+        success true
+        error false
+      )
     )
     
     ;; Return success with the property ID

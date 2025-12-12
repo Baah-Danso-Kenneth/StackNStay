@@ -52,6 +52,7 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
     const { refetchBadges } = useBadges();
     const [isProcessing, setIsProcessing] = useState(false);
     const [txId, setTxId] = useState<string | null>(null);
+    const [isCompleted, setIsCompleted] = useState(false);
 
     // Poll for transaction status
     useEffect(() => {
@@ -64,6 +65,7 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
             if (status === "success") {
                 clearInterval(pollInterval);
                 setTxId(null);
+                setIsCompleted(true); // Immediate UI update
                 toast({
                     title: "Transaction Confirmed! 🎉",
                     description: "Your payment has been released and booking completed.",
@@ -244,59 +246,76 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
 
             {/* Action Buttons - ALWAYS VISIBLE */}
             <div className="space-y-2">
-                {/* Release Payment Button - ALWAYS SHOWS */}
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button
-                            size="lg"
-                            className={`w-full ${canRelease && !txId ? 'gradient-hero' : 'bg-slate-200 dark:bg-muted hover:bg-slate-300 dark:hover:bg-muted text-slate-700 dark:text-muted-foreground cursor-not-allowed border border-slate-300 dark:border-border'}`}
-                            disabled={!canRelease || isProcessing || !!txId}
-                        >
-                            {txId ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
-                                    Transaction Pending...
-                                </>
-                            ) : isProcessing ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Processing...
-                                </>
-                            ) : canRelease ? (
-                                <>
-                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                    Release Payment to Host
-                                    <ArrowRight className="w-4 h-4 ml-2" />
-                                </>
-                            ) : (
-                                <>
-                                    <Clock className="w-4 h-4 mr-2" />
-                                    Waiting for Check-in ({blocksUntilCheckIn} blocks)
-                                </>
-                            )}
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Release Payment to Host?</AlertDialogTitle>
-                            <AlertDialogDescription className="space-y-2">
-                                <p>
-                                    This will release <strong>{(booking.hostPayout / 1_000_000).toFixed(2)} STX</strong> to the host and{" "}
-                                    <strong>{(booking.platformFee / 1_000_000).toFixed(2)} STX</strong> as platform fee.
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    The booking will be marked as completed and you may earn a badge.
-                                </p>
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleReleasePayment} disabled={isProcessing} className="gradient-hero">
-                                {isProcessing ? "Processing..." : "Confirm Release"}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                {/* Release Payment / Claim Payout Button */}
+                {!isCompleted && bookingStatus !== "completed" && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button
+                                size="lg"
+                                className={`w-full ${canRelease && !txId ? 'gradient-hero' : 'bg-slate-200 dark:bg-muted hover:bg-slate-300 dark:hover:bg-muted text-slate-700 dark:text-muted-foreground cursor-not-allowed border border-slate-300 dark:border-border'}`}
+                                disabled={!canRelease || isProcessing || !!txId}
+                            >
+                                {txId ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
+                                        Transaction Pending...
+                                    </>
+                                ) : isProcessing ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Processing...
+                                    </>
+                                ) : canRelease ? (
+                                    <>
+                                        {isHost ? (
+                                            <>
+                                                <DollarSign className="w-4 h-4 mr-2" />
+                                                Claim Payout
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCircle className="w-4 h-4 mr-2" />
+                                                Release Payment to Host
+                                            </>
+                                        )}
+                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <Clock className="w-4 h-4 mr-2" />
+                                        Waiting for Check-in ({blocksUntilCheckIn} blocks)
+                                    </>
+                                )}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    {isHost ? "Claim Payout?" : "Release Payment to Host?"}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="space-y-2">
+                                    <p>
+                                        {isHost
+                                            ? `This will transfer ${(booking.hostPayout / 1_000_000).toFixed(2)} STX to your wallet.`
+                                            : `This will release ${(booking.hostPayout / 1_000_000).toFixed(2)} STX to the host.`
+                                        }
+                                        {" "}
+                                        <strong>{(booking.platformFee / 1_000_000).toFixed(2)} STX</strong> will be paid as platform fee.
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        The booking will be marked as completed and {isHost ? "you" : "you may"} earn a badge.
+                                    </p>
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleReleasePayment} disabled={isProcessing} className="gradient-hero">
+                                    {isProcessing ? "Processing..." : (isHost ? "Confirm Payout" : "Confirm Release")}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
 
                 {/* Pending Transaction Link */}
                 {txId && (
@@ -318,7 +337,7 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
                 )}
 
                 {/* Completed State */}
-                {bookingStatus === "completed" && (
+                {(bookingStatus === "completed" || isCompleted) && (
                     <>
                         <Button size="lg" variant="outline" disabled className="w-full bg-emerald-500/10 border-emerald-500/20">
                             <CheckCircle className="w-4 h-4 mr-2 text-emerald-500" />

@@ -14,6 +14,7 @@ import LearnMore from "./pages/LearnMore";
 import HostLayout from "./layouts/HostLayout";
 import Dashboard from "./pages/host/Dashboard";
 import CreateListing from "./pages/host/CreateListing";
+import MyListings from "./pages/host/MyListings";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import { Navigate } from "react-router-dom";
 import AIChatButton from "./components/AIChatButton";
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/host" element={<HostLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="create-listing" element={<CreateListing />} />
+            <Route path="listings" element={<MyListings />} />
             <Route index element={<Navigate to="/host/dashboard" replace />} />
           </Route>
 
