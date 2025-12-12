@@ -100,11 +100,19 @@ export async function getBadgeMetadata(badgeId: number): Promise<BadgeMetadata |
         }
 
         const data = cvToValue(result.value);
+        console.log(`🔍 getBadgeMetadata(${badgeId}) raw data:`, data);
+
+        // Handle potential object structure
+        const badgeTypeRaw = data["badge-type"];
+        const earnedAtRaw = data["earned-at"];
+
+        const badgeType = typeof badgeTypeRaw === 'object' && badgeTypeRaw?.value ? badgeTypeRaw.value : badgeTypeRaw;
+        const earnedAt = typeof earnedAtRaw === 'object' && earnedAtRaw?.value ? earnedAtRaw.value : earnedAtRaw;
 
         return {
-            badgeType: Number(data["badge-type"]),
+            badgeType: Number(badgeType),
             owner: data.owner,
-            earnedAt: Number(data["earned-at"]),
+            earnedAt: Number(earnedAt),
             metadataUri: data["metadata-uri"],
         };
     } catch (error) {
@@ -160,10 +168,18 @@ export async function getUserBadge(
         }
 
         const data = cvToValue(result.value);
+        console.log(`🔍 getUserBadge(${user}, ${badgeType}) raw data:`, data);
+
+        // Handle potential object structure from cvToValue
+        const badgeIdRaw = data["badge-id"];
+        const earnedRaw = data.earned;
+
+        const badgeId = typeof badgeIdRaw === 'object' && badgeIdRaw?.value ? badgeIdRaw.value : badgeIdRaw;
+        const earned = typeof earnedRaw === 'object' && earnedRaw?.value ? earnedRaw.value : earnedRaw;
 
         return {
-            badgeId: Number(data["badge-id"]),
-            earned: data.earned,
+            badgeId: Number(badgeId),
+            earned: earned === true || earned === 'true',
         };
     } catch (error) {
         // console.error("Error fetching user badge:", error);

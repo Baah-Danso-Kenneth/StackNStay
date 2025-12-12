@@ -85,7 +85,7 @@ export function useBadges(userAddress?: string) {
 
             console.log(`🎖️ Fetching badges for ${targetAddress}...`);
             const userBadges = await getAllUserBadges(targetAddress);
-            console.log(`✅ Found ${userBadges.length} badges for user`);
+            console.log(`✅ Found ${userBadges.length} badges for user ${targetAddress}:`, userBadges);
 
             // Enhance badges with UI properties
             return userBadges.map((badge) => {

@@ -12,7 +12,7 @@ class GlobalRateLimiter {
     private lastRequestTime = 0;
     // 500ms delay between requests (conservative to be safe)
     // If we still get 429s, we can increase this.
-    private minDelay = 500;
+    private minDelay = 1000;
 
     /**
      * Add a request to the queue

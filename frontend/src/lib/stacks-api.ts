@@ -25,9 +25,11 @@ export async function getCurrentBlockHeight(): Promise<number> {
 }
 
 
+import { rateLimiter } from './rate-limiter';
+
 export async function getTransactionStatus(txId: string): Promise<string> {
     try {
-        const response = await fetch(`https://api.testnet.hiro.so/extended/v1/tx/${txId}`);
+        const response = await rateLimiter.add(() => fetch(`https://api.testnet.hiro.so/extended/v1/tx/${txId}`));
         if (!response.ok) {
             throw new Error(`Failed to fetch tx info: ${response.statusText}`);
         }

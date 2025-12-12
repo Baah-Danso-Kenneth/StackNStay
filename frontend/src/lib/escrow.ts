@@ -5,6 +5,7 @@ import {
     fetchCallReadOnlyFunction,
     ClarityType,
     cvToValue,
+    PostConditionMode,
 } from "@stacks/transactions";
 
 import { CONTRACT_ADDRESS, CONTRACTS, NETWORK } from './config';
@@ -109,6 +110,7 @@ export async function releasePayment(bookingId: number) {
         contractName: CONTRACTS.ESCROW,
         functionName: "release-payment",
         functionArgs: [uintCV(bookingId)],
+        postConditionMode: PostConditionMode.Allow,
     };
 }
 
@@ -121,6 +123,7 @@ export async function cancelBooking(bookingId: number) {
         contractName: CONTRACTS.ESCROW,
         functionName: "cancel-booking",
         functionArgs: [uintCV(bookingId)],
+        postConditionMode: PostConditionMode.Allow,
     };
 }
 
