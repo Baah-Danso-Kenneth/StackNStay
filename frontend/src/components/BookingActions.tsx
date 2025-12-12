@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBadges } from "@/hooks/use-badge";
 import { openContractCall } from "@stacks/connect";
 import { releasePayment, cancelBooking, type Booking } from "@/lib/escrow";
+import { getTransactionStatus } from "@/lib/stacks-api";
 import { CheckCircle, XCircle, Clock, DollarSign, AlertTriangle, Loader2, MessageSquare, ArrowRight, ExternalLink } from "lucide-react";
 import { ReviewForm } from "@/components/ReviewForm";
 
@@ -52,22 +53,6 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
     const [isProcessing, setIsProcessing] = useState(false);
     const [txId, setTxId] = useState<string | null>(null);
 
-    if (!userData) return null;
-
-    const userAddress = userData.profile.stxAddress.testnet;
-    const isHost = userAddress === booking.host;
-    const isGuest = userAddress === booking.guest;
-    const blocksUntilCheckIn = Math.max(0, booking.checkIn - currentBlockHeight);
-    const timeUntilCheckIn = blocksToTime(blocksUntilCheckIn);
-
-    // Handle status as both string and object
-    const bookingStatus = typeof booking.status === 'string' ? booking.status : booking.status?.value || 'unknown';
-
-    const canRelease = (isHost || isGuest) && bookingStatus === "confirmed" && currentBlockHeight >= booking.checkIn && booking.escrowedAmount > 0;
-    const canCancel = (isHost || isGuest) && bookingStatus === "confirmed" && currentBlockHeight < booking.checkIn && booking.escrowedAmount > 0;
-    const refundPercentage = calculateRefundPercentage(blocksUntilCheckIn);
-    const refundAmount = (booking.totalAmount / 1_000_000) * (refundPercentage / 100);
-
     // Poll for transaction status
     useEffect(() => {
         if (!txId) return;
@@ -83,7 +68,7 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
                     title: "Transaction Confirmed! 🎉",
                     description: "Your payment has been released and booking completed.",
                 });
-                
+
                 // Refresh data
                 await refetchBadges();
                 onSuccess?.();
@@ -100,6 +85,22 @@ export function BookingActions({ booking, currentBlockHeight, onSuccess }: Booki
 
         return () => clearInterval(pollInterval);
     }, [txId, toast, refetchBadges, onSuccess]);
+
+    if (!userData) return null;
+
+    const userAddress = userData.profile.stxAddress.testnet;
+    const isHost = userAddress === booking.host;
+    const isGuest = userAddress === booking.guest;
+    const blocksUntilCheckIn = Math.max(0, booking.checkIn - currentBlockHeight);
+    const timeUntilCheckIn = blocksToTime(blocksUntilCheckIn);
+
+    // Handle status as both string and object
+    const bookingStatus = typeof booking.status === 'string' ? booking.status : (booking.status as any)?.value || 'unknown';
+
+    const canRelease = (isHost || isGuest) && bookingStatus === "confirmed" && currentBlockHeight >= booking.checkIn && booking.escrowedAmount > 0;
+    const canCancel = (isHost || isGuest) && bookingStatus === "confirmed" && currentBlockHeight < booking.checkIn && booking.escrowedAmount > 0;
+    const refundPercentage = calculateRefundPercentage(blocksUntilCheckIn);
+    const refundAmount = (booking.totalAmount / 1_000_000) * (refundPercentage / 100);
 
     // DEBUG: Log button state
     console.log('✅ Release Button:', canRelease ? 'ENABLED (GREEN)' : 'DISABLED (GRAY)', {
